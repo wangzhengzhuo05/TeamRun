@@ -30,6 +30,10 @@ import type { MobileRelayStatus } from '../shared/mobile-relay-status'
 import type { MobilePairingConnectionMode } from '../shared/mobile-pairing-connection-mode'
 import type { RuntimePairingReach } from '../shared/runtime-pairing-reach'
 import type { MobileRelayMintFailure } from '../shared/mobile-relay-mint-failure'
+import type {
+  MobileRelayConfiguration,
+  UpdateMobileRelayConfiguration
+} from '../shared/mobile-relay-configuration'
 import type { VerifyAndAddRuntimeEnvironmentResult } from '../shared/remote-pairing-verification'
 import type {
   SshMutationExpectation,
@@ -4770,6 +4774,25 @@ const api = {
 
     getRelayStatus: (): Promise<{ status: MobileRelayStatus }> =>
       ipcRenderer.invoke('mobile:getRelayStatus'),
+
+    getRelayConfiguration: (): Promise<MobileRelayConfiguration> =>
+      ipcRenderer.invoke('mobile:getRelayConfiguration'),
+
+    setRelayConfiguration: (
+      configuration: UpdateMobileRelayConfiguration
+    ): Promise<MobileRelayConfiguration> =>
+      ipcRenderer.invoke('mobile:setRelayConfiguration', configuration),
+
+    onRelayConfigurationChanged: (
+      callback: (configuration: MobileRelayConfiguration) => void
+    ): (() => void) => {
+      const listener = (
+        _event: Electron.IpcRendererEvent,
+        configuration: MobileRelayConfiguration
+      ) => callback(configuration)
+      ipcRenderer.on('mobile:relayConfigurationChanged', listener)
+      return () => ipcRenderer.removeListener('mobile:relayConfigurationChanged', listener)
+    },
 
     onRelayStatusChanged: (callback: (status: MobileRelayStatus) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, status: MobileRelayStatus) =>

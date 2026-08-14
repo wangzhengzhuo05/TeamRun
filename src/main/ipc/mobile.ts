@@ -1,4 +1,4 @@
-import { app, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import type { RuntimeAccessGrant } from '../../shared/runtime-access-grants'
 import type { MobilePairingConnectionMode } from '../../shared/mobile-pairing-connection-mode'
 import { classifyRemotePairingHostname } from '../../shared/remote-pairing-address'
@@ -14,6 +14,11 @@ import {
 import { resolveAdvertisedPairingHostname } from '../runtime/pairing-endpoint'
 import type { OrcaRuntimeRpcServer } from '../runtime/runtime-rpc'
 import type { RelayBrokerStatus } from '../runtime/relay/relay-session-broker'
+import type {
+  MobileRelayConfiguration,
+  UpdateMobileRelayConfiguration
+} from '../../shared/mobile-relay-configuration'
+import { isUpdateMobileRelayConfiguration } from '../../shared/mobile-relay-configuration'
 import { encodeMobilePairingQr, type MobilePairingQrResult } from '../runtime/mobile-pairing-qr'
 import { getWindowsDefaultRouteInterfaceNames } from '../runtime/windows-default-route-interfaces'
 import {
@@ -52,6 +57,10 @@ export type MobileHandlerDependencies = {
   firewallEnvironment?: WindowsMobileFirewallEnvironment
   openWindowsNetworkSettings?: () => Promise<void>
   getRelayStatus?: () => RelayBrokerStatus
+  getRelayConfiguration?: () => MobileRelayConfiguration
+  setRelayConfiguration?: (
+    configuration: UpdateMobileRelayConfiguration
+  ) => MobileRelayConfiguration | Promise<MobileRelayConfiguration>
   consumePendingUnpairedDeviceAuthFailure?: (webContentsId: number) => boolean
   encodePairingQr?: (pairingUrl: string) => Promise<MobilePairingQrResult>
   getDefaultRouteInterfaceNames?: DefaultRouteInterfaceLookup
@@ -289,6 +298,38 @@ export function registerMobileHandlers(
   ipcMain.handle('mobile:getRelayStatus', () => ({
     status: dependencies.getRelayStatus?.() ?? 'offline'
   }))
+
+  ipcMain.handle('mobile:getRelayConfiguration', () => {
+    if (!dependencies.getRelayConfiguration) {
+      return {
+        backend: 'orca',
+        serverUrl: null,
+        configured: true,
+        credentialStored: false,
+        revision: 0
+      } satisfies MobileRelayConfiguration
+    }
+    return dependencies.getRelayConfiguration()
+  })
+
+  ipcMain.handle(
+    'mobile:setRelayConfiguration',
+    async (event, configuration: UpdateMobileRelayConfiguration) => {
+      if (!isWindowRenderer(event) || !dependencies.setRelayConfiguration) {
+        throw new Error('mobile_relay_configuration_unavailable')
+      }
+      if (!isUpdateMobileRelayConfiguration(configuration)) {
+        throw new Error('invalid_mobile_relay_configuration')
+      }
+      const saved = await dependencies.setRelayConfiguration(configuration)
+      for (const window of BrowserWindow.getAllWindows()) {
+        if (!window.isDestroyed()) {
+          window.webContents.send('mobile:relayConfigurationChanged', saved)
+        }
+      }
+      return saved
+    }
+  )
 
   ipcMain.handle('mobile:consumePendingUnpairedDeviceAuthFailure', (event) => {
     if (!isWindowRenderer(event)) {

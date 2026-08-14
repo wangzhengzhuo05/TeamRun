@@ -20,23 +20,31 @@ describe('mobile pairing connection mode defaults', () => {
   })
 
   it('cannot commit Anywhere into a QR while signed out', () => {
-    expect(effectiveMobilePairingConnectionMode({ preferred: 'automatic', signedIn: false })).toBe(
-      'local-only'
-    )
-    expect(effectiveMobilePairingConnectionMode({ preferred: 'automatic', signedIn: true })).toBe(
-      'automatic'
-    )
-    expect(effectiveMobilePairingConnectionMode({ preferred: 'local-only', signedIn: false })).toBe(
-      'local-only'
-    )
+    expect(
+      effectiveMobilePairingConnectionMode({ preferred: 'automatic', relayAvailable: false })
+    ).toBe('local-only')
+    expect(
+      effectiveMobilePairingConnectionMode({ preferred: 'automatic', relayAvailable: true })
+    ).toBe('automatic')
+    expect(
+      effectiveMobilePairingConnectionMode({ preferred: 'local-only', relayAvailable: false })
+    ).toBe('local-only')
   })
 
   it('refuses to mint under signed-out Anywhere and allows honest paths', () => {
     // Why: mint refusal is the UI honesty gate that replaces silent degradation
     // for renderer mint paths (signed-out Anywhere must not show a local QR).
-    expect(canMintMobilePairingOffer({ connectionMode: 'automatic', signedIn: false })).toBe(false)
-    expect(canMintMobilePairingOffer({ connectionMode: 'automatic', signedIn: true })).toBe(true)
-    expect(canMintMobilePairingOffer({ connectionMode: 'local-only', signedIn: false })).toBe(true)
-    expect(canMintMobilePairingOffer({ connectionMode: 'local-only', signedIn: true })).toBe(true)
+    expect(canMintMobilePairingOffer({ connectionMode: 'automatic', relayAvailable: false })).toBe(
+      false
+    )
+    expect(canMintMobilePairingOffer({ connectionMode: 'automatic', relayAvailable: true })).toBe(
+      true
+    )
+    expect(canMintMobilePairingOffer({ connectionMode: 'local-only', relayAvailable: false })).toBe(
+      true
+    )
+    expect(canMintMobilePairingOffer({ connectionMode: 'local-only', relayAvailable: true })).toBe(
+      true
+    )
   })
 })

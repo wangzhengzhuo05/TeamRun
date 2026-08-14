@@ -6,6 +6,10 @@ export function resolvePairingInviteThroughDirector(args: {
   timeoutMs?: number
   createSocket?: (url: string) => WebSocket
 }): Promise<PairingRelay> {
+  // Why: a single-node self-hosted Relay is both Director and Cell, so retry the trusted cell.
+  if (args.relay.directorUrl === args.relay.cellUrl) {
+    return Promise.resolve(args.relay)
+  }
   const socket = (args.createSocket ?? ((url) => new WebSocket(url)))(
     directorWebSocketUrl(args.relay)
   )

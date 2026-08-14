@@ -11,13 +11,13 @@ type MutableRef<T> = { current: T }
 
 /**
  * Mints (or rotates) a pairing QR. Every caller must go through this path so
- * signed-out Anywhere is refused rather than silently degraded to a local-only
+ * unavailable Relay is refused rather than silently degraded to a local-only
  * code under the Relay label. Anywhere mint failures surface relayFailure and
  * clear any QR.
  */
 export function useMobilePairingGeneration(params: {
   connectionMode: MobilePairingConnectionMode
-  signedIn: boolean
+  relayAvailable: boolean
   selectedAddress: string | undefined
   mountedRef: MutableRef<boolean>
   hasGeneratedRef: MutableRef<boolean>
@@ -36,7 +36,7 @@ export function useMobilePairingGeneration(params: {
 } {
   const {
     connectionMode,
-    signedIn,
+    relayAvailable,
     selectedAddress,
     mountedRef,
     hasGeneratedRef,
@@ -55,7 +55,7 @@ export function useMobilePairingGeneration(params: {
       connectionModeOverride?: MobilePairingConnectionMode
     ) => {
       const preferredMode = connectionModeOverride ?? connectionMode
-      if (!canMintMobilePairingOffer({ connectionMode: preferredMode, signedIn })) {
+      if (!canMintMobilePairingOffer({ connectionMode: preferredMode, relayAvailable })) {
         return
       }
       const requestId = ++pairingRequestIdRef.current
@@ -133,7 +133,7 @@ export function useMobilePairingGeneration(params: {
       setPairingUrl,
       setPairingQrError,
       setRelayMintFailure,
-      signedIn
+      relayAvailable
     ]
   )
 

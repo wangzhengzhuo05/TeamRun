@@ -32,15 +32,25 @@ describe('MobilePairingConnectionOptions', () => {
   let statusListener: ((status: MobileRelayStatus) => void) | null
   const connect = vi.fn().mockResolvedValue(null)
   const fetchAuthStatus = vi.fn().mockResolvedValue(null)
+  const getRelayConfiguration = vi.fn()
 
   beforeEach(() => {
     statusListener = null
     connect.mockClear()
     fetchAuthStatus.mockClear()
+    getRelayConfiguration.mockReset().mockResolvedValue({
+      backend: 'orca',
+      serverUrl: null,
+      configured: true,
+      credentialStored: false,
+      revision: 0
+    })
     Object.defineProperty(window, 'api', {
       configurable: true,
       value: {
         mobile: {
+          getRelayConfiguration,
+          onRelayConfigurationChanged: vi.fn(() => vi.fn()),
           getRelayStatus: vi.fn().mockResolvedValue({ status: 'registered' }),
           onRelayStatusChanged: vi.fn((listener: (status: MobileRelayStatus) => void) => {
             statusListener = listener
@@ -100,6 +110,22 @@ describe('MobilePairingConnectionOptions', () => {
     render(<MobilePairingConnectionOptions value="local-only" onChange={vi.fn()} />)
     expect(screen.queryByTestId('anywhere-sign-in-panel')).toBeNull()
     expect(screen.queryByRole('button', { name: /Sign in/i })).toBeNull()
+  })
+
+  it('shows a configured self-hosted Relay without an Orca sign-in prompt', async () => {
+    getRelayConfiguration.mockResolvedValue({
+      backend: 'self-hosted',
+      serverUrl: 'https://relay.example.test',
+      configured: true,
+      credentialStored: true,
+      revision: 1
+    })
+    render(<MobilePairingConnectionOptions value="automatic" onChange={vi.fn()} />)
+
+    const relay = await screen.findByRole('radio', { name: /Self-hosted Relay/i })
+    expect(relay).toHaveAttribute('aria-disabled', 'false')
+    expect(screen.getByText('https://relay.example.test')).toBeVisible()
+    expect(screen.queryByTestId('anywhere-sign-in-panel')).toBeNull()
   })
 
   it('shows Unavailable instead of a dead Sign in on unconfigured builds', () => {

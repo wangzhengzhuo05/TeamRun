@@ -25,6 +25,8 @@ import type { MobileRelayMintFailure } from '../../../../shared/mobile-relay-min
 import { useMobilePairingConnectionMode } from '../mobile/use-mobile-pairing-connection-mode'
 import { useMobilePairingAddressPreference } from '../mobile/use-mobile-pairing-address-preference'
 import { shouldOpenMobilePairingAddress } from './mobile-pane-search'
+import { useMobileRelayConfiguration } from '../mobile/use-mobile-relay-configuration'
+import { useMobileRelayPairingInvalidation } from '../mobile/use-mobile-relay-pairing-invalidation'
 export { getMobilePaneSearchEntries } from './mobile-pane-search'
 
 export function MobilePane(): React.JSX.Element {
@@ -41,12 +43,12 @@ export function MobilePane(): React.JSX.Element {
   const [refreshingNetworkInterfaces, setRefreshingNetworkInterfaces] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
   const [deviceCountAtQr, setDeviceCountAtQr] = useState<number | null>(null)
-  const signedIn = useAppStore((state) => state.orcaProfileAuthStatus?.state === 'connected')
+  const signedInToOrca = useAppStore((state) => state.orcaProfileAuthStatus?.state === 'connected')
+  const { relayAvailable, relayConfigurationKey } = useMobileRelayConfiguration(signedInToOrca)
   const settingsSearchQuery = useAppStore((state) => state.settingsSearchQuery)
   const [connectionMode, setConnectionMode] = useMobilePairingConnectionMode()
   const [rotateNextQr, setRotateNextQr] = useState(false)
   const codeCopiedResetTimerRef = useRef<number | null>(null)
-  const wasSignedInRef = useRef(signedIn)
   // Why: monotonically bumped per pairing request so a late getPairingQR
   // response cannot paint a stale QR after sign-out, a mode switch, or an
   // address change invalidated the request that produced it.
@@ -111,17 +113,11 @@ export function MobilePane(): React.JSX.Element {
     onSelectionInvalidated: invalidatePairingAddress
   })
 
-  // Why: a Relay QR minted while signed in must not linger on a now-signed-out
-  // desktop — Generate is disabled in that state. Invalidate any pending relay
-  // mint too, not just a displayed QR, so a late response can't paint a Relay
-  // code after sign-out. Anywhere stays selected.
-  useEffect(() => {
-    const wasSignedIn = wasSignedInRef.current
-    wasSignedInRef.current = signedIn
-    if (wasSignedIn && !signedIn && connectionMode === 'automatic') {
-      invalidatePairing()
-    }
-  }, [signedIn, connectionMode, invalidatePairing])
+  useMobileRelayPairingInvalidation({
+    connectionMode,
+    relayConfigurationKey,
+    invalidatePairing
+  })
 
   const clearCodeCopiedResetTimer = useCallback((): void => {
     if (codeCopiedResetTimerRef.current !== null) {
@@ -175,7 +171,12 @@ export function MobilePane(): React.JSX.Element {
       const preferredMode = opts.connectionModeOverride ?? connectionMode
       // Why: refuse signed-out Anywhere rather than degrading to a local-only QR
       // under the Relay label (canMint is the shared honesty gate).
-      if (!canMintMobilePairingOffer({ connectionMode: preferredMode, signedIn })) {
+      if (
+        !canMintMobilePairingOffer({
+          connectionMode: preferredMode,
+          relayAvailable
+        })
+      ) {
         return
       }
       const requestId = ++pairingRequestIdRef.current
@@ -250,7 +251,7 @@ export function MobilePane(): React.JSX.Element {
       mountedRef,
       rotateNextQr,
       selectedAddress,
-      signedIn
+      relayAvailable
     ]
   )
 
@@ -273,7 +274,7 @@ export function MobilePane(): React.JSX.Element {
       // Why: switching to LAN after a Relay failure should mint immediately.
       if (
         shouldRecoverWithLan &&
-        canMintMobilePairingOffer({ connectionMode: nextMode, signedIn })
+        canMintMobilePairingOffer({ connectionMode: nextMode, relayAvailable })
       ) {
         void generateQR({ rotate: false, connectionModeOverride: 'local-only' })
       }
@@ -283,7 +284,7 @@ export function MobilePane(): React.JSX.Element {
       generateQR,
       invalidatePairing,
       relayMintFailure,
-      signedIn,
+      relayAvailable,
       updateSettings,
       setConnectionMode
     ]
@@ -387,7 +388,7 @@ export function MobilePane(): React.JSX.Element {
     <div className="space-y-6">
       <MobilePairingSetupSection
         connectionMode={connectionMode}
-        canGenerate={canMintMobilePairingOffer({ connectionMode, signedIn })}
+        canGenerate={canMintMobilePairingOffer({ connectionMode, relayAvailable })}
         addressDisclosureForcedOpen={shouldOpenMobilePairingAddress(settingsSearchQuery)}
         connectionPathControl={
           <MobilePairingConnectionOptions

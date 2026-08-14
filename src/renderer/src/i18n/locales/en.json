@@ -10067,7 +10067,11 @@
           "signInAgain": "Sign in again for Relay",
           "localTitle": "LAN",
           "localDescription": "Phone must be on this Wi‑Fi or connected through Tailscale. No account needed.",
-          "retrying": "Retrying"
+          "retrying": "Retrying",
+          "selfHostedDescription": "Phone can be on cellular or any Wi‑Fi. No Orca account required.",
+          "selfHostedNotConfigured": "Self-hosted Relay is not configured",
+          "officialServer": "Relay server: Orca cloud",
+          "selfHostedUnavailable": "Complete the self-hosted Relay configuration, or use LAN."
         },
         "MobilePairingSetupSection": {
           "title": "Pair a phone",
@@ -10690,6 +10694,27 @@
               "disconnectFailed": "Could not remove the saved Bitbucket credential."
             }
           }
+        },
+        "MobileRelayServerDialog": {
+          "secureStorageError": "Secure credential storage is unavailable on this computer.",
+          "saveError": "Could not save the Relay server configuration.",
+          "configure": "Configure server",
+          "selfHosted": "Use self-hosted Relay",
+          "title": "Relay server",
+          "description": "Use Orca Relay with your account, or route encrypted mobile traffic through a server you operate.",
+          "provider": "Provider",
+          "orcaRelay": "Orca Relay",
+          "privateRelay": "Self-hosted Relay",
+          "serverUrl": "Server URL",
+          "serverUrlHelp": "Use the public HTTPS origin configured on your Relay reverse proxy.",
+          "accessKey": "Access key",
+          "savedKey": "Saved — leave blank to keep it",
+          "accessKeyHelp": "At least 32 characters; stored with operating system credential encryption and never included in pairing codes.",
+          "repairWarning": "Phones paired through another Relay provider must be paired again after this change.",
+          "cancel": "Cancel",
+          "save": "Save",
+          "serverUrlPlaceholder": "https://relay.example.com",
+          "savedCredentialError": "The saved Relay access key is unavailable. Enter it again to reconnect."
         }
       },
       "right": {

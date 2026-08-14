@@ -53,6 +53,7 @@
     "dev-stable-name": "pnpm run ensure:electron-runtime && node config/scripts/run-electron-vite-dev.mjs --stable-name",
     "dev:web": "vite --config vite.web.config.ts --host 127.0.0.1",
     "build:relay": "node config/scripts/build-relay.mjs",
+    "build:self-hosted-relay": "node config/scripts/build-self-hosted-relay.mjs",
     "build:computer-macos": "node config/scripts/build-computer-macos.mjs",
     "build:notification-status-macos": "node config/scripts/build-notification-status-macos.mjs",
     "build:native": "node config/scripts/build-native-for-platform.mjs",

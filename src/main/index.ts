@@ -13,7 +13,6 @@ import {
 } from './persistence'
 import { initSessionParseCachePersistence } from './ai-vault/session-parse-cache-persistence'
 import { ensureActiveOrcaProfile, initOrcaProfilePaths } from './orca-profiles/profile-index-store'
-import { getOrcaCloudAuthConfig } from './orca-profiles/profile-cloud-auth-config'
 import { getProfileUserDataPath } from './orca-profiles/profile-storage-paths'
 import { applyAppIcon } from './app-icon'
 import { relaunchApp } from './app-relaunch'
@@ -87,8 +86,12 @@ import {
 import { resolveAdvertisedPairingEndpoint } from './runtime/pairing-endpoint'
 import { ServeReadinessPublisher } from './server/serve-readiness'
 import { reserveServeStdoutForReadiness } from './server/serve-stdout-boundary'
-import { DesktopRelayService } from './runtime/relay/desktop-relay-service'
+import { DesktopRelayLifecycle } from './runtime/relay/desktop-relay-lifecycle'
 import type { RelayBrokerStatus } from './runtime/relay/relay-session-broker'
+import {
+  readMobileRelayConfiguration,
+  saveMobileRelayConfiguration
+} from './runtime/relay/self-hosted-relay-config'
 import { awaitRuntimeFileWatcherUnsubscribes } from './runtime/orca-runtime-files'
 import { clearRuntimeMetadataIfOwned } from './runtime/runtime-metadata'
 import { scheduleAllPendingHistoryTreeRemovals } from './terminal-history-deletion'
@@ -361,7 +364,7 @@ let runtime: OrcaRuntimeService | null = null
 let rateLimits: RateLimitService | null = null
 let runtimeRpc: OrcaRuntimeRpcServer | null = null
 const serveReadinessPublisher = new ServeReadinessPublisher()
-let desktopRelayService: DesktopRelayService | null = null
+let desktopRelayLifecycle: DesktopRelayLifecycle | null = null
 let desktopRelayStatus: RelayBrokerStatus = 'offline'
 let pendingUnpairedDeviceAuthFailure = false
 // Why: gates whether headless serve installs the offscreen browser backend (and advertises browser pane support).
@@ -1447,11 +1450,11 @@ function openMainWindow(options: { revealOnDidFinishLoad?: boolean } = {}): Brow
         }),
       onBeforeRelaunch: async () => {
         isQuitting = true
-        desktopRelayService?.fenceAndCloseNow()
+        desktopRelayLifecycle?.stop()
         await preserveAgentAuthBeforeRestart({ codexRuntimeHome, claudeRuntimeAuth, store })
       },
-      onOrcaProfileAuthMutation: () => desktopRelayService?.authMutated(),
-      onBeforeOrcaProfileSignOut: () => desktopRelayService?.fenceAndCloseNow()
+      onOrcaProfileAuthMutation: () => desktopRelayLifecycle?.authMutated(),
+      onBeforeOrcaProfileSignOut: () => desktopRelayLifecycle?.fenceOfficialAuth()
     },
     pluginService ?? undefined,
     pluginMarketplaceService && pluginMarketplaceInstaller
@@ -2982,6 +2985,12 @@ void app.whenReady().then(async () => {
   })
   registerMobileHandlers(runtimeRpc, {
     getRelayStatus: () => desktopRelayStatus,
+    getRelayConfiguration: () => readMobileRelayConfiguration(getCanonicalUserDataPath()),
+    setRelayConfiguration: (configuration) => {
+      const saved = saveMobileRelayConfiguration(getCanonicalUserDataPath(), configuration)
+      desktopRelayLifecycle?.reconfigure()
+      return saved
+    },
     consumePendingUnpairedDeviceAuthFailure: (webContentsId) => {
       if (
         !mainWindow ||
@@ -3121,38 +3130,20 @@ void app.whenReady().then(async () => {
     void showRuntimeRpcStartupFailureDialog(win, runtimeRpcStartResult.error)
   }
 
-  const cloudAuth = getOrcaCloudAuthConfig()
-  if (cloudAuth.configured) {
-    try {
-      const relayService = new DesktopRelayService({
-        authConfig: cloudAuth.config,
-        userDataPath: getProfileUserDataPath(),
-        appVersion: app.getVersion(),
-        runtimeRpc,
-        onStatus: (status) => {
-          desktopRelayStatus = status
-          mainWindow?.webContents.send('mobile:relayStatusChanged', status)
-        }
-      })
-      desktopRelayService = relayService
-      runtimeRpc.setMobileRelayPairingProvider({
-        createPairingRelay: (relayDeviceId) => relayService.createPairingRelay(relayDeviceId),
-        onDeviceRevokeQueued: (item) => relayService.onDeviceRevokeQueued(item),
-        onDemandStateChanged: () => relayService.demandStateChanged(),
-        getEndpoints: (context, params) => relayService.getEndpoints(context, params),
-        provisionRelay: (context, params) => relayService.provisionRelay(context, params)
-      })
-      relayService.start()
-      // Why: sleeping past relay-token expiry kills the broker with no retry
-      // timer; resume is the moment that state becomes recoverable.
-      powerMonitor.on('resume', () => desktopRelayService?.ensureLive())
-    } catch (error) {
-      console.warn(
-        '[relay] Desktop relay startup unavailable:',
-        error instanceof Error ? error.message : String(error)
-      )
+  desktopRelayLifecycle = new DesktopRelayLifecycle({
+    runtimeRpc,
+    profileUserDataPath: getProfileUserDataPath(),
+    relayConfigUserDataPath: getCanonicalUserDataPath(),
+    appVersion: app.getVersion(),
+    onStatus: (status) => {
+      desktopRelayStatus = status
+      mainWindow?.webContents.send('mobile:relayStatusChanged', status)
     }
-  }
+  })
+  desktopRelayLifecycle.start()
+  // Why: sleeping past relay-token expiry kills the broker with no retry
+  // timer; resume is the moment that state becomes recoverable.
+  powerMonitor.on('resume', () => desktopRelayLifecycle?.ensureLive())
 
   // Why: macOS notification permission dialog must fire after the window is shown, else it's hidden behind the maximized window.
   win.once('show', () => {
@@ -3177,7 +3168,7 @@ app.on('before-quit', () => {
     })
   }
   isQuitting = true
-  desktopRelayService?.fenceAndCloseNow()
+  desktopRelayLifecycle?.stop()
   runtimeRpc?.setMobileRelayPairingProvider(null)
   unsubscribeAgentAwakeStatusChanges?.()
   unsubscribeAgentAwakeStatusChanges = null

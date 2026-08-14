@@ -1,0 +1,15 @@
+services:
+  orca-relay:
+    build:
+      context: ../../../out/self-hosted-relay
+    restart: unless-stopped
+    environment:
+      ORCA_RELAY_PUBLIC_URL: ${ORCA_RELAY_PUBLIC_URL}
+      ORCA_RELAY_ACCESS_TOKEN: ${ORCA_RELAY_ACCESS_TOKEN}
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - orca-relay-data:/var/lib/orca-relay/data
+
+volumes:
+  orca-relay-data:

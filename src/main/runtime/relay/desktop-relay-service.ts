@@ -18,6 +18,7 @@ import type {
 import type { DeviceCredentialInstallAuthorization } from './relay-control-requests'
 import { deriveRelayHostId } from './relay-http-client'
 import { RelayDemandLedger } from './relay-demand-ledger'
+import type { RelayAuthContext } from './relay-auth-coordinator'
 
 type DesktopRelayServiceOptions = {
   authConfig: OrcaCloudAuthConfig
@@ -25,6 +26,7 @@ type DesktopRelayServiceOptions = {
   appVersion: string
   runtimeRpc: OrcaRuntimeRpcServer
   onStatus: (status: RelayBrokerStatus) => void
+  readAuthContext?: () => Promise<RelayAuthContext | null>
 }
 
 export function pairingAuthorizationForContext(
@@ -70,7 +72,9 @@ export class DesktopRelayService {
       relayHostId: deriveRelayHostId(keypair.publicKey)
     })
     this.coordinator = new RelayAuthCoordinator({
-      readContext: () => readRelayAuthContext(options.authConfig, options.userDataPath),
+      readContext:
+        options.readAuthContext ??
+        (() => readRelayAuthContext(options.authConfig, options.userDataPath)),
       hasDemand: ({ identity }) =>
         this.demandLedger.hasDemand(
           `${identity.userId}\0${identity.profileId}\0${identity.organizationId}`

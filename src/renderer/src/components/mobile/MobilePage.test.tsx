@@ -126,6 +126,7 @@ import MobilePage from './MobilePage'
 
 describe('MobilePage pairing connection mode', () => {
   const getPairingQR = vi.fn()
+  const getRelayConfiguration = vi.fn()
   const listNetworkInterfaces = vi.fn()
 
   beforeEach(() => {
@@ -135,6 +136,13 @@ describe('MobilePage pairing connection mode', () => {
       pairingUrl: 'orca://pair#automatic'
     })
     listNetworkInterfaces.mockReset().mockResolvedValue({ interfaces: [] })
+    getRelayConfiguration.mockReset().mockResolvedValue({
+      backend: 'orca',
+      serverUrl: null,
+      configured: true,
+      credentialStored: false,
+      revision: 0
+    })
     mocks.storeState = {
       closeMobilePage: vi.fn(),
       orcaProfileAuthStatus: { state: 'connected' },
@@ -146,6 +154,8 @@ describe('MobilePage pairing connection mode', () => {
       value: {
         mobile: {
           getPairingQR,
+          getRelayConfiguration,
+          onRelayConfigurationChanged: vi.fn(() => vi.fn()),
           listDevices: vi.fn().mockResolvedValue({ devices: [] }),
           listNetworkInterfaces
         },
@@ -245,6 +255,22 @@ describe('MobilePage pairing connection mode', () => {
     expect(screen.getByTestId('mode')).toHaveTextContent('automatic')
     expect(screen.getByTestId('pairing-qr')).toHaveTextContent('none')
     expect(screen.getByTestId('can-generate')).toHaveTextContent('false')
+  })
+
+  it('mints through a configured self-hosted Relay while signed out of Orca', async () => {
+    mocks.storeState.orcaProfileAuthStatus = { state: 'local' }
+    getRelayConfiguration.mockResolvedValue({
+      backend: 'self-hosted',
+      serverUrl: 'https://relay.example.test',
+      configured: true,
+      credentialStored: true,
+      revision: 1
+    })
+
+    await openPairingStep()
+
+    await waitFor(() => expect(getPairingQR).toHaveBeenCalledWith({ connectionMode: 'automatic' }))
+    expect(screen.getByTestId('can-generate')).toHaveTextContent('true')
   })
 
   it('mints a local-only QR when switching to LAN while signed out', async () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { resolvePairingInviteThroughDirector } from './mobile-relay-invite-director'
 
 class FakeSocket {
@@ -25,6 +25,16 @@ const relay = {
 }
 
 describe('pairing invite director resolution', () => {
+  it('reuses a single-node Relay when the Director and Cell origins match', async () => {
+    const singleNode = { ...relay, directorUrl: relay.cellUrl }
+    const createSocket = vi.fn()
+
+    await expect(
+      resolvePairingInviteThroughDirector({ relay: singleNode, createSocket })
+    ).resolves.toBe(singleNode)
+    expect(createSocket).not.toHaveBeenCalled()
+  })
+
   it('authenticates only to the configured director and accepts a strictly newer move', async () => {
     const socket = new FakeSocket()
     let url = ''

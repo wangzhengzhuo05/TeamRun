@@ -19,9 +19,9 @@ export function resolveMobilePairingConnectionMode(
  */
 export function effectiveMobilePairingConnectionMode(args: {
   preferred: MobilePairingConnectionMode
-  signedIn: boolean
+  relayAvailable: boolean
 }): MobilePairingConnectionMode {
-  if (args.preferred === 'automatic' && !args.signedIn) {
+  if (args.preferred === 'automatic' && !args.relayAvailable) {
     return 'local-only'
   }
   return args.preferred
@@ -35,7 +35,7 @@ export function effectiveMobilePairingConnectionMode(args: {
  */
 export function canMintMobilePairingOffer(args: {
   connectionMode: MobilePairingConnectionMode
-  signedIn: boolean
+  relayAvailable: boolean
 }): boolean {
-  return !(args.connectionMode === 'automatic' && !args.signedIn)
+  return !(args.connectionMode === 'automatic' && !args.relayAvailable)
 }
