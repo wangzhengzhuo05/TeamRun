@@ -22,9 +22,9 @@ const { verifySkillsCliRuntime } = require('./scripts/verify-skills-cli-runtime.
 const isMacHourly = process.env.ORCA_MAC_HOURLY === '1'
 const isMacDaily = process.env.ORCA_MAC_DAILY === '1'
 const isMacAdhoc = process.env.ORCA_MAC_ADHOC === '1'
-const isMacRelease =
-  process.env.ORCA_MAC_RELEASE === '1' || isMacHourly || isMacDaily || isMacAdhoc
+const isMacRelease = process.env.ORCA_MAC_RELEASE === '1' || isMacHourly || isMacDaily || isMacAdhoc
 const isLinuxArm64Release = process.env.ORCA_LINUX_ARM64_RELEASE === '1'
+const isSelfHostedDistribution = process.env.ORCA_SELF_HOSTED_DISTRIBUTION === '1'
 const localBuildVersion = isMacRelease ? undefined : process.env.ORCA_LOCAL_BUILD_VERSION
 const devChannelBuildVersion = isMacHourly
   ? process.env.ORCA_HOURLY_BUILD_VERSION
@@ -46,7 +46,14 @@ const devChannelRepo = isMacHourly
     : isMacAdhoc
       ? 'orca-adhoc'
       : null
-const appId = 'com.stablyai.orca'
+const appId = isSelfHostedDistribution ? 'com.wangzhengzhuo.orca.selfhosted' : 'com.stablyai.orca'
+const productName = isSelfHostedDistribution ? 'Orca Self-Hosted' : 'Orca'
+const packageName = isSelfHostedDistribution ? 'orca-self-hosted' : 'orca'
+const packagedVersion = devChannelBuildVersion ?? localBuildVersion
+const extraMetadata = {
+  ...(packagedVersion ? { version: packagedVersion } : {}),
+  ...(isSelfHostedDistribution ? { name: packageName } : {})
+}
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -91,12 +98,8 @@ const winSpeechNativeResource = {
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId,
-  productName: 'Orca',
-  ...(devChannelBuildVersion
-    ? { extraMetadata: { version: devChannelBuildVersion } }
-    : localBuildVersion
-      ? { extraMetadata: { version: localBuildVersion } }
-      : {}),
+  productName,
+  ...(Object.keys(extraMetadata).length > 0 ? { extraMetadata } : {}),
   directories: {
     buildResources: 'resources/build'
   },
@@ -291,7 +294,7 @@ module.exports = {
     }
   },
   win: {
-    executableName: 'Orca',
+    executableName: isSelfHostedDistribution ? 'Orca Self-Hosted' : 'Orca',
     // Why: Windows installers are signed after electron-builder packaging by
     // SignPath, so the packager cannot infer the updater publisherName.
     signtoolOptions: {
@@ -321,7 +324,9 @@ module.exports = {
     ]
   },
   nsis: {
-    artifactName: 'orca-windows-setup.${ext}',
+    artifactName: isSelfHostedDistribution
+      ? 'orca-self-hosted-windows-setup.${ext}'
+      : 'orca-windows-setup.${ext}',
     shortcutName: '${productName}',
     uninstallDisplayName: '${productName}',
     createDesktopShortcut: 'always',
@@ -416,7 +421,9 @@ module.exports = {
   // silently downgrading to ad-hoc artifacts that look shippable in CI logs.
   forceCodeSigning: isMacRelease,
   dmg: {
-    artifactName: 'orca-macos-${arch}.${ext}'
+    artifactName: isSelfHostedDistribution
+      ? 'orca-self-hosted-macos-${arch}.${ext}'
+      : 'orca-macos-${arch}.${ext}'
   },
   linux: {
     // Why: Ubuntu desktop ships GNOME Orca as the `orca` package and /usr/bin/orca.
@@ -427,9 +434,9 @@ module.exports = {
     icon: 'resources/build/icon.icns',
     desktop: {
       entry: {
-        // Why: Electron reports WM_CLASS=orca for the visible Linux window;
-        // GNOME docks need an exact match to group it with orca-ide.desktop.
-        StartupWMClass: 'orca'
+        // Why: Electron derives WM_CLASS from the package name; docks need the
+        // desktop entry to match for correct window grouping.
+        StartupWMClass: packageName
       }
     },
     extraResources: [
@@ -455,7 +462,11 @@ module.exports = {
     category: 'Utility'
   },
   appImage: {
-    artifactName: isLinuxArm64Release ? 'orca-linux-arm64.${ext}' : 'orca-linux.${ext}'
+    artifactName: isSelfHostedDistribution
+      ? 'orca-self-hosted-linux.${ext}'
+      : isLinuxArm64Release
+        ? 'orca-linux-arm64.${ext}'
+        : 'orca-linux.${ext}'
   },
   deb: {
     packageName: 'orca-ide',
@@ -504,12 +515,14 @@ module.exports = {
   // on Intel Macs. The beforeBuild hook performs Orca's targeted rebuild and
   // returns false so electron-builder does not rebuild optional cpu-features.
   npmRebuild: true,
-  publish: {
-    provider: 'github',
-    owner: 'stablyai',
-    repo: devChannelRepo ?? 'orca',
-    releaseType: devChannelRepo ? 'prerelease' : 'release'
-  }
+  publish: isSelfHostedDistribution
+    ? null
+    : {
+        provider: 'github',
+        owner: 'stablyai',
+        repo: devChannelRepo ?? 'orca',
+        releaseType: devChannelRepo ? 'prerelease' : 'release'
+      }
 }
 
 function chmodUnixCliLaunchers(resourcesDir, electronPlatformName) {

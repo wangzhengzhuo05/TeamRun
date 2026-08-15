@@ -165,6 +165,10 @@ import { startFirstWindowStartupServices } from './startup/first-window-startup-
 import { recoverLegacyWorkerTerminalsForRendererStartup } from './startup/legacy-worker-renderer-recovery'
 import { createWslCliReconciliationStartupBarrier } from './startup/wsl-cli-reconciliation-startup-barrier'
 import { getDevInstanceIdentity } from './startup/dev-instance-identity'
+import {
+  configureOrcaAppDistributionEnv,
+  resolveOrcaAppDistribution
+} from './startup/app-distribution'
 import { hydrateShellPath, mergePathSegments } from './startup/hydrate-shell-path'
 import { createWindowsShellPathHydration } from './startup/windows-shell-path-hydration'
 import {
@@ -640,7 +644,9 @@ function maybeAutoRenameBranchOnFirstWorkFromHook(event: {
   )
 }
 
-const devInstanceIdentity = getDevInstanceIdentity(is.dev)
+const appDistribution = resolveOrcaAppDistribution(app.getName())
+configureOrcaAppDistributionEnv(appDistribution)
+const devInstanceIdentity = getDevInstanceIdentity(is.dev, process.env, appDistribution)
 const devAgentHookEndpointNamespace = devInstanceIdentity.isDev
   ? devInstanceIdentity.appUserModelId
   : undefined
@@ -665,7 +671,7 @@ if (app.isPackaged && process.platform !== 'win32') {
     }
   })
 }
-configureDevUserDataPath(is.dev)
+configureDevUserDataPath(is.dev, appDistribution)
 configureOrcaUserDataPathEnv()
 installServeSupervisorDisconnectQuit(isServeMode)
 

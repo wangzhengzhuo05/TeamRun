@@ -80,6 +80,7 @@ import {
   type ReleaseBuild,
   type ReleaseChannel
 } from '../shared/release-channel'
+import { isSelfHostedOrcaDistribution } from './startup/app-distribution'
 
 type CheckFailureSource = 'event' | 'promise' | 'fallback-promise'
 type MissingManifestPrereleaseFallbackResult = { userInitiated: boolean }
@@ -1168,6 +1169,13 @@ export function getRemoteServerUpdateSupport(): RemoteServerUpdateSupport {
       reason: 'unpackaged-build'
     }
   }
+  if (isSelfHostedOrcaDistribution()) {
+    return {
+      installMode: updateInstallMode,
+      automatic: false,
+      reason: 'updater-unavailable'
+    }
+  }
   if (!autoUpdaterInitialized) {
     return {
       installMode: updateInstallMode,
@@ -1521,7 +1529,7 @@ function runBackgroundUpdateCheck(
   if (backgroundCheckLaunchPending || currentStatus.state === 'checking') {
     return false
   }
-  if (!app.isPackaged || is.dev) {
+  if (!app.isPackaged || is.dev || isSelfHostedOrcaDistribution()) {
     sendStatus({ state: 'not-available' })
     return false
   }
@@ -1581,7 +1589,7 @@ function enableIncludePrerelease(): void {
 
 /** Menu-triggered check — delegates feedback to renderer toasts via userInitiated flag */
 export function checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
-  if (!app.isPackaged || is.dev) {
+  if (!app.isPackaged || is.dev || isSelfHostedOrcaDistribution()) {
     sendStatus({ state: 'not-available', userInitiated: true })
     return
   }
@@ -1732,7 +1740,7 @@ export async function listAvailableReleaseBuilds(channel: ReleaseChannel): Promi
  * settles so ordinary background checks never inherit it.
  */
 async function checkForPinnedBuild(channel: ReleaseChannel, tag: string): Promise<void> {
-  if (!app.isPackaged || is.dev) {
+  if (!app.isPackaged || is.dev || isSelfHostedOrcaDistribution()) {
     sendStatus({ state: 'not-available', userInitiated: true })
     return
   }
@@ -2050,7 +2058,7 @@ export function quitAndInstall(): void {
 }
 
 async function checkForUpdateNudge(): Promise<void> {
-  if (!app.isPackaged || is.dev) {
+  if (!app.isPackaged || is.dev || isSelfHostedOrcaDistribution()) {
     return
   }
   if (nudgeCheckInFlight) {
@@ -2175,7 +2183,7 @@ export function setupAutoUpdater(
   if (!app.isPackaged && !is.dev) {
     return
   }
-  if (is.dev) {
+  if (is.dev || isSelfHostedOrcaDistribution()) {
     return
   }
 

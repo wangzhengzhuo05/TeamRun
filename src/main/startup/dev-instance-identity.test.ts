@@ -13,6 +13,15 @@ describe('dev-instance-identity', () => {
     })
   })
 
+  it('separates the self-hosted packaged identity from official Orca', () => {
+    expect(getDevInstanceIdentity(false, {}, 'self-hosted')).toMatchObject({
+      name: 'Orca Self-Hosted',
+      appName: 'Orca Self-Hosted',
+      isDev: false,
+      appUserModelId: 'com.wangzhengzhuo.orca.selfhosted'
+    })
+  })
+
   it('pins a stable dev appName across branches so the safeStorage key does not churn', () => {
     const a = getDevInstanceIdentity(true, { ORCA_DEV_BRANCH: 'feature/a' })
     const b = getDevInstanceIdentity(true, { ORCA_DEV_BRANCH: 'feature/b' })

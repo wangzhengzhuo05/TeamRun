@@ -278,6 +278,16 @@ describe('configureDevUserDataPath', () => {
 
     expect(app.setPath).not.toHaveBeenCalled()
   })
+
+  it('moves self-hosted packaged runs onto an independent userData path', async () => {
+    const { app } = await import('electron')
+    const { configureDevUserDataPath } = await import('./configure-process')
+
+    vi.mocked(app.setPath).mockClear()
+    configureDevUserDataPath(false, 'self-hosted')
+
+    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'orca-self-hosted'))
+  })
 })
 
 function restoreEnv(key: string, value: string | undefined): void {

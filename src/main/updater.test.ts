@@ -299,6 +299,38 @@ describe('updater', () => {
     expect(powerMonitorOnMock).not.toHaveBeenCalled()
   })
 
+  it('does not configure the official updater for self-hosted builds', async () => {
+    const originalDistribution = process.env.ORCA_APP_DISTRIBUTION
+    process.env.ORCA_APP_DISTRIBUTION = 'self-hosted'
+    const send = vi.fn()
+
+    try {
+      const { checkForUpdatesFromMenu, getRemoteServerUpdateSupport, setupAutoUpdater } =
+        await import('./updater')
+
+      setupAutoUpdater({ webContents: { send } } as never)
+      checkForUpdatesFromMenu()
+
+      expect(autoUpdaterMock.setFeedURL).not.toHaveBeenCalled()
+      expect(autoUpdaterMock.checkForUpdates).not.toHaveBeenCalled()
+      expect(powerMonitorOnMock).not.toHaveBeenCalled()
+      expect(send).toHaveBeenCalledWith('updater:status', {
+        state: 'not-available',
+        userInitiated: true
+      })
+      expect(getRemoteServerUpdateSupport()).toMatchObject({
+        automatic: false,
+        reason: 'updater-unavailable'
+      })
+    } finally {
+      if (originalDistribution === undefined) {
+        delete process.env.ORCA_APP_DISTRIBUTION
+      } else {
+        process.env.ORCA_APP_DISTRIBUTION = originalDistribution
+      }
+    }
+  })
+
   it.each([
     ['hourly', 'v1.4.160-hourly.202607281400', 'Hourly builds are produced only for macOS.'],
     ['daily', 'v1.4.160-daily.202607281300', 'Daily builds are produced only for macOS.'],

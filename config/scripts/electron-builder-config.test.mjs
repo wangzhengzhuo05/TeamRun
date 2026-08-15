@@ -241,6 +241,33 @@ describe('electron-builder config', () => {
     }
   })
 
+  it('uses an independent identity for self-hosted packages', () => {
+    const configPath = require.resolve('../electron-builder.config.cjs')
+    const original = process.env.ORCA_SELF_HOSTED_DISTRIBUTION
+    try {
+      delete require.cache[configPath]
+      process.env.ORCA_SELF_HOSTED_DISTRIBUTION = '1'
+      const selfHostedConfig = require('../electron-builder.config.cjs')
+
+      expect(selfHostedConfig).toMatchObject({
+        appId: 'com.wangzhengzhuo.orca.selfhosted',
+        productName: 'Orca Self-Hosted',
+        extraMetadata: { name: 'orca-self-hosted' },
+        publish: null
+      })
+      expect(selfHostedConfig.linux.desktop.entry.StartupWMClass).toBe('orca-self-hosted')
+      expect(selfHostedConfig.appImage.artifactName).toBe('orca-self-hosted-linux.${ext}')
+    } finally {
+      if (original === undefined) {
+        delete process.env.ORCA_SELF_HOSTED_DISTRIBUTION
+      } else {
+        process.env.ORCA_SELF_HOSTED_DISTRIBUTION = original
+      }
+      delete require.cache[configPath]
+      require('../electron-builder.config.cjs')
+    }
+  })
+
   it('overrides packaged semver only for local macOS builds', () => {
     const configPath = require.resolve('../electron-builder.config.cjs')
     const original = process.env.ORCA_LOCAL_BUILD_VERSION

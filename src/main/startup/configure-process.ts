@@ -4,6 +4,7 @@ import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { getVersionManagerBinPaths } from '../codex-cli/command'
 import { getMainE2EConfig } from '../e2e-config'
+import { SELF_HOSTED_USER_DATA_DIR, type OrcaAppDistribution } from './app-distribution'
 
 const DEV_PARENT_SHUTDOWN_GRACE_MS = 3000
 const HTTP1_COMPATIBILITY_ENV_VAR = 'ORCA_DISABLE_HTTP2'
@@ -150,7 +151,10 @@ export function patchPackagedProcessPath(): void {
   }
 }
 
-export function configureDevUserDataPath(isDev: boolean): void {
+export function configureDevUserDataPath(
+  isDev: boolean,
+  distribution: OrcaAppDistribution = 'official'
+): void {
   const e2eConfig = getMainE2EConfig()
   if (e2eConfig.userDataDir) {
     // Why: the E2E suite launches a fresh Electron app for each spec. A
@@ -172,6 +176,9 @@ export function configureDevUserDataPath(isDev: boolean): void {
   }
 
   if (!isDev) {
+    if (distribution === 'self-hosted') {
+      app.setPath('userData', join(app.getPath('appData'), SELF_HOSTED_USER_DATA_DIR))
+    }
     return
   }
   const overrideUserDataPath = process.env.ORCA_DEV_USER_DATA_PATH
