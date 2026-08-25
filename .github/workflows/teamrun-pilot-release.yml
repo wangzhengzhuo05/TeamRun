@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - v1.4.178-rc.3
-      - release-build-v1.4.178-rc.3
+      - release-build-v1.4.178-rc.3*
 
 permissions:
   contents: write
@@ -37,8 +37,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build desktop assets
+        run: |
+          pnpm run build:relay
+          pnpm run build:cli
+          pnpm run build:electron-vite
+          pnpm run verify:built-skills-cli
+          pnpm run build:web-from-renderer
+
       - name: Build Linux installers
-        run: pnpm run build:linux
+        run: |
+          pnpm run ensure:electron-runtime
+          pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage deb
 
       - name: Publish prerelease
         env:
