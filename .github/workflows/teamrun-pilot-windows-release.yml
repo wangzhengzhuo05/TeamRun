@@ -1,0 +1,63 @@
+name: TeamRun pilot Windows release
+
+on:
+  push:
+    tags:
+      - release-build-v1.4.178-rc.3-windows*
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build desktop assets
+        run: |
+          pnpm run build:relay
+          pnpm run build:cli
+          pnpm run build:electron-vite
+          pnpm run verify:built-skills-cli
+          pnpm run build:web-from-renderer
+
+      - name: Build Windows installer
+        run: |
+          pnpm run ensure:electron-runtime
+          pnpm exec electron-builder --config config/electron-builder.config.cjs --win nsis --x64
+
+      - name: Create checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist/teamrun-windows-setup.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  teamrun-windows-setup.exe" | Set-Content -Encoding ascii dist/teamrun-windows-SHA256SUMS
+
+      - name: Publish Windows installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.4.178-rc.3 `
+            dist/teamrun-windows-setup.exe `
+            dist/teamrun-windows-SHA256SUMS `
+            --clobber
+
+      - name: Mark Windows release complete
+        run: |
+          git tag release-complete-v1.4.178-rc.3-windows
+          git push origin release-complete-v1.4.178-rc.3-windows
