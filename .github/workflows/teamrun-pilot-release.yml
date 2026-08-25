@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - v1.4.178-rc.3
+      - release-build-v1.4.178-rc.3
 
 permissions:
   contents: write
@@ -44,10 +45,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sha256sum dist/teamrun-linux.AppImage dist/teamrun_1.4.178-rc.3_amd64.deb > dist/SHA256SUMS
-          gh release create "$GITHUB_REF_NAME" \
-            dist/teamrun-linux.AppImage \
-            dist/teamrun_1.4.178-rc.3_amd64.deb \
-            dist/SHA256SUMS \
-            --title "TeamRun 1.4.178-rc.3" \
-            --prerelease \
-            --notes "TeamRun pilot release with shared-key Team Space authentication and the TeamRun brand migration."
+          if gh release view v1.4.178-rc.3 >/dev/null 2>&1; then
+            gh release upload v1.4.178-rc.3 \
+              dist/teamrun-linux.AppImage \
+              dist/teamrun_1.4.178-rc.3_amd64.deb \
+              dist/SHA256SUMS \
+              --clobber
+          else
+            gh release create v1.4.178-rc.3 \
+              dist/teamrun-linux.AppImage \
+              dist/teamrun_1.4.178-rc.3_amd64.deb \
+              dist/SHA256SUMS \
+              --title "TeamRun 1.4.178-rc.3" \
+              --prerelease \
+              --notes "TeamRun pilot release with shared-key Team Space authentication and the TeamRun brand migration."
+          fi
+
+      - name: Mark release complete
+        run: |
+          git tag release-complete-v1.4.178-rc.3
+          git push origin release-complete-v1.4.178-rc.3
