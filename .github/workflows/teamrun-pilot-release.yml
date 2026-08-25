@@ -1,0 +1,53 @@
+name: TeamRun pilot Linux release
+
+on:
+  push:
+    tags:
+      - v1.4.178-rc.3
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi gir1.2-atspi-2.0 at-spi2-core xclip xdotool
+          npm install -g node-gyp@11.5.0
+          echo "npm_config_node_gyp=$(npm root -g)/node-gyp/bin/node-gyp.js" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Linux installers
+        run: pnpm run build:linux
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sha256sum dist/teamrun-linux.AppImage dist/teamrun_1.4.178-rc.3_amd64.deb > dist/SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" \
+            dist/teamrun-linux.AppImage \
+            dist/teamrun_1.4.178-rc.3_amd64.deb \
+            dist/SHA256SUMS \
+            --title "TeamRun 1.4.178-rc.3" \
+            --prerelease \
+            --notes "TeamRun pilot release with shared-key Team Space authentication and the TeamRun brand migration."
