@@ -1,9 +1,9 @@
 {
   "app": {
     "recoverableError": {
-      "rootTitle": "Orca 遇到渲染器错误。",
-      "rootDescription": "应用 shell 无法完成渲染。重试以重新挂载，如果错误仍然存在，请重新启动 Orca。",
-      "webTitle": "Orca Web 遇到渲染器错误。",
+      "rootTitle": "TeamRun 遇到渲染器错误。",
+      "rootDescription": "应用 shell 无法完成渲染。重试以重新挂载，如果错误仍然存在，请重新启动 TeamRun。",
+      "webTitle": "TeamRun Web 遇到渲染器错误。",
       "webDescription": "重试 Web 客户端或重新连接到配对的运行时。"
     }
   },

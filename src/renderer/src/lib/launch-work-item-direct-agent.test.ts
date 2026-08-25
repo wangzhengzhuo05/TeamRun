@@ -77,6 +77,25 @@ const settings = {
 }
 
 describe('buildDirectWorkItemAgentStartupPlan', () => {
+  it('passes frozen context as the final Generic CLI argument', () => {
+    const result = buildDirectWorkItemAgentStartupPlan({
+      agent: 'generic-cli',
+      agentCommandOverride: 'team-agent --interactive',
+      draftContent: 'Review task 42',
+      promptDelivery: 'auto-submit',
+      settings,
+      launchPlatform: 'linux'
+    })
+
+    expect(result).toMatchObject({
+      draftLaunchedNatively: true,
+      startupPlanFailed: false,
+      startupPlan: {
+        launchCommand: "team-agent --interactive 'Review task 42'"
+      }
+    })
+  })
+
   it('omits native-chat preferences when the new workspace opens in terminal mode', () => {
     const result = buildDirectWorkItemAgentStartupPlan({
       agent: 'codex',

@@ -39,6 +39,8 @@ export type LaunchAgentInNewTabArgs = {
   prompt?: string
   /** Optional CLI arguments appended to the selected agent command. */
   agentArgs?: string | null
+  /** One-launch command override, used by project-scoped Team Agents. */
+  agentCommandOverride?: string | null
   initialCwd?: string | null
   /** How to deliver the prompt: `draft` leaves it editable, `submit-after-ready` sends it once the TUI is ready. */
   promptDelivery?: 'auto-submit' | 'draft' | 'submit-after-ready'
@@ -76,6 +78,7 @@ export function launchAgentInNewTab(args: LaunchAgentInNewTabArgs): LaunchAgentI
     groupId,
     prompt,
     agentArgs,
+    agentCommandOverride,
     initialCwd,
     promptDelivery = 'auto-submit',
     launchSource,
@@ -94,14 +97,19 @@ export function launchAgentInNewTab(args: LaunchAgentInNewTabArgs): LaunchAgentI
           repo.connectionId ? undefined : getLocalProjectExecutionRuntimeContext(store, worktreeId)
         )
       : CLIENT_PLATFORM)
-  // Why: SSH remotes deploy the shim as plain `orca`, so skip the Linux-only `orca-ide` rename for remote launches.
-  const isRemote = repo ? repoIsRemote(repo) : false
+  const runtimeEnvironmentId = getRuntimeEnvironmentIdForWorktree(store, worktreeId)
+  // Why: folder workspaces have no repo row but can still be owned by SSH or a paired runtime.
+  const isRemote = repo
+    ? repoIsRemote(repo)
+    : Boolean(getConnectionIdFromState(store, worktreeId) || runtimeEnvironmentId)
   const queuedShell = resolveLocalWindowsAgentStartupShell({
     platform: resolvedLaunchPlatform,
     isRemote,
     terminalWindowsShell: store.settings?.terminalWindowsShell
   })
-  const cmdOverrides = store.settings?.agentCmdOverrides ?? {}
+  const cmdOverrides = agentCommandOverride?.trim()
+    ? { ...store.settings?.agentCmdOverrides, [agent]: agentCommandOverride.trim() }
+    : (store.settings?.agentCmdOverrides ?? {})
   const effectiveAgentArgs =
     agentArgs !== undefined
       ? agentArgs
@@ -144,7 +152,6 @@ export function launchAgentInNewTab(args: LaunchAgentInNewTabArgs): LaunchAgentI
     return null
   }
 
-  const runtimeEnvironmentId = getRuntimeEnvironmentIdForWorktree(store, worktreeId)
   if (isWebRuntimeSessionActive(runtimeEnvironmentId)) {
     const webHostDelivery = launchAgentInWebHostTab({
       agent,

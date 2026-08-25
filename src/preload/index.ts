@@ -552,6 +552,101 @@ const api = {
       ipcRenderer.invoke('terminal:writeRenderDesyncEvidence', args)
   },
 
+  teamRun: {
+    auth: {
+      status: () => ipcRenderer.invoke('teamrun:authStatus'),
+      signIn: (args) => ipcRenderer.invoke('teamrun:signIn', args),
+      signOut: () => ipcRenderer.invoke('teamrun:signOut')
+    },
+    sync: {
+      status: () => ipcRenderer.invoke('teamrun:sync:status'),
+      flush: () => ipcRenderer.invoke('teamrun:sync:flush'),
+      onStatus: (callback) => {
+        const listener = (
+          _event: Electron.IpcRendererEvent,
+          status: Parameters<typeof callback>[0]
+        ) => callback(status)
+        ipcRenderer.on('teamrun:sync:status', listener)
+        return () => ipcRenderer.removeListener('teamrun:sync:status', listener)
+      }
+    },
+    organizations: {
+      list: () => ipcRenderer.invoke('teamrun:organizations:list'),
+      create: (args) => ipcRenderer.invoke('teamrun:organizations:create', args),
+      listMembers: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:listMembers', organizationId),
+      addMember: (args) => ipcRenderer.invoke('teamrun:organizations:addMember', args),
+      removeMember: (args) => ipcRenderer.invoke('teamrun:organizations:removeMember', args),
+      listInvitations: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:listInvitations', organizationId),
+      invite: (args) => ipcRenderer.invoke('teamrun:organizations:invite', args),
+      revokeInvitation: (args) => ipcRenderer.invoke('teamrun:organizations:revokeInvitation', args)
+    },
+    projects: {
+      list: (organizationId) => ipcRenderer.invoke('teamrun:projects:list', organizationId),
+      create: (args) => ipcRenderer.invoke('teamrun:projects:create', args),
+      update: (args) => ipcRenderer.invoke('teamrun:projects:update', args),
+      listRepositories: (projectId) => ipcRenderer.invoke('teamrun:repositories:list', projectId),
+      createRepository: (args) => ipcRenderer.invoke('teamrun:repositories:create', args)
+    },
+    collaboration: {
+      listChannels: (projectId) => ipcRenderer.invoke('teamrun:channels:list', projectId),
+      createChannel: (args) => ipcRenderer.invoke('teamrun:channels:create', args),
+      listMessages: (channelId) => ipcRenderer.invoke('teamrun:channels:listMessages', channelId),
+      createMessage: (args) => ipcRenderer.invoke('teamrun:channels:createMessage', args),
+      listTeamAgents: (projectId) => ipcRenderer.invoke('teamrun:teamAgents:list', projectId),
+      createTeamAgent: (args) => ipcRenderer.invoke('teamrun:teamAgents:create', args)
+    },
+    tasks: {
+      list: (projectId) => ipcRenderer.invoke('teamrun:tasks:list', projectId),
+      get: (taskId) => ipcRenderer.invoke('teamrun:tasks:get', taskId),
+      create: (args) => ipcRenderer.invoke('teamrun:tasks:create', args),
+      update: (args) => ipcRenderer.invoke('teamrun:tasks:update', args),
+      listComments: (taskId) => ipcRenderer.invoke('teamrun:comments:list', taskId),
+      createComment: (args) => ipcRenderer.invoke('teamrun:comments:create', args),
+      listSnapshots: (taskId) => ipcRenderer.invoke('teamrun:snapshots:list', taskId),
+      createSnapshot: (args) => ipcRenderer.invoke('teamrun:snapshots:create', args)
+    },
+    runs: {
+      list: (taskId) => ipcRenderer.invoke('teamrun:runs:list', taskId),
+      create: (args) => ipcRenderer.invoke('teamrun:runs:create', args),
+      createLinked: (args) => ipcRenderer.invoke('teamrun:runs:createLinked', args),
+      resolveWorkspace: (clientRunId) =>
+        ipcRenderer.invoke('teamrun:runs:resolveWorkspace', clientRunId),
+      reviewWorkspace: (args) => ipcRenderer.invoke('teamrun:runs:reviewWorkspace', args),
+      updateStatus: (args) => ipcRenderer.invoke('teamrun:runs:updateStatus', args),
+      listVerifications: (runId) => ipcRenderer.invoke('teamrun:verifications:list', runId),
+      listVerificationCommands: (clientRunId) =>
+        ipcRenderer.invoke('teamrun:verifications:listCommands', clientRunId),
+      runVerification: (args) => ipcRenderer.invoke('teamrun:verifications:run', args)
+    },
+    publications: {
+      list: (taskId) => ipcRenderer.invoke('teamrun:publications:list', taskId),
+      listArtifacts: (publicationId) =>
+        ipcRenderer.invoke('teamrun:publications:listArtifacts', publicationId),
+      prepare: (request) => ipcRenderer.invoke('teamrun:publications:prepare', request),
+      finalize: (args) => ipcRenderer.invoke('teamrun:publications:finalize', args),
+      publishSelected: (args) => ipcRenderer.invoke('teamrun:publications:publishSelected', args)
+    },
+    events: {
+      start: (args) => ipcRenderer.invoke('teamrun:events:start', args),
+      stop: () => ipcRenderer.invoke('teamrun:events:stop'),
+      onEvent: (callback) => {
+        const listener = (
+          _event: Electron.IpcRendererEvent,
+          payload: Parameters<typeof callback>[0]
+        ) => callback(payload)
+        ipcRenderer.on('teamrun:event', listener)
+        return () => ipcRenderer.removeListener('teamrun:event', listener)
+      },
+      onError: (callback) => {
+        const listener = (_event: Electron.IpcRendererEvent, message: string) => callback(message)
+        ipcRenderer.on('teamrun:events:error', listener)
+        return () => ipcRenderer.removeListener('teamrun:events:error', listener)
+      }
+    }
+  } satisfies PreloadApi['teamRun'],
+
   orcaProfiles: {
     list: () => ipcRenderer.invoke('orcaProfiles:list'),
     authStatus: () => ipcRenderer.invoke('orcaProfiles:authStatus'),

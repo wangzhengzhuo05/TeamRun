@@ -186,6 +186,26 @@ describe('launchAgentInNewTab', () => {
     })
   })
 
+  it('uses a one-launch Generic CLI command without persisting it to settings', async () => {
+    const { launchAgentInNewTab } = await import('./launch-agent-in-new-tab')
+
+    launchAgentInNewTab({
+      agent: 'generic-cli',
+      agentCommandOverride: 'team-agent --interactive',
+      worktreeId: 'wt-1',
+      prompt: 'frozen task context'
+    })
+
+    expect(mockQueueTabStartupCommand).toHaveBeenCalledWith(
+      'tab-1',
+      expect.objectContaining({
+        command: "team-agent --interactive 'frozen task context'",
+        launchAgent: 'generic-cli'
+      })
+    )
+    expect(store.settings.agentCmdOverrides).toEqual({})
+  })
+
   it('keeps Floating Workspace authority on native Windows beside an active WSL project', async () => {
     store.projects = [
       {

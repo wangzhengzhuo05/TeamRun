@@ -114,4 +114,5 @@ export type TopLevelView =
   | 'automations'
   | 'space'
   | 'artifacts'
+  | 'team'
   | 'mobile'

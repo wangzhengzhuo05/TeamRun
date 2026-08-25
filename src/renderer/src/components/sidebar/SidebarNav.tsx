@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bell, CalendarClock, EyeOff, Files, Search, Smartphone } from 'lucide-react'
+import { Bell, CalendarClock, EyeOff, Files, Search, Smartphone, UsersRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
@@ -63,6 +63,7 @@ const SidebarNav = React.memo(function SidebarNav() {
   const openModal = useAppStore((s) => s.openModal)
   const updateSettings = useAppStore((s) => s.updateSettings)
   const activeView = useAppStore((s) => s.activeView)
+  const setActiveView = useAppStore((s) => s.setActiveView)
   const experimentalSidebarButtons = useAppStore(
     (s) =>
       (shouldShowAgentsButton(s.settings) ? 1 : 0) |
@@ -77,6 +78,7 @@ const SidebarNav = React.memo(function SidebarNav() {
   const activityActive = activeView === 'activity'
   const mobileActive = activeView === 'mobile'
   const artifactsActive = activeView === 'artifacts'
+  const teamActive = activeView === 'team'
   const activityUnreadCount = useActivityUnreadCount(showAgentsButton, 'sidebar-badge')
   const mobileOnboardingBadge = useMobileSidebarOnboardingBadge(showMobileButton)
   const hideAutomationsButton = React.useCallback(() => {
@@ -95,6 +97,25 @@ const SidebarNav = React.memo(function SidebarNav() {
       data-contextual-tour-target="sidebar-navigation"
     >
       <SetupGuideSidebarEntry />
+      <button
+        type="button"
+        onClick={() => setActiveView('team')}
+        aria-current={teamActive ? 'page' : undefined}
+        className={cn(
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] font-medium tracking-tight transition-colors',
+          teamActive
+            ? 'bg-worktree-sidebar-accent text-worktree-sidebar-accent-foreground'
+            : 'text-worktree-sidebar-foreground/60 hover:bg-worktree-sidebar-foreground/8'
+        )}
+      >
+        <UsersRound
+          className={cn('size-4 shrink-0', !teamActive && 'text-worktree-sidebar-foreground/30')}
+          strokeWidth={teamActive ? 2.25 : 1.75}
+        />
+        <span className="flex-1">
+          {translate('auto.components.sidebar.SidebarNav.teamSpace', 'Team Space')}
+        </span>
+      </button>
       <SidebarTaskNavButton />
       {showArtifactsButton ? (
         <ContextMenu>

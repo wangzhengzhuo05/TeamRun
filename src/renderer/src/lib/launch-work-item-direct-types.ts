@@ -29,7 +29,14 @@ export type LaunchWorkItemDirectArgs = {
   launchSource: LaunchSource
   telemetrySource?: WorkspaceCreateTelemetrySource
   agentOverride?: TuiAgent
+  agentCommandOverride?: string | null
   agentArgs?: string | null
-  promptDelivery?: 'draft' | 'submit-after-ready'
+  promptDelivery?: 'auto-submit' | 'draft' | 'submit-after-ready'
   launchPlatform?: NodeJS.Platform
+  onWorkspaceCreated?: (workspace: {
+    id: string
+    path: string
+    head: string
+    agent: TuiAgent
+  }) => void | Promise<void>
 }

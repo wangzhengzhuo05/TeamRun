@@ -582,6 +582,7 @@ import { RuntimeEmulatorCommands } from './orca-runtime-emulator'
 import type { EmulatorBridge } from '../emulator/emulator-bridge'
 import { getRuntimeFileTargetExecutionHostId, RuntimeFileCommands } from './orca-runtime-files'
 import { RuntimeGitCommands } from './orca-runtime-git'
+import { RuntimeTeamRunCommands } from './orca-runtime-teamrun'
 import {
   activateClientSessionTabSelection,
   ClientSessionTabSelectionStore,
@@ -9199,6 +9200,18 @@ export class OrcaRuntimeService {
     this.gitCommands.getRuntimeGitRemoteFileUrl.bind(this.gitCommands)
   getRuntimeGitRemoteCommitUrl: RuntimeGitCommands['getRuntimeGitRemoteCommitUrl'] =
     this.gitCommands.getRuntimeGitRemoteCommitUrl.bind(this.gitCommands)
+
+  private readonly teamRunCommands = new RuntimeTeamRunCommands({
+    resolveRuntimeFileTarget: (selector) => this.resolveRuntimeFileTarget(selector),
+    resolveRuntimeGitTarget: (selector) => this.resolveRuntimeGitTarget(selector)
+  })
+
+  listTeamRunVerificationCommands: RuntimeTeamRunCommands['listVerificationCommands'] =
+    this.teamRunCommands.listVerificationCommands.bind(this.teamRunCommands)
+  runTeamRunVerification: RuntimeTeamRunCommands['runVerification'] =
+    this.teamRunCommands.runVerification.bind(this.teamRunCommands)
+  prepareTeamRunPublication: RuntimeTeamRunCommands['preparePublication'] =
+    this.teamRunCommands.preparePublication.bind(this.teamRunCommands)
 
   private async resolveRuntimeGitTarget(worktreeSelector: string): Promise<{
     worktree: ResolvedWorktree

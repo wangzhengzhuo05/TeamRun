@@ -15,6 +15,7 @@ const { verifyLinuxGlibcFloor } = require('./scripts/verify-linux-glibc-floor.cj
 const { writeMacBuildCompatibility } = require('./scripts/mac-build-compatibility.cjs')
 const { verifyPackagedPluginResources } = require('./scripts/verify-packaged-plugin-resources.cjs')
 const { verifySkillsCliRuntime } = require('./scripts/verify-skills-cli-runtime.cjs')
+const teamRunIdentity = require('./teamrun/product-identity.json')
 
 // Why: dev-channel builds must carry the *release* identity — same bundle id,
 // Developer ID signature, and notarization ticket — or Squirrel.Mac refuses to
@@ -39,18 +40,15 @@ const devChannelBuildVersion = isMacHourly
 // to install. Keeping adhoc/daily separate from hourly too means a branch build
 // or a once-a-day cut cannot be picked up by someone who only meant to ride
 // main's hourlies.
-const devChannelRepo = isMacHourly
-  ? 'orca-hourly'
-  : isMacDaily
-    ? 'orca-daily'
-    : isMacAdhoc
-      ? 'orca-adhoc'
-      : null
-const appId = isSelfHostedDistribution ? 'com.wangzhengzhuo.orca.selfhosted' : 'com.stablyai.orca'
-const productName = isSelfHostedDistribution ? 'Orca Self-Hosted' : 'Orca'
-const packageName = isSelfHostedDistribution ? 'orca-self-hosted' : 'orca'
+const appId = isSelfHostedDistribution ? 'com.wangzhengzhuo.orca.selfhosted' : teamRunIdentity.appId
+const productName = isSelfHostedDistribution ? 'Orca Self-Hosted' : teamRunIdentity.productName
+const packageName = isSelfHostedDistribution ? 'orca-self-hosted' : teamRunIdentity.packageName
+const desktopName = isSelfHostedDistribution
+  ? 'orca-self-hosted.desktop'
+  : teamRunIdentity.desktopName
 const packagedVersion = devChannelBuildVersion ?? localBuildVersion
 const extraMetadata = {
+  desktopName,
   ...(packagedVersion ? { version: packagedVersion } : {}),
   ...(isSelfHostedDistribution ? { name: packageName } : {})
 }
@@ -99,6 +97,12 @@ const winSpeechNativeResource = {
 module.exports = {
   appId,
   productName,
+  protocols: [
+    {
+      name: 'TeamRun links',
+      schemes: [teamRunIdentity.protocol]
+    }
+  ],
   ...(Object.keys(extraMetadata).length > 0 ? { extraMetadata } : {}),
   directories: {
     buildResources: 'resources/build'
@@ -183,6 +187,11 @@ module.exports = {
     'out/main/antigravity/**',
     'out/main/claude/**',
     'out/main/claude-accounts/keychain.js',
+    // Why: unpacked Codex hook modules import the atomic writer, which in turn
+    // imports the Windows ACL bridge; Node cannot cross from app.asar.unpacked
+    // back into app.asar when the CLI runs through ELECTRON_RUN_AS_NODE.
+    'out/main/codex-accounts/fs-utils.js',
+    'out/main/win32-utils.js',
     'out/main/codex/**',
     'out/main/copilot/**',
     'out/main/cursor/**',
@@ -294,7 +303,7 @@ module.exports = {
     }
   },
   win: {
-    executableName: isSelfHostedDistribution ? 'Orca Self-Hosted' : 'Orca',
+    executableName: isSelfHostedDistribution ? 'Orca Self-Hosted' : teamRunIdentity.productName,
     // Why: Windows installers are signed after electron-builder packaging by
     // SignPath, so the packager cannot infer the updater publisherName.
     signtoolOptions: {
@@ -307,6 +316,10 @@ module.exports = {
       {
         from: 'resources/win32/bin/orca.cmd',
         to: 'bin/orca.cmd'
+      },
+      {
+        from: 'resources/win32/bin/teamrun.cmd',
+        to: 'bin/teamrun.cmd'
       },
       {
         from: 'native/windows-cli-launcher/.build/orca.exe',
@@ -326,7 +339,7 @@ module.exports = {
   nsis: {
     artifactName: isSelfHostedDistribution
       ? 'orca-self-hosted-windows-setup.${ext}'
-      : 'orca-windows-setup.${ext}',
+      : 'teamrun-windows-setup.${ext}',
     shortcutName: '${productName}',
     uninstallDisplayName: '${productName}',
     createDesktopShortcut: 'always',
@@ -341,19 +354,19 @@ module.exports = {
     entitlementsInherit: 'resources/build/entitlements.mac.plist',
     extendInfo: {
       NSAppleEventsUsageDescription:
-        'Orca allows terminal-launched developer tools to automate local apps when you request it.',
+        'TeamRun allows terminal-launched developer tools to automate local apps when you request it.',
       NSBluetoothAlwaysUsageDescription:
-        'Orca allows terminal-launched developer tools to access Bluetooth devices when you request it.',
+        'TeamRun allows terminal-launched developer tools to access Bluetooth devices when you request it.',
       NSBluetoothPeripheralUsageDescription:
-        'Orca allows terminal-launched developer tools to access Bluetooth devices when you request it.',
+        'TeamRun allows terminal-launched developer tools to access Bluetooth devices when you request it.',
       NSCameraUsageDescription: "Application requests access to the device's camera.",
       NSLocationUsageDescription:
-        'Orca allows terminal-launched developer tools to access location when you request it.',
+        'TeamRun allows terminal-launched developer tools to access location when you request it.',
       NSLocalNetworkUsageDescription:
-        'Orca allows terminal-launched developer tools to discover and connect to local development servers when you request it.',
+        'TeamRun allows terminal-launched developer tools to discover and connect to local development servers when you request it.',
       NSMicrophoneUsageDescription: "Application requests access to the device's microphone.",
       NSAudioCaptureUsageDescription:
-        'Orca allows terminal-launched developer tools to capture desktop audio when you request it.',
+        'TeamRun allows terminal-launched developer tools to capture desktop audio when you request it.',
       NSBonjourServices: ['_http._tcp', '_https._tcp'],
       NSDocumentsFolderUsageDescription:
         "Application requests access to the user's Documents folder.",
@@ -380,6 +393,10 @@ module.exports = {
       {
         from: 'resources/darwin/bin/orca',
         to: 'bin/orca'
+      },
+      {
+        from: 'resources/darwin/bin/teamrun',
+        to: 'bin/teamrun'
       },
       {
         from: 'node_modules/agent-browser/bin/agent-browser-darwin-${arch}',
@@ -423,12 +440,13 @@ module.exports = {
   dmg: {
     artifactName: isSelfHostedDistribution
       ? 'orca-self-hosted-macos-${arch}.${ext}'
-      : 'orca-macos-${arch}.${ext}'
+      : 'teamrun-macos-${arch}.${ext}'
   },
   linux: {
     // Why: Ubuntu desktop ships GNOME Orca as the `orca` package and /usr/bin/orca.
     // The Linux installer should not claim those system package/file names.
-    executableName: 'orca-ide',
+    executableName: teamRunIdentity.linuxExecutableName,
+    syncDesktopName: true,
     // Why: the icns source lets electron-builder emit standard hicolor PNG
     // sizes; a single 1024px PNG is ignored by some Linux docks/launchers.
     icon: 'resources/build/icon.icns',
@@ -448,6 +466,10 @@ module.exports = {
         to: 'bin/orca-ide'
       },
       {
+        from: 'resources/linux/bin/teamrun',
+        to: 'bin/teamrun'
+      },
+      {
         from: 'node_modules/agent-browser/bin/agent-browser-linux-${arch}',
         to: 'agent-browser-linux-${arch}'
       },
@@ -458,19 +480,19 @@ module.exports = {
       featureWallResources
     ],
     target: ['AppImage', 'deb'],
-    maintainer: 'stablyai',
+    maintainer: 'TeamRun contributors',
     category: 'Utility'
   },
   appImage: {
     artifactName: isSelfHostedDistribution
       ? 'orca-self-hosted-linux.${ext}'
       : isLinuxArm64Release
-        ? 'orca-linux-arm64.${ext}'
-        : 'orca-linux.${ext}'
+        ? 'teamrun-linux-arm64.${ext}'
+        : 'teamrun-linux.${ext}'
   },
   deb: {
-    packageName: 'orca-ide',
-    artifactName: 'orca-ide_${version}_${arch}.${ext}',
+    packageName: teamRunIdentity.packageName,
+    artifactName: 'teamrun_${version}_${arch}.${ext}',
     // Why: xvfb lets the bundled `orca serve` CLI run browser panes on a headless
     // Linux host — Chromium needs a display server even for offscreen rendering,
     // and serve starts Xvfb itself when present (see ensure-virtual-display.ts).
@@ -491,8 +513,8 @@ module.exports = {
     afterRemove: 'resources/linux/packaging/after-remove.sh'
   },
   rpm: {
-    packageName: 'orca-ide',
-    artifactName: 'orca-ide-${version}.${arch}.${ext}',
+    packageName: teamRunIdentity.packageName,
+    artifactName: 'teamrun-${version}.${arch}.${ext}',
     // Why: see deb depends. RPM distros ship Xvfb as xorg-x11-server-Xvfb (there
     // is no `xvfb` package), so the name differs from the deb here.
     depends: [
@@ -515,21 +537,15 @@ module.exports = {
   // on Intel Macs. The beforeBuild hook performs Orca's targeted rebuild and
   // returns false so electron-builder does not rebuild optional cpu-features.
   npmRebuild: true,
-  publish: isSelfHostedDistribution
-    ? null
-    : {
-        provider: 'github',
-        owner: 'stablyai',
-        repo: devChannelRepo ?? 'orca',
-        releaseType: devChannelRepo ? 'prerelease' : 'release'
-      }
+  // TeamRun releases must never consume the upstream Orca update feed.
+  publish: null
 }
 
 function chmodUnixCliLaunchers(resourcesDir, electronPlatformName) {
   if (electronPlatformName === 'win32') {
     return
   }
-  for (const launcherName of ['orca', 'orca-ide']) {
+  for (const launcherName of ['teamrun', 'orca', 'orca-ide']) {
     const launcherPath = join(resourcesDir, 'bin', launcherName)
     if (!existsSync(launcherPath)) {
       continue

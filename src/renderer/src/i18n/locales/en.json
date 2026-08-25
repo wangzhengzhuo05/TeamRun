@@ -1,9 +1,9 @@
 {
   "app": {
     "recoverableError": {
-      "rootTitle": "Orca hit a renderer error.",
-      "rootDescription": "The app shell could not finish rendering. Retry to remount it, or relaunch Orca if the error persists.",
-      "webTitle": "Orca web hit a renderer error.",
+      "rootTitle": "TeamRun hit a renderer error.",
+      "rootDescription": "The app shell could not finish rendering. Retry to remount it, or relaunch TeamRun if the error persists.",
+      "webTitle": "TeamRun web hit a renderer error.",
       "webDescription": "Retry the web client or reconnect to the paired runtime."
     }
   },
@@ -504,7 +504,8 @@
             "new": {
               "tab": {
                 "11cce5cc77": "Could not launch {{value0}} in a new terminal.",
-                "a5a1f7033f": "Your {{value0}} wasn't sent — paste it once the agent is ready."
+                "a5a1f7033f": "Your {{value0}} wasn't sent — paste it once the agent is ready.",
+                "genericCliPromptMode": "Generic CLI context must be passed as the command’s final argument."
               }
             }
           },
@@ -530,7 +531,8 @@
               "8bc45efdbc": "Failed to resolve PR head.",
               "agent": {
                 "ceeeb509b5": "Agent took too long to start. The workspace is ready — paste the {{value0}} when the agent is idle."
-              }
+              },
+              "ae2286dd60": "Failed to link TeamRun workspace."
             }
           }
         }
@@ -723,7 +725,8 @@
       "blocked": {
         "notification": {
           "fallback": {
-            "de50bef680": "macOS is blocking Orca notifications"
+            "de50bef680": "macOS is blocking Orca notifications",
+            "teamrunBlocked": "macOS is blocking TeamRun notifications"
           }
         }
       },
@@ -793,6 +796,16 @@
       },
       "ephemeralVmWorktreeCreation": {
         "sparseCheckoutUnsupported": "Provisioned-root recipes do not support sparse checkout."
+      },
+      "teamrun": {
+        "folder": {
+          "agent": {
+            "launch": {
+              "669a730e7e": "The selected agent is not available in this folder workspace.",
+              "66ee9d9956": "The selected agent is disabled on this device."
+            }
+          }
+        }
       }
     },
     "hooks": {
@@ -1289,7 +1302,9 @@
         "0d0ace8861": "Star on GitHub",
         "ec43b38ba7": "Starred on GitHub",
         "157bb5ecbb": "Open GitHub",
-        "preflightDismiss": "Dismiss"
+        "preflightDismiss": "Dismiss",
+        "teamRunLogo": "TeamRun logo",
+        "teamRunBrand": "TEAMRUN"
       },
       "LinearIssueMarkdownDescriptionEditor": {
         "d9c47069ef": "Markdown",
@@ -4199,7 +4214,8 @@
           "addRemoteHostTooltip": "Choose SSH for a machine you can log into, or remote server for an Orca server.",
           "addSshHostDetail": "Use an existing machine over SSH.",
           "addRemoteServerDetail": "Pair with Orca running on another computer.",
-          "addRemoteHostDetail": "SSH host or Orca server"
+          "addRemoteHostDetail": "SSH host or Orca server",
+          "teamRunRemoteServerDetail": "Pair with TeamRun running on another computer."
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "Scanning repositories. Click to stop.",
@@ -4267,7 +4283,8 @@
           "d13757911c": "Add a project",
           "d301db1c9a": "Scanning repositories. Click to stop.",
           "69ea7f8dc4": "Stop scanning",
-          "9906cae183": "Stop scan"
+          "9906cae183": "Stop scan",
+          "teamRunDescription": "Add a project to get started with TeamRun."
         },
         "AddRepoStepIndicator": {
           "3bb655c117": "Back"
@@ -4511,7 +4528,8 @@
           "0ccba862b8": "Open GitHub tasks",
           "fee535205b": "Tasks",
           "d599269755": "Hide from sidebar",
-          "artifacts": "Artifacts"
+          "artifacts": "Artifacts",
+          "teamSpace": "Team Space"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "Clear",
@@ -5316,7 +5334,8 @@
           "sshConfigPickerAddAllEmpty": "Add all to Orca",
           "identityFileFromConfigHint": "Left empty on purpose: Orca uses every key ~/.ssh/config resolves for {{value0}}. Type a path to use just that key.",
           "sshConfigPickerRetry": "Try again",
-          "sshConfigPickerResolving": "Reading…"
+          "sshConfigPickerResolving": "Reading…",
+          "teamRunServerDescription": "Pair with TeamRun running on another computer."
         },
         "ForgetSshWorkspaceDialog": {
           "reconnectFailed": "Reconnection failed",
@@ -12273,7 +12292,8 @@
           "94562ba367": "macOS is asking for permission. Click Allow in the dialog and this step updates automatically.",
           "4f6a1da718": "Open System Settings",
           "90b5d2e363": "macOS is not delivering Orca notifications",
-          "2c47f5465f": "Turn on Allow notifications for Orca in System Settings. This step updates automatically once enabled."
+          "2c47f5465f": "Turn on Allow notifications for Orca in System Settings. This step updates automatically once enabled.",
+          "teamrunNotDelivering": "macOS is not delivering TeamRun notifications"
         },
         "OnboardingFlow": {
           "1b5e182e9f": "Welcome to Orca",
@@ -12294,7 +12314,12 @@
           "984338477a": "theme",
           "c47e1bd149": "agent",
           "windowsTerminalTitle": "Set Windows terminal defaults",
-          "windowsTerminalSubtitle": "Choose the DEFAULT Shell for new panes and how right-click behaves in the terminal."
+          "windowsTerminalSubtitle": "Choose the DEFAULT Shell for new panes and how right-click behaves in the terminal.",
+          "teamRunAgentSubtitle": "TeamRun works with every CLI agent. Choose the one you'll reach for most. Switch any time.",
+          "teamRunNotificationSubtitle": "TeamRun will notify you when agents are done or need help.",
+          "teamRunAriaLabel": "TeamRun onboarding",
+          "teamRunBrand": "TeamRun",
+          "teamRunWelcome": "Welcome to TeamRun"
         },
         "OnboardingFooter": {
           "ba58547306": "Back",
@@ -12370,7 +12395,8 @@
               "card": {
                 "f696515944": "Click Allow in the macOS dialog.",
                 "3d18cf71f9": "Updates automatically.",
-                "721d2bedb6": "Turn on Allow notifications for Orca in System Settings."
+                "721d2bedb6": "Turn on Allow notifications for Orca in System Settings.",
+                "teamrunGuidance": "Turn on Allow notifications for TeamRun in System Settings."
               }
             }
           }
@@ -14925,7 +14951,8 @@
             "onboardingCompleted": "Onboarding completed!",
             "body": "If you’re enjoying Orca so far, a GitHub star helps other developers discover it.",
             "dismiss": "Dismiss",
-            "later": "Later"
+            "later": "Later",
+            "teamRunBody": "TeamRun builds on Orca. A GitHub star helps support the upstream project."
           }
         }
       },
@@ -15147,6 +15174,252 @@
           "openLink": "Open link",
           "updating": "Updating…",
           "update": "Update shared content"
+        }
+      },
+      "team": {
+        "space": {
+          "CompareAgentRunsDialog": {
+            "8bff8ea12f": "Result B",
+            "54331605e9": "Result A",
+            "c619efc0c0": "Read committed diffs",
+            "30c09b2873": "Reading…",
+            "e3abeaefc1": "Result {{value0}}",
+            "68302ae78d": "Reads committed diffs from this device only. Nothing is uploaded until you publish.",
+            "a4cd513779": "Compare agent results",
+            "7129fda456": "Compare results",
+            "dda2dc9fdd": "Unable to read the selected result.",
+            "77da7cd634": "No committed changes.",
+            "0f828b971d": "Folder workspace · Git diff unavailable",
+            "1320679bb7": "{{value0}} · {{value1}} commit{{value2}}",
+            "af763732b3": "Select a result.",
+            "resultLabel": "{{agent}} · Result {{number}}",
+            "workingTreeIncluded": " · working tree included",
+            "workspaceSummary": "{{value0}} · {{value1}} commit{{value2}}{{value3}}",
+            "noWorkspaceChanges": "No workspace changes.",
+            "privacyDescription": "Reads committed and uncommitted workspace changes from the execution host. Nothing is uploaded until you publish.",
+            "readWorkspaceDiffs": "Read workspace diffs"
+          },
+          "CreateTeamTaskDialog": {
+            "a1d97b95bd": "Create",
+            "a14fd02010": "Import",
+            "4408774de4": "No repository",
+            "7db079e9cf": "Repository",
+            "5051fda5bc": "Description",
+            "0d659a107c": "Title",
+            "fe3962ddf8": "Source URL",
+            "76b0bd5a45": "External ID",
+            "5d4d54a8e7": "Jira",
+            "daaa6de2ec": "Linear",
+            "f755a3e0c0": "GitLab",
+            "0ee6092632": "GitHub",
+            "f767ec8c43": "Provider",
+            "1122f643b7": "Add a shared unit of work for the team.",
+            "58bcd92bc3": "Capture the external source as immutable imported Markdown.",
+            "f1c06c09a8": "Create task",
+            "a53fedb076": "Import task",
+            "ce3b2e873b": "New task",
+            "4d2561e655": "Unable to create task"
+          },
+          "PublishAgentResultDialog": {
+            "e265aec5cf": "Confirm and publish",
+            "a0bbee6251": "Publishing…",
+            "4081314a98": "explicit check",
+            "a12a207165": "Verification output",
+            "3a2147cc5e": "Base revision to current HEAD, capped at 5 MiB.",
+            "70a742ac37": "Committed diff",
+            "78e54a1db3": "https://gitlab.example/team/repo/-/merge_requests/42",
+            "06b5311e94": "Review URL (optional)",
+            "db9eebc331": "Result summary",
+            "9b1cfa92ac": "Prompts and full terminal logs stay private. Only the items confirmed below are uploaded.",
+            "92e523226a": "Publish selected result",
+            "867743a570": "Publish result",
+            "b8e3cca263": "Publication failed",
+            "d073bd4a81": "Selected result published to the task review.",
+            "workspaceDiff": "Workspace diff",
+            "workspaceDiffDescription": "Base revision through committed, staged, unstaged, and untracked changes, capped at 5 MiB."
+          },
+          "RunVerificationDialog": {
+            "76851c311a": "Run command",
+            "3303b7eed3": "Running…",
+            "600a450bcd": "in teamrun.yaml.",
+            "b50048cf94": "scripts.verify",
+            "fc08d07145": "Add commands under",
+            "7fa4b32a1c": "This command runs in the agent workspace. Its output stays on this device until you publish it.",
+            "b6b18d20bc": "Run trusted verification",
+            "a06986eb0b": "Verify",
+            "11e06d9d92": "Verification failed",
+            "2233ed5f42": "Unable to load checks",
+            "completed": "{{label}} exited with code {{code}}."
+          },
+          "TaskContextPanel": {
+            "bc37efd95f": "No context snapshot selected.",
+            "781ed2c6bf": "Copy",
+            "4cd7e8b7c8": "Copied",
+            "d2f82c4681": "SHA-256",
+            "c46a2234e3": "Freeze context before launching agents. Runs always reference an immutable snapshot.",
+            "9b187a9ca8": "Task v",
+            "0476dbda6b": "Freeze context"
+          },
+          "TaskConversationPanel": {
+            "c011c9a39a": "Comment",
+            "85fb31812b": "Add comment",
+            "21c766a629": "Discussion",
+            "fd395cb122": "No description.",
+            "ae0966a48c": "Open source issue",
+            "ownerLabel": "Task owner",
+            "statusLabel": "Task status"
+          },
+          "TeamAgentLauncher": {
+            "e6a3610e1e": "Add a Git repository or folder workspace before launching an agent.",
+            "57385fe0d3": "Freeze a context snapshot first.",
+            "72bc9f2414": "agent",
+            "71aa5194e9": "· Team Agent",
+            "511baae8d9": "Folder",
+            "e058033aa0": "Git",
+            "883c087e34": "Repository workspace",
+            "3658f275a3": "Launch",
+            "49f1951c0b": "Launching…",
+            "03975ebdf8": "Git agents use independent worktrees. A folder workspace launches one Agent tab without copying or changing the source folder.",
+            "f51c9bb62e": "Launch independent agents",
+            "50e9904340": "Started {{value0}} TeamRun agent workspace{{value1}}.",
+            "partialFailure": "{{value0}} agent workspace{{value1}} could not be started.",
+            "openTaskTitle": "Open task in TeamRun",
+            "openInTeamRun": "Open in TeamRun"
+          },
+          "TeamAgentRunPanel": {
+            "72ba875f87": "No agent runs for this task.",
+            "1ea0087769": "Published revision",
+            "62179c7416": "verification",
+            "ae51fd0785": "Folder workspace",
+            "c254620589": "Open workspace",
+            "cecf8c7075": "Ready for review",
+            "3412fc359a": "Stale context",
+            "872ca19575": "This agent workspace is not available on this device.",
+            "markReadyError": "Unable to mark the run ready for review"
+          },
+          "TeamCollaborationDialog": {
+            "9bca007245": "TeamRun collaboration request failed",
+            "8753302558": "No additional instructions",
+            "04cd97be0f": "Create Team Agent",
+            "4b903cf9fb": "Reusable instructions added before the frozen task context",
+            "478185f70b": "Team Agent name",
+            "50d5256799": "Send",
+            "343ca1bd98": "Share project context",
+            "657eac68c5": "No channel messages yet.",
+            "bced45584d": "Choose a channel",
+            "48b5d0079f": "Add",
+            "33cbbbe531": "channel-name",
+            "9a71d6f2db": "Team Agents",
+            "3864000c86": "Channels",
+            "d08c4fdd59": "Project collaboration",
+            "b945e8ba1c": "Collaborate",
+            "createChannelError": "Unable to create channel",
+            "sendMessageError": "Unable to send message",
+            "createAgentError": "Unable to create Team Agent",
+            "genericCli": "Generic CLI",
+            "launchCommand": "Command that accepts task context as its final argument",
+            "launchCommandHint": "The command is shared with project members. Keep credentials in the host environment."
+          },
+          "TeamMembersDialog": {
+            "78911cff23": "Revoke {{value0}}",
+            "9180bc785a": "Pending until",
+            "2cc90be5fe": "Remove {{value0}}",
+            "026448eaaa": "Invite",
+            "56b4fe831a": "Admin",
+            "6df91988f4": "Member",
+            "424211afdd": "Role",
+            "207b48b11f": "Email",
+            "5f04ee9461": "Manage access without sharing Agent prompts or private workspace data.",
+            "1b61fd93a3": "Organization members",
+            "785f97f193": "Members",
+            "8f0eaf500d": "Unable to invite member",
+            "6dc33dd63f": "Unable to load members",
+            "removeError": "Unable to remove member",
+            "revokeError": "Unable to revoke invitation"
+          },
+          "TeamSpacePage": {
+            "3598cbd1e2": "total",
+            "6b793be66b": "Tasks",
+            "99d00e4bca": "Sign out",
+            "db8395a8d6": " · {{value0}} pending",
+            "01b927d2d1": "Offline cache",
+            "0e6814c307": "Sync blocked",
+            "64634f5670": "Syncing…",
+            "d1821ea669": "Synced",
+            "dc9763afa5": "Project",
+            "023381a7e7": "Organization",
+            "4b5d94ac3e": "Signed in",
+            "60190506d5": "Team Space"
+          },
+          "TeamSpaceSetupDialogs": {
+            "49e78f6731": "Connect",
+            "f2accfcc64": "Default branch",
+            "98b6c3b9ea": "Display name",
+            "1b1b42ce0b": "https://gitlab.example/team/repo.git",
+            "9bbfcdb2f7": "Remote URL",
+            "39a7aa3782": "The provider is detected from the HTTPS remote URL.",
+            "30be4e02e7": "Connect repository",
+            "5c7025d090": "Add repository",
+            "ff5efeb011": "Create",
+            "78dd10486d": "Shared context",
+            "642efa6af4": "Name",
+            "ce4518e34c": "Key",
+            "0abca8d22c": "Project context is included in new task snapshots.",
+            "dda244e421": "Create project",
+            "ae1a7d6d76": "New project",
+            "588010c812": "product-team",
+            "24af1baa2a": "Slug",
+            "77c1f39568": "Organizations own projects, tasks, and membership.",
+            "eb0815af66": "Create organization",
+            "e460bbbd46": "New organization",
+            "fe6cecad53": "Unable to save"
+          },
+          "TeamSpaceSignIn": {
+            "60b94b9191": "Sign in with SSO",
+            "f20be4afdc": "Continue in development",
+            "68590386ad": "Connecting…",
+            "15b961f735": "Development email",
+            "0e33e1cf3a": "to connect this desktop app to your TeamRun service.",
+            "114979f3a6": "TEAMRUN_API_URL",
+            "b8f3d9f0d3": "Set",
+            "faa629364a": "Coordinate shared tasks and publish only the agent result you choose.",
+            "fa4609f5ef": "Team Space"
+          },
+          "TeamTaskDetail": {
+            "b4dbc18417": "Agent runs",
+            "ee456389ae": "Context",
+            "9ac6f4b345": "Overview",
+            "5789758699": "Loading task…",
+            "327543a112": "Select a task to view its context and agent runs.",
+            "results": "Results"
+          },
+          "TeamTaskList": {
+            "2bb05cb6b3": "No tasks yet. Create one or import an external issue."
+          },
+          "useTeamSpaceWorkspace": {
+            "e3e738a0bb": "TeamRun request failed"
+          },
+          "useTeamTaskWorkspace": {
+            "d72b3e04bf": "Unable to load task",
+            "updateStatus": "Unable to update task status",
+            "addComment": "Unable to add comment",
+            "createSnapshot": "Unable to freeze context",
+            "updateOwner": "Unable to change task owner"
+          },
+          "TaskResultsPanel": {
+            "loadFailed": "Unable to load published artifacts",
+            "empty": "No results have been published yet.",
+            "revision": "Revision {{value}}",
+            "openReview": "Open review",
+            "commits": "{{value}} commits"
+          },
+          "teamrunMutationFeedback": {
+            "queued": "Saved locally and queued for sync."
+          },
+          "GenericCliCommandConfirmation": {
+            "commandLabel": "Command from this project",
+            "confirm": "I trust this command to run on the selected execution host."
+          }
         }
       }
     },
@@ -15569,6 +15842,25 @@
       "unassignedInstruction": "Assign a dictation shortcut before starting voice dictation in a focused pane.",
       "settingsInstruction": "Change the model, dictation mode, or shortcut anytime in",
       "settingsLink": "Settings → Voice"
+    }
+  },
+  "teamRun": {
+    "agentStatus": {
+      "queued": "Queued",
+      "starting": "Starting",
+      "working": "Working",
+      "needsInput": "Needs input",
+      "review": "Ready for review",
+      "completed": "Published",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    },
+    "taskStatus": {
+      "todo": "To do",
+      "inProgress": "In progress",
+      "inReview": "In review",
+      "done": "Done",
+      "canceled": "Canceled"
     }
   }
 }

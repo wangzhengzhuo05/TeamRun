@@ -1,10 +1,10 @@
 {
   "app": {
     "recoverableError": {
-      "rootTitle": "Orca tuvo un error de renderizado.",
-      "rootDescription": "El shell de la aplicación no pudo terminar de renderizarse. Vuelva a intentar volver a montarlo o reinicie Orca si el error persiste.",
-      "webTitle": "Orca web tuvo un error de renderizado.",
-      "webDescription": "Vuelva a cargar el cliente web o vuelva a conectarse al servidor Orca vinculado."
+      "rootTitle": "TeamRun tuvo un error de renderizado.",
+      "rootDescription": "El shell de la aplicación no pudo terminar de renderizarse. Vuelva a intentar volver a montarlo o reinicie TeamRun si el error persiste.",
+      "webTitle": "TeamRun web tuvo un error de renderizado.",
+      "webDescription": "Vuelva a cargar el cliente web o vuelva a conectarse al servidor TeamRun vinculado."
     }
   },
   "githubChecks": {

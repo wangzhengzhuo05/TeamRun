@@ -40,8 +40,8 @@ export function AddRemoteHostServerFormPanel({
         </DialogTitle>
         <DialogDescription>
           {translate(
-            'auto.components.sidebar.AddRemoteHostDialog.serverDescription',
-            'Pair with Orca running on another computer.'
+            'auto.components.sidebar.AddRemoteHostDialog.teamRunServerDescription',
+            'Pair with TeamRun running on another computer.'
           )}
         </DialogDescription>
       </DialogHeader>

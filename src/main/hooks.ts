@@ -8,6 +8,7 @@ import { resolveHookCommandSourcePolicy } from '../shared/hook-command-source-po
 import { shouldWaitForSetupBeforeAgentStartup } from '../shared/setup-agent-startup-policy'
 import { TERMINAL_GIT_CREDENTIAL_GUARD_POLICY_ENV } from '../shared/terminal-git-credential-guard'
 import { parseOrcaYaml } from '../shared/orca-yaml'
+import { mergeTeamRunProjectConfig, parseTeamRunYaml } from '../shared/teamrun-yaml'
 import { nativeWindowsPathToPosixShellPath } from '../shared/setup-runner-command'
 import {
   isShebangLine,
@@ -53,27 +54,31 @@ function getHookShell(): string | undefined {
 export { parseOrcaYaml }
 
 /**
- * Load hooks from orca.yaml in the given repo root.
+ * Load TeamRun project config with field-level orca.yaml compatibility fallback.
  */
 export function loadHooks(repoPath: string): OrcaHooks | null {
-  const yamlPath = join(repoPath, 'orca.yaml')
-  if (!existsSync(yamlPath)) {
-    return null
+  const read = (fileName: string, parse: (content: string) => OrcaHooks | null) => {
+    const filePath = join(repoPath, fileName)
+    if (!existsSync(filePath)) {
+      return null
+    }
+    try {
+      return parse(readFileSync(filePath, 'utf-8'))
+    } catch {
+      return null
+    }
   }
-
-  try {
-    const content = readFileSync(yamlPath, 'utf-8')
-    return parseOrcaYaml(content)
-  } catch {
-    return null
-  }
+  return mergeTeamRunProjectConfig(
+    read('teamrun.yaml', parseTeamRunYaml),
+    read('orca.yaml', parseOrcaYaml)
+  )
 }
 
 /**
  * Check whether an orca.yaml exists for a repo.
  */
 export function hasHooksFile(repoPath: string): boolean {
-  return existsSync(join(repoPath, 'orca.yaml'))
+  return existsSync(join(repoPath, 'teamrun.yaml')) || existsSync(join(repoPath, 'orca.yaml'))
 }
 
 // Why: detect unrecognised keys so the UI can suggest an update instead of showing a "could not be parsed" error.

@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 import type { Store } from '../persistence'
 import { pruneLineageForMissingRepoWorktrees } from '../worktree-lineage-pruning'
 import { isFolderRepo } from '../../shared/repo-kind'
+import { loadTeamRunProjectConfig } from '../teamrun/teamrun-project-config'
 import { readBranchRenameFailureOutputForDisplay } from '../agent-hooks/branch-rename-failure-output'
 import { parseWorkspaceKey } from '../../shared/workspace-scope'
 import { inspectSetupScriptImportCandidates } from '../../shared/setup-script-imports'
@@ -3314,21 +3315,17 @@ export function registerWorktreeHandlers(
       }
 
       if (repo.connectionId) {
-        const fsProvider = getSshFilesystemProvider(repo.connectionId)
-        if (!fsProvider) {
-          return { status: 'error', hasHooks: false, hooks: null, mayNeedUpdate: false }
-        }
         try {
-          const result = await fsProvider.readFile(joinWorktreeRelativePath(repo.path, 'orca.yaml'))
+          const hooks = await loadTeamRunProjectConfig(repo)
           return {
             status: 'ok',
-            hasHooks: !result.isBinary,
-            hooks: result.isBinary ? null : parseOrcaYaml(result.content),
+            hasHooks: hooks !== null,
+            hooks,
             mayNeedUpdate: false
           }
-        } catch (error) {
+        } catch {
           return {
-            status: isENOENT(error) ? 'ok' : 'error',
+            status: 'error',
             hasHooks: false,
             hooks: null,
             mayNeedUpdate: false

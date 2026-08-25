@@ -21,9 +21,10 @@ import type { PersistedNativeChatSessionOptions } from '../../../shared/native-c
 
 export function buildDirectWorkItemAgentStartupPlan(args: {
   agent: TuiAgent | null
+  agentCommandOverride?: string | null
   agentArgs?: string | null
   draftContent: string
-  promptDelivery: 'draft' | 'submit-after-ready'
+  promptDelivery: 'auto-submit' | 'draft' | 'submit-after-ready'
   settings:
     | {
         agentCmdOverrides?: Partial<Record<TuiAgent, string>>
@@ -54,6 +55,9 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
       ? resolveTuiAgentLaunchArgs(args.agent, args.settings?.agentDefaultArgs)
       : args.agentArgs
   const effectiveAgentEnv = resolveTuiAgentLaunchEnv(args.agent, args.settings?.agentDefaultEnv)
+  const cmdOverrides = args.agentCommandOverride?.trim()
+    ? { ...args.settings?.agentCmdOverrides, [args.agent]: args.agentCommandOverride.trim() }
+    : (args.settings?.agentCmdOverrides ?? {})
   const sessionOptions = resolveInitialNativeChatSessionOptions(args.settings, {
     agent: args.agent,
     ...(args.promptDelivery === 'draft'
@@ -61,13 +65,30 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
       : {}),
     nativeChatTranscriptIsLocalReadable: args.nativeChatTranscriptIsLocalReadable
   })
+  if (args.promptDelivery === 'auto-submit') {
+    const startupPlan = buildAgentStartupPlan({
+      agent: args.agent,
+      prompt: args.draftContent,
+      cmdOverrides,
+      platform: args.launchPlatform,
+      isRemote: args.isRemote,
+      agentArgs: effectiveAgentArgs,
+      agentEnv: effectiveAgentEnv,
+      sessionOptions
+    })
+    return {
+      startupPlan,
+      draftLaunchedNatively: startupPlan !== null,
+      startupPlanFailed: startupPlan === null
+    }
+  }
   const draftLaunchPlan =
     args.promptDelivery === 'submit-after-ready'
       ? null
       : buildAgentDraftLaunchPlan({
           agent: args.agent,
           draft: args.draftContent,
-          cmdOverrides: args.settings?.agentCmdOverrides ?? {},
+          cmdOverrides,
           platform: args.launchPlatform,
           isRemote: args.isRemote,
           agentArgs: effectiveAgentArgs,
@@ -99,7 +120,7 @@ export function buildDirectWorkItemAgentStartupPlan(args: {
   const startupPlan = buildAgentStartupPlan({
     agent: args.agent,
     prompt: '',
-    cmdOverrides: args.settings?.agentCmdOverrides ?? {},
+    cmdOverrides,
     platform: args.launchPlatform,
     isRemote: args.isRemote,
     agentArgs: effectiveAgentArgs,
@@ -150,7 +171,7 @@ export function buildDirectWorkItemStartupOpts(
       ...(plan.env ? { env: plan.env } : {}),
       launchConfig: plan.launchConfig,
       ...(plan.sessionOptions ? { sessionOptions: plan.sessionOptions } : {}),
-      ...(agent ? { launchAgent: agent } : {}),
+      ...(agent && agent !== 'generic-cli' ? { launchAgent: agent } : {}),
       ...(plan.draftPrompt ? { draftPrompt: plan.draftPrompt } : {}),
       ...(launchDraftText ? { launchDraftText } : {}),
       ...(plan.startupCommandDelivery

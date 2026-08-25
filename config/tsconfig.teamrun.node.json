@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.node.json",
+  "include": [
+    "../src/main/ipc/teamrun.ts",
+    "../src/main/teamrun/**/*",
+    "../src/main/runtime/orca-runtime-teamrun.ts",
+    "../src/main/runtime/rpc/methods/teamrun.ts",
+    "../src/preload/api/teamrun-api.ts",
+    "../src/shared/teamrun-api.ts",
+    "../src/shared/teamrun-cloud.ts",
+    "../src/shared/teamrun-runtime.ts",
+    "../src/shared/teamrun-yaml.ts",
+    "../src/packages/teamrun-contracts/src/*.ts",
+    "../src/types/**/*"
+  ],
+  "exclude": ["../src/main/**/*.test.ts", "../src/packages/teamrun-contracts/src/**/*.test.ts"],
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false
+  }
+}

@@ -4,7 +4,11 @@ import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { getVersionManagerBinPaths } from '../codex-cli/command'
 import { getMainE2EConfig } from '../e2e-config'
-import { SELF_HOSTED_USER_DATA_DIR, type OrcaAppDistribution } from './app-distribution'
+import {
+  SELF_HOSTED_USER_DATA_DIR,
+  TEAMRUN_USER_DATA_DIR,
+  type OrcaAppDistribution
+} from './app-distribution'
 
 const DEV_PARENT_SHUTDOWN_GRACE_MS = 3000
 const HTTP1_COMPATIBILITY_ENV_VAR = 'ORCA_DISABLE_HTTP2'
@@ -153,7 +157,7 @@ export function patchPackagedProcessPath(): void {
 
 export function configureDevUserDataPath(
   isDev: boolean,
-  distribution: OrcaAppDistribution = 'official'
+  distribution: OrcaAppDistribution = 'teamrun'
 ): void {
   const e2eConfig = getMainE2EConfig()
   if (e2eConfig.userDataDir) {
@@ -178,17 +182,20 @@ export function configureDevUserDataPath(
   if (!isDev) {
     if (distribution === 'self-hosted') {
       app.setPath('userData', join(app.getPath('appData'), SELF_HOSTED_USER_DATA_DIR))
+    } else if (distribution === 'teamrun') {
+      app.setPath('userData', join(app.getPath('appData'), TEAMRUN_USER_DATA_DIR))
     }
     return
   }
-  const overrideUserDataPath = process.env.ORCA_DEV_USER_DATA_PATH
+  const overrideUserDataPath =
+    process.env.TEAMRUN_DEV_USER_DATA_PATH ?? process.env.ORCA_DEV_USER_DATA_PATH
   if (overrideUserDataPath) {
     // Why: automated repros need an isolated profile so the dev's persisted tabs/worktrees don't skew startup and hide window bugs.
     app.setPath('userData', overrideUserDataPath)
     return
   }
   // Why: without a dev-only path, pnpm dev overwrites the packaged app's runtime pointer under userData and breaks the orca CLI.
-  app.setPath('userData', join(app.getPath('appData'), 'orca-dev'))
+  app.setPath('userData', join(app.getPath('appData'), 'teamrun-dev'))
 }
 
 function areSameE2EHomePath(left: string, right: string): boolean {
@@ -202,6 +209,7 @@ function areSameE2EHomePath(left: string, right: string): boolean {
 export function configureOrcaUserDataPathEnv(): void {
   // Why: relaunches can inherit a stale ORCA_USER_DATA_PATH; canonicalize before CLI-shared modules build runtime-home paths.
   process.env.ORCA_USER_DATA_PATH = app.getPath('userData')
+  process.env.TEAMRUN_USER_DATA_PATH = app.getPath('userData')
 }
 
 export function shouldInstallManagedHooks(isDev: boolean): boolean {

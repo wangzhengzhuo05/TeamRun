@@ -1,9 +1,9 @@
 {
   "app": {
     "recoverableError": {
-      "rootTitle": "Orca でレンダラーエラーが発生しました。",
-      "rootDescription": "アプリシェルのレンダリングを完了できませんでした。再マウントを試すか、エラーが解決しない場合は Orca を再起動してください。",
-      "webTitle": "Orca Web でレンダラーエラーが発生しました。",
+      "rootTitle": "TeamRun でレンダラーエラーが発生しました。",
+      "rootDescription": "アプリシェルのレンダリングを完了できませんでした。再マウントを試すか、エラーが解決しない場合は TeamRun を再起動してください。",
+      "webTitle": "TeamRun Web でレンダラーエラーが発生しました。",
       "webDescription": "Web クライアントを再試行するか、ペアリングされたランタイムに再接続します。"
     }
   },

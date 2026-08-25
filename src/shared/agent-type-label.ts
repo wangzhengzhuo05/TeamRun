@@ -6,6 +6,7 @@ const WELL_KNOWN_LABELS: Record<string, string> = {
   claude: 'Claude',
   openclaude: 'OpenClaude',
   codex: 'Codex',
+  'generic-cli': 'Generic CLI',
   gemini: 'Gemini',
   antigravity: 'Antigravity',
   amp: 'Amp',

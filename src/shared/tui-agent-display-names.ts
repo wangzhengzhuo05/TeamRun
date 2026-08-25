@@ -10,6 +10,7 @@ export const TUI_AGENT_DISPLAY_NAMES: Record<TuiAgent, string> = {
   'claude-agent-teams': 'Claude Agent Teams',
   openclaude: 'OpenClaude',
   codex: 'Codex',
+  'generic-cli': 'Generic CLI',
   devin: 'Devin',
   ante: 'Ante',
   trae: 'Trae',
@@ -46,4 +47,6 @@ export const TUI_AGENT_DISPLAY_NAMES: Record<TuiAgent, string> = {
 
 /** Canonical agent id list derived from the exhaustive display-name record,
  * so shared modules can enumerate agents without importing renderer code. */
-export const ALL_TUI_AGENTS = Object.keys(TUI_AGENT_DISPLAY_NAMES) as readonly TuiAgent[]
+export const ALL_TUI_AGENTS = Object.keys(TUI_AGENT_DISPLAY_NAMES).filter(
+  (agent) => agent !== 'generic-cli'
+) as readonly TuiAgent[]

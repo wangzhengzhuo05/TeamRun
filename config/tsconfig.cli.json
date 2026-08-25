@@ -85,6 +85,7 @@
     "../src/main/sqlite/sync-database.ts",
     "../src/main/win32-utils.ts"
   ],
+  "exclude": ["../src/shared/teamrun-*.ts"],
   "compilerOptions": {
     "composite": true,
     // TypeScript 7 removed node10 resolution; Node16 preserves CommonJS emit for this package.

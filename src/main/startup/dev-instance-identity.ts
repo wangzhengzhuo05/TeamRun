@@ -4,11 +4,13 @@ import type { AppIdentity } from '../../shared/app-identity'
 import {
   SELF_HOSTED_APP_ID,
   SELF_HOSTED_APP_NAME,
+  TEAMRUN_APP_ID,
+  TEAMRUN_APP_NAME,
   type OrcaAppDistribution
 } from './app-distribution'
 
-const BASE_APP_NAME = 'Orca'
-const BASE_APP_USER_MODEL_ID = 'com.stablyai.orca'
+const ORCA_APP_NAME = 'Orca'
+const ORCA_APP_USER_MODEL_ID = 'com.stablyai.orca'
 const MAX_LABEL_LENGTH = 80
 
 export type DevInstanceIdentity = AppIdentity & {
@@ -45,21 +47,23 @@ function formatLabel(branch: string | null, worktreeName: string | null): string
   return branch ?? worktreeName
 }
 
-function createDevAppUserModelId(identityKey: string | null): string {
+function createDevAppUserModelId(identityKey: string | null, baseAppUserModelId: string): string {
   if (!identityKey) {
-    return BASE_APP_USER_MODEL_ID
+    return baseAppUserModelId
   }
   const hash = createHash('sha1').update(identityKey).digest('hex').slice(0, 10)
-  return `${BASE_APP_USER_MODEL_ID}.dev.${hash}`
+  return `${baseAppUserModelId}.dev.${hash}`
 }
 
 export function getDevInstanceIdentity(
   isDev: boolean,
   env: NodeJS.ProcessEnv = process.env,
-  distribution: OrcaAppDistribution = 'official'
+  distribution: OrcaAppDistribution = 'teamrun'
 ): DevInstanceIdentity {
+  const baseAppName = distribution === 'teamrun' ? TEAMRUN_APP_NAME : ORCA_APP_NAME
+  const baseAppUserModelId = distribution === 'teamrun' ? TEAMRUN_APP_ID : ORCA_APP_USER_MODEL_ID
   if (!isDev) {
-    const appName = distribution === 'self-hosted' ? SELF_HOSTED_APP_NAME : BASE_APP_NAME
+    const appName = distribution === 'self-hosted' ? SELF_HOSTED_APP_NAME : baseAppName
     return {
       name: appName,
       appName,
@@ -69,31 +73,37 @@ export function getDevInstanceIdentity(
       devWorktreeName: null,
       devRepoRoot: null,
       dockBadgeLabel: null,
-      appUserModelId: distribution === 'self-hosted' ? SELF_HOSTED_APP_ID : BASE_APP_USER_MODEL_ID
+      appUserModelId: distribution === 'self-hosted' ? SELF_HOSTED_APP_ID : baseAppUserModelId
     }
   }
 
-  const repoRoot = cleanEnvValue(env.ORCA_DEV_REPO_ROOT)
-  const branch = cleanEnvValue(env.ORCA_DEV_BRANCH)
+  const repoRoot = cleanEnvValue(env.TEAMRUN_DEV_REPO_ROOT) ?? cleanEnvValue(env.ORCA_DEV_REPO_ROOT)
+  const branch = cleanEnvValue(env.TEAMRUN_DEV_BRANCH) ?? cleanEnvValue(env.ORCA_DEV_BRANCH)
   const worktreeName =
+    cleanEnvValue(env.TEAMRUN_DEV_WORKTREE_NAME) ??
     cleanEnvValue(env.ORCA_DEV_WORKTREE_NAME) ??
     cleanEnvValue(path.basename(repoRoot ?? process.cwd()))
-  const devLabel = cleanEnvValue(env.ORCA_DEV_INSTANCE_LABEL) ?? formatLabel(branch, worktreeName)
+  const devLabel =
+    cleanEnvValue(env.TEAMRUN_DEV_INSTANCE_LABEL) ??
+    cleanEnvValue(env.ORCA_DEV_INSTANCE_LABEL) ??
+    formatLabel(branch, worktreeName)
   const dockTitle =
-    cleanEnvValue(env.ORCA_DEV_DOCK_TITLE) ?? `${BASE_APP_NAME}: ${branch ?? devLabel ?? 'dev'}`
+    cleanEnvValue(env.TEAMRUN_DEV_DOCK_TITLE) ??
+    cleanEnvValue(env.ORCA_DEV_DOCK_TITLE) ??
+    `${baseAppName}: ${branch ?? devLabel ?? 'dev'}`
 
   return {
     name: dockTitle,
     // Why: one stable Keychain key ('Orca Dev Safe Storage') for all dev
     // branches; the per-branch identity still shows via `name` (window title,
     // app menu, renderer label).
-    appName: `${BASE_APP_NAME} Dev`,
+    appName: `${baseAppName} Dev`,
     isDev: true,
     devLabel,
     devBranch: branch,
     devWorktreeName: worktreeName,
     devRepoRoot: repoRoot,
     dockBadgeLabel: null,
-    appUserModelId: createDevAppUserModelId(repoRoot ?? devLabel)
+    appUserModelId: createDevAppUserModelId(repoRoot ?? devLabel, baseAppUserModelId)
   }
 }

@@ -1,9 +1,9 @@
 {
   "app": {
     "recoverableError": {
-      "rootTitle": "Orca에 렌더러 오류가 발생했습니다.",
-      "rootDescription": "앱 셸에서 렌더링을 완료할 수 없습니다. 다시 마운트해 보거나 오류가 지속되면 Orca를 다시 시작하세요.",
-      "webTitle": "Orca 웹에 렌더러 오류가 발생했습니다.",
+      "rootTitle": "TeamRun에 렌더러 오류가 발생했습니다.",
+      "rootDescription": "앱 셸에서 렌더링을 완료할 수 없습니다. 다시 마운트해 보거나 오류가 지속되면 TeamRun을 다시 시작하세요.",
+      "webTitle": "TeamRun 웹에 렌더러 오류가 발생했습니다.",
       "webDescription": "웹 클라이언트를 다시 시도하거나 페어링된 런타임에 다시 연결하세요."
     }
   },

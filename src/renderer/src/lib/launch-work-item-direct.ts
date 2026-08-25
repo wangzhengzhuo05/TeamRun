@@ -38,6 +38,7 @@ import {
   getLocalProjectExecutionRuntimeContext,
   getLocalRepoProjectExecutionRuntimeContext
 } from '@/lib/local-preflight-context'
+import { translate } from '@/i18n/i18n'
 
 /**
  * "Use" flow: create the workspace, activate it, launch the default agent,
@@ -60,6 +61,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
     telemetrySource,
     launchSource,
     agentOverride,
+    agentCommandOverride,
     agentArgs
   } = args
   const store = useAppStore.getState()
@@ -157,6 +159,8 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   }
 
   let worktreeId: string
+  let worktreePath: string
+  let worktreeHead: string
   let primaryTabId: string | null
   let startupPlan = null as ReturnType<typeof buildDirectWorkItemAgentStartupPlan>['startupPlan']
   let effectiveAgent: TuiAgent | null = null
@@ -192,7 +196,8 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
       resolvedCompareBaseRef
     )
     worktreeId = result.worktree.id
-    const worktreePath = result.worktree.path
+    worktreePath = result.worktree.path
+    worktreeHead = result.worktree.head
 
     const createdConnectionId = getConnectionId(worktreeId)
     // Why: newly-created SSH worktrees can be activated before the store
@@ -211,12 +216,13 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
             : undefined
       })
     if (agentOverride) {
-      const detectedAgents =
-        typeof launchConnectionId === 'string'
+      const detectedAgents = agentCommandOverride?.trim()
+        ? null
+        : typeof launchConnectionId === 'string'
           ? await latestStore.ensureRemoteDetectedAgents(launchConnectionId)
           : await latestStore.ensureDetectedAgents()
       if (
-        !detectedAgents.includes(agentOverride) ||
+        (detectedAgents && !detectedAgents.includes(agentOverride)) ||
         !isTuiAgentEnabled(agentOverride, latestStore.settings?.disabledTuiAgents)
       ) {
         activateAndRevealWorktree(worktreeId, {
@@ -241,7 +247,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
         settings?.disabledTuiAgents
       )
     }
-    if (effectiveAgent) {
+    if (effectiveAgent && effectiveAgent !== 'generic-cli') {
       // Why: direct task launch creates and starts the workspace in separate
       // steps so agent detection can overlap git worktree creation. Persist the
       // chosen agent once known so removal safety and ownership see it — reopen
@@ -276,6 +282,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
     ;({ startupPlan, draftLaunchedNatively, startupPlanFailed } =
       buildDirectWorkItemAgentStartupPlan({
         agent: effectiveAgent,
+        agentCommandOverride,
         agentArgs,
         draftContent,
         promptDelivery,
@@ -317,6 +324,26 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   if (startupPlanFailed) {
     toast.error(agentLaunchCommandErrorMessage())
     return false
+  }
+
+  if (effectiveAgent && args.onWorkspaceCreated) {
+    void Promise.resolve(
+      args.onWorkspaceCreated({
+        id: worktreeId,
+        path: worktreePath,
+        head: worktreeHead,
+        agent: effectiveAgent
+      })
+    ).catch((error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : translate(
+              'auto.lib.launch.work.item.direct.ae2286dd60',
+              'Failed to link TeamRun workspace.'
+            )
+      )
+    })
   }
 
   // Why: draft delivery lands only in the TUI input buffer (argv prefill or

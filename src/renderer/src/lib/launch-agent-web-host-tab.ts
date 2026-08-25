@@ -122,6 +122,37 @@ export function launchAgentInWebHostTab(args: {
     return { delivered: promptDelivered, failureNotified: false }
   }
 
+  if (agent === 'generic-cli') {
+    if (pastePromptAfterReady !== null) {
+      return Promise.resolve(
+        handleCreation({
+          outcome: {
+            status: 'failed',
+            message: translate(
+              'auto.lib.launch.agent.in.new.tab.genericCliPromptMode',
+              'Generic CLI context must be passed as the command’s final argument.'
+            )
+          },
+          promptDelivered: false
+        })
+      )
+    }
+    return createWebRuntimeSessionTerminal({
+      worktreeId,
+      environmentId,
+      targetGroupId: groupId,
+      activate: true,
+      ...(cwd?.trim() ? { cwd } : {}),
+      viewMode: 'terminal',
+      command: startupPlan.launchCommand,
+      ...(startupPlan.env ? { env: startupPlan.env } : {}),
+      launchConfig: startupPlan.launchConfig,
+      ...(startupPlan.startupCommandDelivery
+        ? { startupCommandDelivery: startupPlan.startupCommandDelivery }
+        : {})
+    }).then((outcome) => handleCreation({ outcome, promptDelivered: hasPrompt }))
+  }
+
   if (pastePromptAfterReady !== null) {
     return createWebRuntimeAgentSessionTerminal({
       ...launch,

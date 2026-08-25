@@ -3,6 +3,7 @@ import { computerUseErrorRecoveryData } from '../shared/computer-use-error-recov
 import { prepareComputerCliJsonResult } from './computer-format'
 import type { RuntimeRpcFailure, RuntimeRpcSuccess } from './runtime-client'
 import { RuntimeClientError, RuntimeRpcFailureError } from './runtime/types'
+import { brandTeamRunCliText } from './teamrun-cli-brand'
 
 export {
   formatBrowserProfileList,
@@ -125,7 +126,7 @@ export function reportCliError(error: unknown, json: boolean, context: CliErrorC
       console.log(JSON.stringify(response, null, 2))
     }
   } else {
-    console.error(formatCliError(error, context))
+    console.error(brandTeamRunCliText(formatCliError(error, context)))
   }
 }
 

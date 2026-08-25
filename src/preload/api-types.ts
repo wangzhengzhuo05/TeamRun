@@ -53,6 +53,7 @@ import type { KeybindingsApi, SettingsApi } from './api/settings-api'
 import type { ShellApi } from './api/shell-api'
 import type { SpeechApi } from './api/speech-api'
 import type { SshApi } from './api/ssh-api'
+import type { TeamRunApi } from './api/teamrun-api'
 import type { DiagnosticsApi, MemoryApi, StatsApi, TelemetryApi } from './api/telemetry-api'
 import type { UiCommandEventApi } from './api/ui-command-event-api'
 import type { UiWindowApi } from './api/ui-window-api'
@@ -67,6 +68,7 @@ type Merged<T> = { [K in keyof T]: T[K] }
 
 export type PreloadApi = {
   app: AppApi
+  teamRun: TeamRunApi
   orcaProfiles: OrcaProfileApi
   platform: PlatformApi
   e2e: E2EApi

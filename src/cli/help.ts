@@ -2,6 +2,7 @@
 import type { CommandSpec } from './args'
 import { findCommandSpec, isCommandGroup, supportsBrowserPageFlag } from './args'
 import { unknownCommandData } from './command-suggestion'
+import { brandTeamRunCliText } from './teamrun-cli-brand'
 
 const ROOT_HELP_TEXT = `orca
 
@@ -364,22 +365,26 @@ Examples:
 export function printHelp(specs: CommandSpec[], commandPath: string[] = []): void {
   const exactSpec = findCommandSpec(specs, commandPath)
   if (exactSpec) {
-    console.log(formatCommandHelp(exactSpec))
+    console.log(brandTeamRunCliText(formatCommandHelp(exactSpec)))
     return
   }
 
   if (isCommandGroup(commandPath)) {
-    console.log(formatGroupHelp(specs, commandPath[0]))
+    console.log(brandTeamRunCliText(formatGroupHelp(specs, commandPath[0])))
     return
   }
 
   if (commandPath.length > 0) {
     const { nextSteps } = unknownCommandData(specs, commandPath)
     const recovery = nextSteps.map((step) => `Next step: ${step}`).join('\n')
-    console.log(`Unknown command: ${commandPath.join(' ')}${recovery ? `\n${recovery}` : ''}\n`)
+    console.log(
+      brandTeamRunCliText(
+        `Unknown command: ${commandPath.join(' ')}${recovery ? `\n${recovery}` : ''}\n`
+      )
+    )
   }
 
-  console.log(ROOT_HELP_TEXT)
+  console.log(brandTeamRunCliText(ROOT_HELP_TEXT))
 }
 
 export function formatCommandHelp(spec: CommandSpec): string {

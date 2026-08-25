@@ -5,6 +5,7 @@ export type TuiAgent =
   | 'claude-agent-teams' // Claude Code Agent Teams via Orca native panes
   | 'openclaude' // OpenClaude
   | 'codex' // OpenAI Codex
+  | 'generic-cli' // TeamRun user-configured CLI agent
   | 'autohand' // Autohand Code CLI
   | 'opencode' // OpenCode
   | 'mimo-code'

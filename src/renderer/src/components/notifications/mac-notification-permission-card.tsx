@@ -196,14 +196,14 @@ export function MacNotificationPermissionCard({
             <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
               <TriangleAlert className="size-4" />
               {translate(
-                'auto.components.onboarding.NotificationStep.90b5d2e363',
-                'macOS is not delivering Orca notifications'
+                'auto.components.onboarding.NotificationStep.teamrunNotDelivering',
+                'macOS is not delivering TeamRun notifications'
               )}
             </div>
             <p className="max-w-[58ch] text-[13px] leading-relaxed text-amber-700/80 dark:text-amber-200/80">
               {translate(
-                'auto.components.onboarding.mac.notification.permission.card.721d2bedb6',
-                'Turn on Allow notifications for Orca in System Settings.'
+                'auto.components.onboarding.mac.notification.permission.card.teamrunGuidance',
+                'Turn on Allow notifications for TeamRun in System Settings.'
               )}
             </p>
           </div>

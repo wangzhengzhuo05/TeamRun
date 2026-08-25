@@ -121,8 +121,8 @@ function StarNagToast({
           </div>
           <p className="text-sm leading-5 text-muted-foreground">
             {translate(
-              'auto.components.star.nag.StarNagToastHost.body',
-              'If you’re enjoying Orca so far, a GitHub star helps other developers discover it.'
+              'auto.components.star.nag.StarNagToastHost.teamRunBody',
+              'TeamRun builds on Orca. A GitHub star helps support the upstream project.'
             )}
           </p>
         </div>

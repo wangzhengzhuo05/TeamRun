@@ -1,15 +1,13 @@
 #!/bin/bash
-# Why: remove the PATH symlink that after-install.sh created, but only if it
-# still points into an Orca install dir — never delete an unrelated
-# /usr/bin/orca-ide a user or other package may own.
+# Why: remove only the TeamRun PATH symlink created by after-install.sh.
 set -e
 
-link="/usr/bin/orca-ide"
+link="/usr/bin/teamrun"
 
 if [ -L "$link" ]; then
   target="$(readlink "$link" || true)"
   case "$target" in
-    /opt/Orca/*|/opt/orca-ide/*|/opt/orca/*)
+    /opt/TeamRun/*|/opt/teamrun/*)
       rm -f "$link"
       ;;
   esac

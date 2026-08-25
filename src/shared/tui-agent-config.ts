@@ -86,6 +86,13 @@ export const TUI_AGENT_CONFIG: Record<TuiAgent, TuiAgentConfig> = {
     preflightTrust: 'codex',
     draftPasteReadySignal: 'codex-composer-prompt'
   },
+  'generic-cli': {
+    detectCmd: '__teamrun_generic_cli__',
+    detectUnsupportedRuntimes: ['darwin', 'linux', 'win32', 'wsl'],
+    launchCmd: '__teamrun_generic_cli__',
+    expectedProcess: '__teamrun_generic_cli__',
+    promptInjectionMode: 'argv'
+  },
   autohand: {
     detectCmd: 'autohand',
     launchCmd: 'autohand',

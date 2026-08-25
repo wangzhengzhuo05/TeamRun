@@ -1,0 +1,1 @@
+ALTER TABLE "team_agents" ADD COLUMN "launch_command" text;

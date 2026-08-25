@@ -17,13 +17,13 @@ export function showBlockedNotificationFallbackToast(): void {
   shownThisSession = true
   toast.warning(
     translate(
-      'auto.lib.blocked.notification.fallback.de50bef680',
-      'macOS is blocking Orca notifications'
+      'auto.lib.blocked.notification.fallback.teamrunBlocked',
+      'macOS is blocking TeamRun notifications'
     ),
     {
       description: translate(
-        'auto.components.onboarding.mac.notification.permission.card.721d2bedb6',
-        'Turn on Allow notifications for Orca in System Settings.'
+        'auto.components.onboarding.mac.notification.permission.card.teamrunGuidance',
+        'Turn on Allow notifications for TeamRun in System Settings.'
       ),
       action: {
         label: translate(

@@ -159,8 +159,8 @@ export function AddRepoLocalStartStep({
         {repoCount === 0 ? (
           <DialogDescription>
             {translate(
-              'auto.components.sidebar.AddRepoStartSteps.acf895cb42',
-              'Add a project to get started with Orca.'
+              'auto.components.sidebar.AddRepoStartSteps.teamRunDescription',
+              'Add a project to get started with TeamRun.'
             )}
           </DialogDescription>
         ) : null}

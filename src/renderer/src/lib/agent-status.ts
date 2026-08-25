@@ -102,6 +102,7 @@ const ICONABLE_AGENT_TYPES: Record<TuiAgent, true> = {
   'claude-agent-teams': true,
   openclaude: true,
   codex: true,
+  'generic-cli': true,
   autohand: true,
   opencode: true,
   'mimo-code': true,

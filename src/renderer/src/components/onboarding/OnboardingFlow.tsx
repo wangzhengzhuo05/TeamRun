@@ -26,8 +26,8 @@ const stepCopy = {
     },
     get subtitle() {
       return translate(
-        'auto.components.onboarding.OnboardingFlow.322fc50a18',
-        "Orca works with every CLI agent. Choose the one you'll reach for most. Switch any time."
+        'auto.components.onboarding.OnboardingFlow.teamRunAgentSubtitle',
+        "TeamRun works with every CLI agent. Choose the one you'll reach for most. Switch any time."
       )
     }
   },
@@ -54,8 +54,8 @@ const stepCopy = {
     },
     get subtitle() {
       return translate(
-        'auto.components.onboarding.OnboardingFlow.ff92d15436',
-        'Orca will notify you when agents are done or need help.'
+        'auto.components.onboarding.OnboardingFlow.teamRunNotificationSubtitle',
+        'TeamRun will notify you when agents are done or need help.'
       )
     }
   },
@@ -191,8 +191,8 @@ export default function OnboardingFlow({
           ref={flow.setLifecycleRootRef}
           role="dialog"
           aria-label={translate(
-            'auto.components.onboarding.OnboardingFlow.277ba45540',
-            'Orca onboarding'
+            'auto.components.onboarding.OnboardingFlow.teamRunAriaLabel',
+            'TeamRun onboarding'
           )}
           aria-modal="true"
           data-onboarding-modal
@@ -210,7 +210,7 @@ export default function OnboardingFlow({
                 className="h-7 w-auto shrink-0 invert dark:invert-0"
               />
               <span>
-                {translate('auto.components.onboarding.OnboardingFlow.a249f81538', 'Orca')}
+                {translate('auto.components.onboarding.OnboardingFlow.teamRunBrand', 'TeamRun')}
               </span>
             </div>
 
@@ -259,8 +259,8 @@ export default function OnboardingFlow({
               {stepIndex === 0 && (
                 <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                   {translate(
-                    'auto.components.onboarding.OnboardingFlow.1b5e182e9f',
-                    'Welcome to Orca'
+                    'auto.components.onboarding.OnboardingFlow.teamRunWelcome',
+                    'Welcome to TeamRun'
                   )}
                 </div>
               )}

@@ -152,8 +152,8 @@ export function AddRepoHostSelector({
                         </span>
                         <span className="mt-0.5 text-[11px] text-muted-foreground">
                           {translate(
-                            'auto.components.sidebar.AddRepoHostSelector.addRemoteServerDetail',
-                            'Pair with Orca running on another computer.'
+                            'auto.components.sidebar.AddRepoHostSelector.teamRunRemoteServerDetail',
+                            'Pair with TeamRun running on another computer.'
                           )}
                         </span>
                       </button>

@@ -225,10 +225,22 @@ async function collectCandidateFiles(root) {
   return reports
 }
 
-export async function main(root = process.cwd()) {
+function resolveRequestedFiles(root, requestedFiles) {
+  if (requestedFiles.length === 0) return null
+  const rendererRoot = path.resolve(root, 'src', 'renderer', 'src')
+  return requestedFiles.map((requestedFile) => {
+    const filePath = path.resolve(root, requestedFile)
+    if (filePath !== rendererRoot && !filePath.startsWith(`${rendererRoot}${path.sep}`)) {
+      throw new Error(`Localization target must be inside the renderer: ${requestedFile}`)
+    }
+    return filePath
+  })
+}
+
+export async function main(root = process.cwd(), requestedFiles = []) {
   const catalogPath = path.join(root, 'src', 'renderer', 'src', 'i18n', 'locales', 'en.json')
   const catalog = JSON.parse(await fs.readFile(catalogPath, 'utf8'))
-  const files = await collectCandidateFiles(root)
+  const files = resolveRequestedFiles(root, requestedFiles) ?? (await collectCandidateFiles(root))
   let count = 0
 
   for (const filePath of files) {
@@ -241,5 +253,5 @@ export async function main(root = process.cwd()) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(await main())
+  process.exit(await main(process.cwd(), process.argv.slice(2)))
 }

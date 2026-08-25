@@ -1,0 +1,11 @@
+{
+  "appId": "com.teamrun.desktop",
+  "appUserModelId": "com.teamrun.desktop",
+  "productName": "TeamRun",
+  "packageName": "teamrun",
+  "protocol": "teamrun",
+  "userDataDirectory": "TeamRun",
+  "devUserDataDirectory": "teamrun-dev",
+  "linuxExecutableName": "teamrun",
+  "desktopName": "teamrun.desktop"
+}
