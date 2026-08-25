@@ -1,5 +1,5 @@
 {
-  "name": "Orca Official Plugins",
+  "name": "TeamRun Official Plugins",
   "owner": "stablyai",
   "plugins": [
     {
@@ -9,8 +9,11 @@
         "url": "https://github.com/stablyai/orca-portuguese.git",
         "ref": "v1.0.0"
       },
-      "description": "Brazilian Portuguese translations for common Orca navigation.",
-      "categories": ["languages", "official"]
+      "description": "Brazilian Portuguese translations for common TeamRun navigation.",
+      "categories": [
+        "languages",
+        "official"
+      ]
     },
     {
       "id": "stablyai.orca-multipass-recipes",
@@ -20,7 +23,10 @@
         "ref": "v1.0.0"
       },
       "description": "A reviewed starter lifecycle for disposable Multipass workspaces.",
-      "categories": ["vm-recipes", "official"]
+      "categories": [
+        "vm-recipes",
+        "official"
+      ]
     },
     {
       "id": "stablyai.orca-navigation-shortcuts",
@@ -29,8 +35,11 @@
         "url": "https://github.com/stablyai/orca-navigation-shortcuts.git",
         "ref": "v1.0.0"
       },
-      "description": "Command aliases and optional shortcuts for frequent Orca views.",
-      "categories": ["keybindings", "official"]
+      "description": "Command aliases and optional shortcuts for frequent TeamRun views.",
+      "categories": [
+        "keybindings",
+        "official"
+      ]
     }
   ]
 }

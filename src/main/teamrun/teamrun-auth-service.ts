@@ -14,7 +14,8 @@ const authConfigSchema = z.object({
   issuer: z.url().nullable(),
   audience: z.string().nullable(),
   clientId: z.string().nullable(),
-  devAuth: z.boolean()
+  devAuth: z.boolean(),
+  sharedKeyAuth: z.boolean().optional().default(false)
 })
 
 const discoverySchema = z.object({
@@ -32,11 +33,23 @@ const tokenSchema = z.object({
 type ServiceAuthConfig = z.infer<typeof authConfigSchema>
 type OidcDiscovery = z.infer<typeof discoverySchema>
 
+export function normalizeTeamRunApiUrl(value: string): string {
+  const url = new URL(value.trim())
+  const localHttp =
+    url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  if (url.protocol !== 'https:' && !localHttp) {
+    throw new Error('teamrun_https_required')
+  }
+  return url.toString().replace(/\/$/, '')
+}
+
 function configuredApiUrl(): string | null {
   const value = process.env.TEAMRUN_API_URL?.trim()
   if (value) {
-    return new URL(value).toString().replace(/\/$/, '')
+    return normalizeTeamRunApiUrl(value)
   }
+  const session = readTeamRunSession()
+  if (session?.mode === 'shared-key') return session.apiUrl
   return app.isPackaged ? null : 'http://127.0.0.1:4310'
 }
 
@@ -75,7 +88,7 @@ async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
 }
 
 export class TeamRunAuthService {
-  #configCache: { value: ServiceAuthConfig; expiresAt: number } | null = null
+  #configCache: { apiUrl: string; value: ServiceAuthConfig; expiresAt: number } | null = null
   #refreshPromise: Promise<Extract<TeamRunSession, { mode: 'oidc' }>> | null = null
 
   get apiUrl(): string | null {
@@ -89,14 +102,16 @@ export class TeamRunAuthService {
     const identity =
       session.mode === 'dev'
         ? `dev:${session.email}`
-        : `oidc:${tokenSubject(session.accessToken) ?? session.email ?? 'unknown'}`
+        : session.mode === 'shared-key'
+          ? `shared-key:${session.email ?? 'team'}`
+          : `oidc:${tokenSubject(session.accessToken) ?? session.email ?? 'unknown'}`
     return createHash('sha256').update(`${apiUrl}:${identity}`).digest('hex')
   }
 
   async status(): Promise<TeamRunAuthStatus> {
     const apiUrl = this.apiUrl
     if (!apiUrl) {
-      return { state: 'unconfigured', apiUrl: '', devAuth: false }
+      return { state: 'unconfigured', apiUrl: '', devAuth: false, sharedKeyAuth: false }
     }
     try {
       const config = await this.#authConfig()
@@ -106,25 +121,48 @@ export class TeamRunAuthService {
             state: 'signed-in',
             apiUrl,
             devAuth: config.devAuth,
+            sharedKeyAuth: config.sharedKeyAuth,
             email: session.email
           }
-        : { state: 'signed-out', apiUrl, devAuth: config.devAuth }
+        : {
+            state: 'signed-out',
+            apiUrl,
+            devAuth: config.devAuth,
+            sharedKeyAuth: config.sharedKeyAuth
+          }
     } catch (error) {
       return {
         state: 'error',
         apiUrl,
         devAuth: false,
+        sharedKeyAuth: false,
         message: error instanceof Error ? error.message : String(error)
       }
     }
   }
 
   async signIn(args: TeamRunSignInArgs = {}): Promise<TeamRunAuthStatus> {
-    const apiUrl = this.apiUrl
+    const apiUrl = args.apiUrl ? normalizeTeamRunApiUrl(args.apiUrl) : this.apiUrl
     if (!apiUrl) {
-      return { state: 'unconfigured', apiUrl: '', devAuth: false }
+      return { state: 'unconfigured', apiUrl: '', devAuth: false, sharedKeyAuth: false }
     }
-    const config = await this.#authConfig()
+    const config = await this.#authConfig(apiUrl)
+    if (config.sharedKeyAuth) {
+      const accessKey = args.sharedKey?.trim()
+      if (!accessKey || accessKey.length < 24) {
+        throw new Error('teamrun_shared_key_required')
+      }
+      saveTeamRunSession({ mode: 'shared-key', apiUrl, accessKey, email: null })
+      try {
+        await fetchJson(`${apiUrl}/v1/organizations`, {
+          headers: { authorization: `Bearer ${accessKey}` }
+        })
+      } catch (error) {
+        clearTeamRunSession()
+        throw error
+      }
+      return this.status()
+    }
     if (config.devAuth) {
       const email = args.devEmail?.trim().toLowerCase()
       if (!email) {
@@ -170,7 +208,12 @@ export class TeamRunAuthService {
   signOut(): TeamRunAuthStatus {
     clearTeamRunSession()
     const apiUrl = this.apiUrl ?? ''
-    return { state: this.apiUrl ? 'signed-out' : 'unconfigured', apiUrl, devAuth: false }
+    return {
+      state: this.apiUrl ? 'signed-out' : 'unconfigured',
+      apiUrl,
+      devAuth: false,
+      sharedKeyAuth: false
+    }
   }
 
   async authorizationHeader(): Promise<string> {
@@ -181,6 +224,9 @@ export class TeamRunAuthService {
     if (session.mode === 'dev') {
       return `Dev ${session.email}`
     }
+    if (session.mode === 'shared-key') {
+      return `Bearer ${session.accessKey}`
+    }
     if (session.expiresAt > Date.now() + 60_000) {
       return `Bearer ${session.accessToken}`
     }
@@ -188,16 +234,19 @@ export class TeamRunAuthService {
     return `Bearer ${refreshed.accessToken}`
   }
 
-  async #authConfig(): Promise<ServiceAuthConfig> {
-    if (this.#configCache && this.#configCache.expiresAt > Date.now()) {
+  async #authConfig(apiUrl = this.apiUrl): Promise<ServiceAuthConfig> {
+    if (
+      apiUrl &&
+      this.#configCache?.apiUrl === apiUrl &&
+      this.#configCache.expiresAt > Date.now()
+    ) {
       return this.#configCache.value
     }
-    const apiUrl = this.apiUrl
     if (!apiUrl) {
       throw new Error('teamrun_api_unconfigured')
     }
     const value = authConfigSchema.parse(await fetchJson(`${apiUrl}/v1/auth/config`))
-    this.#configCache = { value, expiresAt: Date.now() + 5 * 60 * 1000 }
+    this.#configCache = { apiUrl, value, expiresAt: Date.now() + 5 * 60 * 1000 }
     return value
   }
 

@@ -71,7 +71,7 @@ type Props = {
   selectedRepoIds: ReadonlySet<string>
 }
 
-const ORCA_FEATURE_REQUEST_URL = 'https://github.com/stablyai/orca/issues/new'
+const ORCA_FEATURE_REQUEST_URL = 'https://github.com/wangzhengzhuo05/TeamRun/issues/new'
 
 function listProjectViewsForRuntime(
   settings: Parameters<typeof getActiveRuntimeTarget>[0],
@@ -416,7 +416,7 @@ export default function ProjectViewWrapper({ selectedRepoIds }: Props): React.JS
     selectedRepoIds
   )
   if (resolvedDialogRepoItem !== dialogRepoItem) {
-    // Why: clear the repo-backed dialog when its repo leaves Orca, before the modal tree gets stale repo ids.
+    // Why: clear the repo-backed dialog when its repo leaves TeamRun, before the modal tree gets stale repo ids.
     setDialogRepoItem(resolvedDialogRepoItem)
   }
   const resolvedDialogRepo = resolvedDialogRepoItem
@@ -950,14 +950,14 @@ export default function ProjectViewWrapper({ selectedRepoIds }: Props): React.JS
             <DialogTitle>
               {translate(
                 'auto.components.github.project.ProjectViewWrapper.7037c8f5f1',
-                'Repository not in Orca'
+                'Repository not in TeamRun'
               )}
             </DialogTitle>
             <DialogDescription>
               {resolvedMissingRepoDialogs.repoNotInOrca
                 ? translate(
                     'auto.components.github.project.ProjectViewWrapper.1850fceac8',
-                    "{{value0}}/{{value1}} isn't added to Orca. Add it to start work, or open in GitHub.",
+                    "{{value0}}/{{value1}} isn't added to TeamRun. Add it to start work, or open in GitHub.",
                     {
                       value0: resolvedMissingRepoDialogs.repoNotInOrca.owner,
                       value1: resolvedMissingRepoDialogs.repoNotInOrca.repo
@@ -1167,7 +1167,7 @@ function ViewTabStrip({
                 ? v.name
                 : translate(
                     'auto.components.github.project.ProjectViewWrapper.2edf5e7e77',
-                    "{{value0}} — Orca doesn't support {{value1}} project views yet. File a feature request at {{value2}}.",
+                    "{{value0}} — TeamRun doesn't support {{value1}} project views yet. File a feature request at {{value2}}.",
                     { value0: v.name, value1: layoutLabel, value2: ORCA_FEATURE_REQUEST_URL }
                   )
             }
@@ -1187,7 +1187,7 @@ function ViewTabStrip({
         if (supported) {
           return tab
         }
-        const unsupportedMessage = `Orca doesn't support ${layoutLabel} project views yet.`
+        const unsupportedMessage = `TeamRun doesn't support ${layoutLabel} project views yet.`
         return (
           <HoverCard key={v.id} openDelay={200} closeDelay={100}>
             <HoverCardTrigger asChild>
@@ -1209,7 +1209,7 @@ function ViewTabStrip({
                   {unsupportedMessage}{' '}
                   {translate(
                     'auto.components.github.project.ProjectViewWrapper.1bf8c01c8b',
-                    'Switch to a Table view to work with this project in Orca.'
+                    'Switch to a Table view to work with this project in TeamRun.'
                   )}
                 </p>
                 <Button
@@ -1264,9 +1264,9 @@ function ErrorState({
   }
   const copy =
     error.type === 'too_large'
-      ? `This view has ${totalCount ?? 'many'} items — too large to render in Orca. Narrow the view's filter on GitHub.`
+      ? `This view has ${totalCount ?? 'many'} items — too large to render in TeamRun. Narrow the view's filter on GitHub.`
       : error.type === 'unsupported_layout'
-        ? 'Orca only renders table views yet. This is a Board or Roadmap view.'
+        ? 'TeamRun only renders table views yet. This is a Board or Roadmap view.'
         : error.type === 'not_found'
           ? 'Could not find this project or view.'
           : error.type === 'schema_drift'

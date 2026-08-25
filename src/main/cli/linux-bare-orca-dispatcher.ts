@@ -31,7 +31,7 @@ export type LinuxBareOrcaDispatcherResult = {
 }
 
 // Why: on Linux the CLI installs as `orca-ide`, not bare `orca`, to avoid
-// shadowing GNOME Orca's /usr/bin/orca. But the Claude Team launcher typed into
+// shadowing GNOME TeamRun's /usr/bin/orca. But the Claude Team launcher typed into
 // the initial managed terminal invokes the literal `orca claude-teams`, so a
 // headless serve box needs a bare-`orca` dispatcher on the managed-terminal PATH
 // (~/.local/bin, which patchPackagedProcessPath puts ahead of /usr/bin). It is a
@@ -60,7 +60,7 @@ export async function installLinuxBareOrcaDispatcher(
   return { state: 'installed', dispatcherPath, target: resolved.target }
 }
 
-/** Bare-`orca` script that execs the Orca CLI: the stable AppImage when running
+/** Bare-`orca` script that execs the TeamRun CLI: the stable AppImage when running
  *  from one, otherwise the bundled `orca-ide` launcher. Shared by the serve
  *  dispatcher and the managed-terminal PATH shim. */
 export function buildBareOrcaCliScript(

@@ -1,6 +1,6 @@
 import { REMOTE_SERVER_UPDATE_CAPABILITY } from './remote-server-update'
 
-// Why: declares the Orca runtime RPC compatibility contract. Desktop,
+// Why: declares the TeamRun runtime RPC compatibility contract. Desktop,
 // headless server, CLI, and mobile builds may drift in app version, but
 // they must agree on this protocol range before runtime RPCs are allowed.
 //
@@ -93,7 +93,7 @@ export const FILE_MUTATION_OWNERSHIP_RUNTIME_CAPABILITY = 'files.mutation-owners
 export const TEAMRUN_WORKSPACE_OPERATIONS_RUNTIME_CAPABILITY =
   'teamrun.workspace-operations.v1' as const
 export const FILE_MUTATION_OWNERSHIP_UPDATE_REQUIRED_MESSAGE =
-  'Remote file changes require a newer Orca server. Update the HUB and try again.'
+  'Remote file changes require a newer TeamRun server. Update the HUB and try again.'
 
 export const RUNTIME_CAPABILITIES = [
   'runtime.status.compat.v1',

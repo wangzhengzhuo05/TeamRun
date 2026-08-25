@@ -12,7 +12,7 @@ export type AgentTrustPreset = 'cursor' | 'copilot' | 'codex'
  * Codex so the agent's "Do you trust this folder?" menu does not fire on
  * first launch.
  *
- * Why: Orca's "drop URL into agent input as a draft" flow injects the URL
+ * Why: TeamRun's "drop URL into agent input as a draft" flow injects the URL
  * via bracketed-paste once the TUI is up. If the trust menu intercepts the
  * keystrokes (each menu reads a single character or numbered option), the
  * paste either selects an arbitrary option or quits the session. Pre-writing
@@ -112,7 +112,7 @@ export function markCodexProjectTrusted(workspacePath: string): void {
   const absPath = resolveCodexProjectTrustRoot(workspacePath)
   const configPath = join(homedir(), '.codex', 'config.toml')
   upsertProjectTrustLevel(configPath, absPath, 'trusted')
-  // Why: Orca-launched Codex runs with an Orca-owned CODEX_HOME, so the trust
+  // Why: TeamRun-launched Codex runs with an TeamRun-owned CODEX_HOME, so the trust
   // preset must also update the runtime config Codex will actually read.
   upsertProjectTrustLevel(join(getOrcaManagedCodexHomePath(), 'config.toml'), absPath, 'trusted')
 }

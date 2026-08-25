@@ -87,7 +87,8 @@ export async function createTeamRunApp(config: TeamRunServiceConfig): Promise<Fa
     issuer: config.TEAMRUN_OIDC_ISSUER ?? null,
     audience: config.TEAMRUN_OIDC_AUDIENCE ?? null,
     clientId: config.TEAMRUN_OIDC_CLIENT_ID ?? null,
-    devAuth: config.TEAMRUN_DEV_AUTH === '1'
+    devAuth: config.TEAMRUN_DEV_AUTH === '1',
+    sharedKeyAuth: Boolean(config.TEAMRUN_SHARED_KEY)
   }))
 
   await registerOrganizationRoutes(app)

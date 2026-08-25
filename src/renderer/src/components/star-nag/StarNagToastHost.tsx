@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { translate } from '@/i18n/i18n'
 
-const ORCA_REPO_URL = 'https://github.com/stablyai/orca'
+const ORCA_REPO_URL = 'https://github.com/wangzhengzhuo05/TeamRun'
 type StarNagMode = 'gh' | 'web'
 type StarNagToastStatus = 'idle' | 'busy' | 'starred' | 'opened'
 
@@ -122,7 +122,7 @@ function StarNagToast({
           <p className="text-sm leading-5 text-muted-foreground">
             {translate(
               'auto.components.star.nag.StarNagToastHost.teamRunBody',
-              'TeamRun builds on Orca. A GitHub star helps support the upstream project.'
+              'TeamRun builds on TeamRun. A GitHub star helps support the upstream project.'
             )}
           </p>
         </div>

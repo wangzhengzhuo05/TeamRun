@@ -214,7 +214,7 @@ export function configureOrcaUserDataPathEnv(): void {
 
 export function shouldInstallManagedHooks(isDev: boolean): boolean {
   void isDev
-  // Why: managed hooks now target Orca-owned Codex homes, not ~/.codex, so keep install on for all agents until each gets its own seam.
+  // Why: managed hooks now target TeamRun-owned Codex homes, not ~/.codex, so keep install on for all agents until each gets its own seam.
   return true
 }
 
@@ -260,7 +260,7 @@ export function installDevParentWatchdog(isDev: boolean): void {
 
     if (parentPidChanged || parentMissing) {
       clearInterval(timer)
-      // Why: the dev runner spawns Electron without IPC, so on macOS Ctrl+C leaves Orca open; watch the parent PID to couple shutdown.
+      // Why: the dev runner spawns Electron without IPC, so on macOS Ctrl+C leaves TeamRun open; watch the parent PID to couple shutdown.
       requestDevParentShutdown()
     }
   }, 1000)

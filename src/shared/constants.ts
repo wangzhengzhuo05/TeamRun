@@ -281,7 +281,7 @@ export function getDefaultSettings(homedir: string): GlobalSettings {
     showMobileButton: true,
     showPinnedWorktreesInGroups: false,
     ctrlTabOrderMode: 'mru',
-    // Why: Orca-first keeps core shortcuts working from a focused terminal; TUI-ownership users opt in.
+    // Why: TeamRun-first keeps core shortcuts working from a focused terminal; TUI-ownership users opt in.
     terminalShortcutPolicy: 'orca-first',
     floatingTerminalEnabled: true,
     floatingTerminalDefaultedForAllUsers: true,

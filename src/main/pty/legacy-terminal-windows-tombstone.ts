@@ -35,7 +35,7 @@ if not defined orca_clean_path goto :orca_candidates_walked
 for %%P in ("%orca_clean_path:;=" "%") do call :orca_try_candidate "%%~P"
 :orca_candidates_walked
 if not defined orca_real (
-  echo Orca compatibility wrapper could not locate __ORCA_COMMAND__ on PATH. 1>&2
+  echo TeamRun compatibility wrapper could not locate __ORCA_COMMAND__ on PATH. 1>&2
   exit /b 127
 )
 :run
@@ -129,7 +129,7 @@ if (-not $realCommand -or -not (Test-Path -LiteralPath $realCommand)) {
   }
 }
 if (-not $realCommand) {
-  [Console]::Error.WriteLine("Orca compatibility wrapper could not locate $commandName on PATH.")
+  [Console]::Error.WriteLine("TeamRun compatibility wrapper could not locate $commandName on PATH.")
   exit 127
 }
 & $realCommand @args

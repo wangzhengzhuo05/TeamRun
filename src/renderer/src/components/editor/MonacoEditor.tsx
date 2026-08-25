@@ -838,7 +838,7 @@ export default function MonacoEditor({
       <Editor
         height={renderedEditorHeight === null ? '100%' : `${renderedEditorHeight}px`}
         language={language}
-        // Why: defaultValue, not controlled value — Orca owns post-mount content sync; a controlled path would double setValue.
+        // Why: defaultValue, not controlled value — TeamRun owns post-mount content sync; a controlled path would double setValue.
         defaultValue={content}
         theme={isDark ? 'vs-dark' : 'vs'}
         onChange={handleChange}
@@ -869,7 +869,7 @@ export default function MonacoEditor({
           selectionClipboard: settings?.primarySelectionMiddleClickPaste ?? isLinuxUserAgent()
         }}
         path={filePath}
-        // Why: Orca owns cursor/scroll restoration, so disable @monaco-editor/react's competing view-state Map.
+        // Why: TeamRun owns cursor/scroll restoration, so disable @monaco-editor/react's competing view-state Map.
         saveViewState={false}
         keepCurrentModel
       />

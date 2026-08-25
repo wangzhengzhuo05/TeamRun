@@ -197,7 +197,7 @@ export function buildSettingsNavigationMetadata({
       title: translate('auto.hooks.useSettingsNavigationMetadata.58a868e8e4', 'Orchestration'),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.cd50cec5d7',
-        'Coordinate multiple coding agents through Orca.'
+        'Coordinate multiple coding agents through TeamRun.'
       ),
       icon: Network,
       searchEntries: getOrchestrationPaneSearchEntries(),
@@ -212,7 +212,7 @@ export function buildSettingsNavigationMetadata({
             title: translate('auto.hooks.useSettingsNavigationMetadata.linearTitle', 'Linear'),
             description: translate(
               'auto.hooks.useSettingsNavigationMetadata.linearDescription',
-              'How Linear works in Orca, setup checklist, agent skill, and example prompts.'
+              'How Linear works in TeamRun, setup checklist, agent skill, and example prompts.'
             ),
             icon: LinearIcon,
             searchEntries: getLinearAgentSkillPaneSearchEntries(),
@@ -250,10 +250,10 @@ export function buildSettingsNavigationMetadata({
       ? [
           {
             id: 'orca-account',
-            title: translate('auto.components.settings.orcaAccount.title', 'Orca Account'),
+            title: translate('auto.components.settings.orcaAccount.title', 'TeamRun Account'),
             description: translate(
               'auto.components.settings.orcaAccount.description',
-              'Share work instantly and reach your desktop from Orca Mobile wherever you are.'
+              'Share work instantly and reach your desktop from TeamRun Mobile wherever you are.'
             ),
             icon: CircleUserRound,
             searchEntries: getOrcaAccountSettingsSearchEntries(),
@@ -269,7 +269,7 @@ export function buildSettingsNavigationMetadata({
       ),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.5f32ac08f3',
-        'Finish the onboarding checklist for core Orca workflows.'
+        'Finish the onboarding checklist for core TeamRun workflows.'
       ),
       icon: OrcaLogoSettingsIcon,
       searchEntries: [
@@ -286,7 +286,7 @@ export function buildSettingsNavigationMetadata({
             translate('auto.hooks.useSettingsNavigationMetadata.ea0b1bc7b8', 'setup guide'),
             translate(
               'auto.hooks.useSettingsNavigationMetadata.0505d0df29',
-              'get started with Orca'
+              'get started with TeamRun'
             ),
             translate('auto.hooks.useSettingsNavigationMetadata.724c440e72', 'getting started')
           ]
@@ -432,7 +432,7 @@ export function buildSettingsNavigationMetadata({
             ),
             description: translate(
               'auto.hooks.useSettingsNavigationMetadata.3d65d3f1b9',
-              'Configure mobile emulator support for Orca and coding agents.'
+              'Configure mobile emulator support for TeamRun and coding agents.'
             ),
             icon: TabletSmartphone,
             searchEntries: getMobileEmulatorSearchEntries(),
@@ -521,7 +521,7 @@ export function buildSettingsNavigationMetadata({
       title: translate('auto.hooks.useSettingsNavigationMetadata.d72a58b5b9', 'Stats & Usage'),
       description: translate(
         'auto.hooks.useSettingsNavigationMetadata.b351014180',
-        'Orca stats plus Claude, Codex, OpenCode token analytics and Grok subscription usage.'
+        'TeamRun stats plus Claude, Codex, OpenCode token analytics and Grok subscription usage.'
       ),
       icon: BarChart3,
       searchEntries: getStatsPaneSearchEntries(),
@@ -546,11 +546,11 @@ export function buildSettingsNavigationMetadata({
       id: 'servers',
       title: translate(
         'auto.hooks.useSettingsNavigationMetadata.de0c2907a1',
-        'Remote Orca Servers'
+        'Remote TeamRun Servers'
       ),
       description: isWebClient
-        ? 'Connect this browser to a saved Orca server.'
-        : 'Pair remote Orca runtimes for persistent sessions, richer remote state, and web or mobile handoff.',
+        ? 'Connect this browser to a saved TeamRun server.'
+        : 'Pair remote TeamRun runtimes for persistent sessions, richer remote state, and web or mobile handoff.',
       icon: Server,
       searchEntries: [runtimeEnvironmentsSearchEntry],
       group: 'remote',
@@ -641,7 +641,7 @@ export function buildSettingsNavigationMetadata({
             title: translate('auto.hooks.useSettingsNavigationMetadata.pluginsTitle', 'Plugins'),
             description: translate(
               'auto.hooks.useSettingsNavigationMetadata.pluginsDescription',
-              'Install and manage experimental Orca plugins.'
+              'Install and manage experimental TeamRun plugins.'
             ),
             icon: Blocks,
             searchEntries: getPluginsPaneSearchEntries(),
@@ -650,7 +650,7 @@ export function buildSettingsNavigationMetadata({
         ]
       : []),
     // Why: one nav row per project, not per repo row — a project set up on
-    // multiple hosts (local + a Remote Orca Server, or two clones) collapses to
+    // multiple hosts (local + a Remote TeamRun Server, or two clones) collapses to
     // a single entry. Derived from repos alone so this list matches the panes.
     ...buildSettingsProjectList(repos).map(({ project, representativeRepoId, setups }) => {
       const representativeRepo = reposById.get(representativeRepoId) ?? repos[0]

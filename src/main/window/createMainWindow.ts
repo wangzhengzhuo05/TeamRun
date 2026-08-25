@@ -194,7 +194,7 @@ type CreateMainWindowOptions = {
     details: Electron.RenderProcessGoneDetails,
     webContentsId: number
   ) => void
-  /** Returns true when Orca should reload after renderer loss; update-relaunch/quit tear down children intentionally, so don't fight shutdown. */
+  /** Returns true when TeamRun should reload after renderer loss; update-relaunch/quit tear down children intentionally, so don't fight shutdown. */
   shouldRecoverRenderer?: (
     details: Electron.RenderProcessGoneDetails,
     webContentsId: number
@@ -273,7 +273,7 @@ export function createMainWindow(
     minHeight: MIN_HEIGHT,
     title: opts?.title ?? 'TeamRun',
     show: false,
-    // Why: macOS swallows the app-activating click by default, so clicking back into Orca needed a second click (Windows/Linux already deliver it).
+    // Why: macOS swallows the app-activating click by default, so clicking back into TeamRun needed a second click (Windows/Linux already deliver it).
     acceptFirstMouse: true,
     // Why: auto-hide the Windows/Linux menu bar to save a row (Alt reveals it); macOS uses the system menu bar anyway.
     autoHideMenuBar: true,
@@ -830,7 +830,7 @@ export function createMainWindow(
     }
 
     if (isMacAppPasteInput(input)) {
-      // Why: chat/terminal panes hold focus without native editable controls, so route Cmd+V through Orca's paste ownership.
+      // Why: chat/terminal panes hold focus without native editable controls, so route Cmd+V through TeamRun's paste ownership.
       event.preventDefault()
       mainWindow.webContents.send('ui:appMenuPaste')
       return

@@ -64,7 +64,7 @@ function formatDevInstanceLabel(branch, worktreeName) {
 }
 
 function createDockTitle(branch, label) {
-  return `Orca: ${branch || label || 'dev'}`
+  return `TeamRun: ${branch || label || 'dev'}`
 }
 
 function seedDevInstanceIdentityEnv() {
@@ -106,7 +106,7 @@ function sanitizeMacAppBundleName(value) {
       .join('')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 120) || 'Orca'
+      .slice(0, 120) || 'TeamRun'
   )
 }
 
@@ -126,9 +126,9 @@ function prepareMacDevElectronApp() {
     electronVersion = JSON.parse(readFileSync(electronPackagePath, 'utf8')).version ?? null
   } catch {}
 
-  const title = process.env.ORCA_DEV_DOCK_TITLE || 'Orca: dev'
+  const title = process.env.ORCA_DEV_DOCK_TITLE || 'TeamRun: dev'
   const identityKey = process.env.ORCA_DEV_INSTANCE_KEY || repoRoot
-  // v7: give the terminal daemon helper an Orca-specific TCC identity.
+  // v7: give the terminal daemon helper an TeamRun-specific TCC identity.
   const bundleLayoutVersion = 'dock-title-app-preserve-framework-symlinks-v7'
   const hash = createHash('sha1')
     .update(
@@ -144,7 +144,7 @@ function prepareMacDevElectronApp() {
   const markerPath = path.join(distDir, 'orca-dev-electron-app.json')
   // Why: one stable id for every dev instance. Per-instance ids registered a
   // new macOS Notification Settings entry for each branch × Electron version,
-  // piling up "Orca: <branch>" rows forever and breaking the notification
+  // piling up "TeamRun: <branch>" rows forever and breaking the notification
   // settings deep-link (System Settings can't resolve an id it has no entry
   // for and falls back to the root list). macOS keys notification permission
   // by bundle id, so a single id also means granting notifications to one dev

@@ -1,4 +1,4 @@
-// Why: full Orca dispatch preambles are multi-KB (CLI instructions before
+// Why: full TeamRun dispatch preambles are multi-KB (CLI instructions before
 // `=== TASK ===`). A naive first-N-char fold of the agent-status prompt keeps
 // only lifecycle boilerplate and drops the task body the UI needs as a
 // fallback label before orchestration metadata arrives. Compact the status
@@ -6,6 +6,8 @@
 // inside AGENT_STATUS_MAX_FIELD_LENGTH.
 
 export const ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX =
+  'You are working inside TeamRun, a multi-agent IDE.'
+const LEGACY_ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX =
   'You are working inside Orca, a multi-agent IDE.'
 export const ORCA_DISPATCH_STATUS_TASK_MARKER = '=== TASK ==='
 const ORCA_DISPATCH_STATUS_TASK_ID_MARKER = 'Your task ID is:'
@@ -21,9 +23,8 @@ export function isOrcaDispatchStatusPrompt(value: string): boolean {
   while (start < scanEnd && isEcmaTrimWhitespace(value.charCodeAt(start))) {
     start++
   }
-  return (
-    start + ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX.length <= scanEnd &&
-    value.startsWith(ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX, start)
+  return [ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX, LEGACY_ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX].some(
+    (prefix) => start + prefix.length <= scanEnd && value.startsWith(prefix, start)
   )
 }
 
@@ -85,9 +86,9 @@ export function compactDispatchPromptForStatus(
 }
 
 /**
- * Locate the Orca task separator in a dispatch prompt scan window.
+ * Locate the TeamRun task separator in a dispatch prompt scan window.
  * Why: base-drift commit subjects are repository-controlled and may mention
- * `=== TASK ===`. Raw multi-line preambles must use the standalone line Orca
+ * `=== TASK ===`. Raw multi-line preambles must use the standalone line TeamRun
  * emits; already-normalized single-line status previews intentionally keep the
  * marker inline so re-normalization and UI helpers stay consistent.
  */

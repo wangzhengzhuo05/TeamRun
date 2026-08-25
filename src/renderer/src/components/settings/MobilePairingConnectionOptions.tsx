@@ -149,7 +149,7 @@ export function MobilePairingConnectionOptions({
           onSelect={() => onChange('automatic')}
           title={translate(
             'auto.components.settings.MobilePairingConnectionOptions.anywhereTitle',
-            selfHosted ? 'Self-hosted Relay' : 'Orca Relay'
+            selfHosted ? 'Self-hosted Relay' : 'TeamRun Relay'
           )}
           description={
             relayUnavailable
@@ -160,12 +160,12 @@ export function MobilePairingConnectionOptions({
                   )
                 : translate(
                     'auto.components.settings.MobilePairingConnectionOptions.relayUnavailable',
-                    'Orca Relay isn’t available in this build. Use LAN.'
+                    'TeamRun Relay isn’t available in this build. Use LAN.'
                   )
               : selfHosted
                 ? translate(
                     'auto.components.settings.MobilePairingConnectionOptions.selfHostedDescription',
-                    'Phone can be on cellular or any Wi‑Fi. No Orca account required.'
+                    'Phone can be on cellular or any Wi‑Fi. No TeamRun account required.'
                   )
                 : translate(
                     'auto.components.settings.MobilePairingConnectionOptions.anywhereDescription',
@@ -274,7 +274,7 @@ export function MobilePairingConnectionOptions({
               )
             : translate(
                 'auto.components.settings.MobilePairingConnectionOptions.officialServer',
-                'Relay server: Orca cloud'
+                'Relay server: TeamRun cloud'
               )}
         </p>
         <MobileRelayServerDialog

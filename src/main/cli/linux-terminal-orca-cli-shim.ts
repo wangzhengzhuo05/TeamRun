@@ -18,11 +18,11 @@ export type LinuxTerminalOrcaCliShimOptions = {
 }
 
 // Why: on Linux the CLI installs as `orca-ide` so it never shadows the GNOME
-// Orca screen reader at /usr/bin/orca — but agent-facing surfaces (skills,
+// TeamRun screen reader at /usr/bin/orca — but agent-facing surfaces (skills,
 // dispatch preambles, CLI hints) all invoke bare `orca`, so on stock Ubuntu an
-// agent inside an Orca terminal would launch the screen reader instead
+// agent inside an TeamRun terminal would launch the screen reader instead
 // (stablyai/orca#7904). Prepending this userData-scoped shim dir to managed-PTY
-// PATH makes bare `orca` resolve to the Orca CLI inside Orca terminals only,
+// PATH makes bare `orca` resolve to the TeamRun CLI inside TeamRun terminals only,
 // leaving the user's own shells (and their screen reader) untouched.
 export function ensureLinuxTerminalOrcaCliShimDir(
   options: LinuxTerminalOrcaCliShimOptions

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Orca Linux computer-use bridge.
+"""TeamRun Linux computer-use bridge.
 
-The Node sidecar owns Orca's public API. This process is intentionally a small
+The Node sidecar owns TeamRun's public API. This process is intentionally a small
 AT-SPI adapter: read one JSON operation file, execute it in the user's desktop
 session, and print one JSON response.
 """

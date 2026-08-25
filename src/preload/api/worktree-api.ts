@@ -94,7 +94,7 @@ export type WorktreeApi = {
     allowUnverifiedPtyStop?: boolean
     skipArchive?: boolean
   }) => Promise<RemoveWorktreeResult>
-  // Forget a workspace from Orca only (no remote Git/FS work) — for workspaces pinned to a removed/disconnected SSH host.
+  // Forget a workspace from TeamRun only (no remote Git/FS work) — for workspaces pinned to a removed/disconnected SSH host.
   forgetLocal: (args: {
     worktreeId: string
     hostId?: ExecutionHostId

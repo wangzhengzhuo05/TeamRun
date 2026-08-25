@@ -9,7 +9,7 @@ import {
   type OrcaAppDistribution
 } from './app-distribution'
 
-const ORCA_APP_NAME = 'Orca'
+const ORCA_APP_NAME = 'TeamRun'
 const ORCA_APP_USER_MODEL_ID = 'com.stablyai.orca'
 const MAX_LABEL_LENGTH = 80
 
@@ -18,7 +18,7 @@ export type DevInstanceIdentity = AppIdentity & {
   // Why: drives app.setName → the macOS safeStorage Keychain item name
   // ("<appName> Safe Storage"). Kept stable across dev branches (unlike the
   // per-branch `name`) so every dev instance shares one Keychain key instead of
-  // creating a new one per branch and re-prompting. Distinct from prod's 'Orca'.
+  // creating a new one per branch and re-prompting. Distinct from prod's 'TeamRun'.
   appName: string
 }
 
@@ -94,7 +94,7 @@ export function getDevInstanceIdentity(
 
   return {
     name: dockTitle,
-    // Why: one stable Keychain key ('Orca Dev Safe Storage') for all dev
+    // Why: one stable Keychain key ('TeamRun Dev Safe Storage') for all dev
     // branches; the per-branch identity still shows via `name` (window title,
     // app menu, renderer label).
     appName: `${baseAppName} Dev`,

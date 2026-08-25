@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: teamrun
+      POSTGRES_USER: teamrun
+      POSTGRES_PASSWORD: ${TEAMRUN_DATABASE_PASSWORD}
+    volumes:
+      - teamrun-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U teamrun']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${TEAMRUN_S3_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${TEAMRUN_S3_SECRET_ACCESS_KEY}
+    volumes:
+      - teamrun-minio:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      TEAMRUN_S3_ACCESS_KEY_ID: ${TEAMRUN_S3_ACCESS_KEY_ID}
+      TEAMRUN_S3_SECRET_ACCESS_KEY: ${TEAMRUN_S3_SECRET_ACCESS_KEY}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - >-
+        mc alias set teamrun http://minio:9000 "$${TEAMRUN_S3_ACCESS_KEY_ID}" "$${TEAMRUN_S3_SECRET_ACCESS_KEY}";
+        mc mb --ignore-existing teamrun/teamrun-publications
+
+  api:
+    build:
+      context: ../..
+      dockerfile: config/teamrun/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4310
+      DATABASE_URL: postgres://teamrun:${TEAMRUN_DATABASE_PASSWORD}@postgres:5432/teamrun
+      TEAMRUN_PUBLIC_URL: https://${TEAMRUN_DOMAIN}
+      TEAMRUN_SHARED_KEY: ${TEAMRUN_SHARED_KEY}
+      TEAMRUN_SHARED_KEY_EMAIL: ${TEAMRUN_SHARED_KEY_EMAIL:-team@teamrun.local}
+      TEAMRUN_SHARED_KEY_DISPLAY_NAME: ${TEAMRUN_SHARED_KEY_DISPLAY_NAME:-TeamRun Team}
+      TEAMRUN_DEV_AUTH: '0'
+      TEAMRUN_CORS_ORIGINS: https://${TEAMRUN_DOMAIN}
+      TEAMRUN_S3_ENDPOINT: http://minio:9000
+      TEAMRUN_S3_PUBLIC_ENDPOINT: https://storage.${TEAMRUN_DOMAIN}
+      TEAMRUN_S3_REGION: us-east-1
+      TEAMRUN_S3_BUCKET: teamrun-publications
+      TEAMRUN_S3_ACCESS_KEY_ID: ${TEAMRUN_S3_ACCESS_KEY_ID}
+      TEAMRUN_S3_SECRET_ACCESS_KEY: ${TEAMRUN_S3_SECRET_ACCESS_KEY}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:4310/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      TEAMRUN_DOMAIN: ${TEAMRUN_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - teamrun-caddy-data:/data
+      - teamrun-caddy-config:/config
+
+volumes:
+  teamrun-postgres:
+  teamrun-minio:
+  teamrun-caddy-data:
+  teamrun-caddy-config:

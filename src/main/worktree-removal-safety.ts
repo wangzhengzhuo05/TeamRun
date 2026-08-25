@@ -185,7 +185,7 @@ export function canCleanupUnregisteredOrcaWorktreeDirectory(args: {
   }
 
   // Why: path shape alone is not authority; users can create plain Git
-  // worktrees inside Orca's workspace directory too.
+  // worktrees inside TeamRun's workspace directory too.
   return false
 }
 
@@ -202,7 +202,7 @@ export async function canCleanupUnregisteredOrcaLeftoverDirectory(args: {
   // Why: this recovery state has already lost the worktree .git marker, so the
   // existing .git-file orphan proof cannot establish ownership.
   // Why: without a surviving .git file, path shape alone is too weak to prove
-  // ownership for recursive deletion; require persisted Orca-created evidence.
+  // ownership for recursive deletion; require persisted TeamRun-created evidence.
   if (!hasCurrentOrcaCreationProvenance(args.meta) && !hasLegacyOrcaCreationEvidence(args.meta)) {
     return false
   }

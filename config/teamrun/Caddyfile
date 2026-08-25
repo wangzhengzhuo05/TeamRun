@@ -1,0 +1,8 @@
+{$TEAMRUN_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy api:4310
+}
+
+storage.{$TEAMRUN_DOMAIN} {
+  reverse_proxy minio:9000
+}

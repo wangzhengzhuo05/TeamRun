@@ -215,10 +215,10 @@ export type GetStatusOptions = GitRuntimeOptions & {
    */
   limit?: number
   bypassEffectiveUpstreamNegativeCache?: boolean
-  /** Paths Orca may have symlinked into this worktree (per-user shared paths
+  /** Paths TeamRun may have symlinked into this worktree (per-user shared paths
    *  plus `orca.yaml` shared directories). Untracked entries that are one of
    *  these *and* really symlinks are dropped: Git cannot ignore them when the
-   *  repo's rule is directory-only (`node_modules/`), but they are Orca's own
+   *  repo's rule is directory-only (`node_modules/`), but they are TeamRun's own
    *  artifacts, not user work. */
   sharedLinkPaths?: readonly string[]
 }
@@ -256,7 +256,7 @@ function getStatusReadKey(worktreePath: string, options: GetStatusOptions): stri
   ])
 }
 
-/** Remove untracked entries that are shared symlinks Orca created.
+/** Remove untracked entries that are shared symlinks TeamRun created.
  *
  *  Why this can't be left to Git: a directory-only ignore rule (`node_modules/`)
  *  matches the primary checkout's real directory but never the worktree's

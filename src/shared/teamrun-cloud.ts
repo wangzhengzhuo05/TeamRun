@@ -3,21 +3,28 @@ export type TeamRunAuthStatus =
       state: 'signed-out' | 'unconfigured'
       apiUrl: string
       devAuth: boolean
+      sharedKeyAuth: boolean
     }
   | {
       state: 'signed-in'
       apiUrl: string
       devAuth: boolean
+      sharedKeyAuth: boolean
       email: string | null
     }
   | {
       state: 'error'
       apiUrl: string
       devAuth: boolean
+      sharedKeyAuth: boolean
       message: string
     }
 
-export type TeamRunSignInArgs = { devEmail?: string }
+export type TeamRunSignInArgs = {
+  apiUrl?: string
+  sharedKey?: string
+  devEmail?: string
+}
 
 export type TeamRunSyncStatus = {
   connection: 'connecting' | 'online' | 'offline' | 'blocked'

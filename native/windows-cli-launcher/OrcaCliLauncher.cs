@@ -12,7 +12,7 @@ internal static class OrcaCliLauncher
             string launcherDirectory = Path.GetDirectoryName(typeof(OrcaCliLauncher).Assembly.Location);
             string resourcesDirectory = Directory.GetParent(launcherDirectory).FullName;
             string appDirectory = Directory.GetParent(resourcesDirectory).FullName;
-            string electronPath = Path.Combine(appDirectory, "Orca.exe");
+            string electronPath = Path.Combine(appDirectory, "TeamRun.exe");
             string cliPath = Path.Combine(
                 resourcesDirectory,
                 "app.asar.unpacked",
@@ -23,13 +23,13 @@ internal static class OrcaCliLauncher
 
             if (!File.Exists(electronPath))
             {
-                Console.Error.WriteLine("Unable to locate Orca.exe next to \"{0}\"", resourcesDirectory);
+                Console.Error.WriteLine("Unable to locate TeamRun.exe next to \"{0}\"", resourcesDirectory);
                 return 1;
             }
 
             if (!File.Exists(cliPath))
             {
-                Console.Error.WriteLine("Unable to locate the Orca CLI entrypoint at \"{0}\"", cliPath);
+                Console.Error.WriteLine("Unable to locate the TeamRun CLI entrypoint at \"{0}\"", cliPath);
                 return 1;
             }
 
@@ -62,7 +62,7 @@ internal static class OrcaCliLauncher
         }
         catch (Exception error)
         {
-            Console.Error.WriteLine("Unable to start the Orca CLI: {0}", error.Message);
+            Console.Error.WriteLine("Unable to start the TeamRun CLI: {0}", error.Message);
             return 1;
         }
     }

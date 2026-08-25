@@ -299,7 +299,7 @@ const AGENT_HOOK_RUNTIME_ENV_KEYS = [
   'ORCA_CLAUDE_AGENT_STATUS_SETTINGS'
 ] as const
 
-// Why: Orca never sets these, so an inherited value means a pty host launched from inside a Claude session — Claude reads it as a nested child and silently stops persisting the transcript.
+// Why: TeamRun never sets these, so an inherited value means a pty host launched from inside a Claude session — Claude reads it as a nested child and silently stops persisting the transcript.
 const CLAUDE_CHILD_SESSION_STAMP_ENV_KEYS = [
   'CLAUDE_CODE_CHILD_SESSION',
   'CLAUDE_CODE_SESSION_ID',
@@ -1124,7 +1124,7 @@ export type BuildPtyHostEnvOptions = {
   selectedCodexHomePath: string | null
   skipCodexHomeEnv?: boolean
   /** System-default real-home routing (flag ON): inject no managed CODEX_HOME,
-   *  and strip only an inherited Orca-owned override so nested Orca panes do not
+   *  and strip only an inherited TeamRun-owned override so nested TeamRun panes do not
    *  leak the parent's managed home. A user-set CODEX_HOME is preserved. */
   stripInheritedOrcaCodexHome?: boolean
   /** Launch command the renderer chose (e.g. 'pi', 'omp', 'claude'); resolves the per-agent
@@ -1171,7 +1171,7 @@ function promoteAgentTeamsShimPath(
   const remaining = currentPath
     .split(delimiter)
     .filter((entry) => entry.length > 0 && entry !== shimPath)
-  // Why: host env injection prepends Orca's shims; Claude Agent Teams must still resolve our fake tmux before any real tmux.
+  // Why: host env injection prepends TeamRun's shims; Claude Agent Teams must still resolve our fake tmux before any real tmux.
   env[currentPathKey] = [shimPath, ...remaining].join(delimiter)
 }
 
@@ -1201,7 +1201,7 @@ function isCodexStatusHooksEnabled(settings: GlobalSettings | undefined): boolea
 }
 
 // Why: with the real-home flag ON, a host system-default launch resolves to a
-// null managed home. Signal the env builder to strip a nested-Orca-inherited
+// null managed home. Signal the env builder to strip a nested-TeamRun-inherited
 // override instead of injecting one, so Codex runs on the user's own ~/.codex.
 function shouldStripInheritedOrcaCodexHome(args: {
   target: CodexAccountSelectionTarget
@@ -1217,10 +1217,10 @@ function shouldStripInheritedOrcaCodexHome(args: {
 const CODEX_HOME_ENV_KEYS = ['CODEX_HOME', 'ORCA_CODEX_HOME'] as const
 
 // Why: system-default real-home routing runs Codex on the user's own ~/.codex.
-// Nested Orca panes inherit the parent's Orca-owned override; strip only that
-// (CODEX_HOME matching Orca's private ORCA_CODEX_HOME marker), and always drop
+// Nested TeamRun panes inherit the parent's TeamRun-owned override; strip only that
+// (CODEX_HOME matching TeamRun's private ORCA_CODEX_HOME marker), and always drop
 // the marker so a shell-ready wrapper cannot restore the managed home. A
-// user-set CODEX_HOME with no Orca marker is preserved untouched (see #8606).
+// user-set CODEX_HOME with no TeamRun marker is preserved untouched (see #8606).
 function stripInheritedOrcaCodexHomeOverride(baseEnv: Record<string, string>): void {
   for (const key of getLocalOrcaCodexHomeEnvKeysToDelete(baseEnv)) {
     delete baseEnv[key]
@@ -1529,7 +1529,7 @@ function resolvePiAgentSourceDir(
   const publicDir = readEnvWithProcessFallback(baseEnv, primaryKey)
   const ownOverlayDir = readEnvWithProcessFallback(baseEnv, overlayKey)
   const otherOverlayDir = readEnvWithProcessFallback(baseEnv, otherOverlayKey)
-  // Why: if PI_CODING_AGENT_DIR is a restored Orca overlay with no source shadow, remirroring leaks another agent's overlay tree; fall through to defaults.
+  // Why: if PI_CODING_AGENT_DIR is a restored TeamRun overlay with no source shadow, remirroring leaks another agent's overlay tree; fall through to defaults.
   if (publicDir && publicDir !== ownOverlayDir && publicDir !== otherOverlayDir) {
     return publicDir
   }
@@ -1629,7 +1629,7 @@ function getInheritedClaudeSessionStampEnvKeysToDelete(
   return CLAUDE_CHILD_SESSION_STAMP_ENV_KEYS.filter((key) => env[key] === undefined)
 }
 
-// Why: a nested terminal can inherit prior OpenCode/Pi/OMP overlay env; restore the user's recorded source dir, else strip only Orca-owned values.
+// Why: a nested terminal can inherit prior OpenCode/Pi/OMP overlay env; restore the user's recorded source dir, else strip only TeamRun-owned values.
 function restoreOrStripOverlayEnv(
   baseEnv: Record<string, string>,
   keys: {
@@ -1678,7 +1678,7 @@ function resolveOpenCodeSourceConfigDir(baseEnv: Record<string, string>): string
 
   const configDir = baseEnv.OPENCODE_CONFIG_DIR ?? process.env.OPENCODE_CONFIG_DIR
   const orcaConfigDir = baseEnv.ORCA_OPENCODE_CONFIG_DIR ?? process.env.ORCA_OPENCODE_CONFIG_DIR
-  // Why: with no recorded source dir, an inherited OPENCODE_CONFIG_DIR is Orca-owned, not user config; treating it as user config makes child Orcas mirror the hook dir.
+  // Why: with no recorded source dir, an inherited OPENCODE_CONFIG_DIR is TeamRun-owned, not user config; treating it as user config makes child Orcas mirror the hook dir.
   if (configDir && orcaConfigDir && configDir === orcaConfigDir) {
     return undefined
   }
@@ -1732,13 +1732,13 @@ export function buildPtyHostEnv(
       : resolveScopedPiAgentSourceDir(baseEnv, 'prime-agent')
 
   if (opts.agentStatusHooksEnabled) {
-    // Why: OPENCODE_CONFIG_DIR is a single path, not a colon-list; mirror the user's value into an overlay so their plugins and Orca's status plugin coexist. See docs/opencode-config-dir-collision.md.
+    // Why: OPENCODE_CONFIG_DIR is a single path, not a colon-list; mirror the user's value into an overlay so their plugins and TeamRun's status plugin coexist. See docs/opencode-config-dir-collision.md.
     Object.assign(baseEnv, openCodeHookService.buildPtyEnv(id, preexistingOpenCodeConfigDir))
     if (baseEnv.OPENCODE_CONFIG_DIR) {
       // Why: ~/.zshrc can re-export the user's default after spawn; shell-ready wrappers restore this PTY-scoped value.
       baseEnv.ORCA_OPENCODE_CONFIG_DIR = baseEnv.OPENCODE_CONFIG_DIR
       if (preexistingOpenCodeConfigDir) {
-        // Why: nested Orca terminals inherit the overlay as OPENCODE_CONFIG_DIR; keep the real source so overlays don't mirror overlays.
+        // Why: nested TeamRun terminals inherit the overlay as OPENCODE_CONFIG_DIR; keep the real source so overlays don't mirror overlays.
         baseEnv.ORCA_OPENCODE_SOURCE_CONFIG_DIR = preexistingOpenCodeConfigDir
       } else {
         delete baseEnv.ORCA_OPENCODE_SOURCE_CONFIG_DIR
@@ -1798,7 +1798,7 @@ export function buildPtyHostEnv(
     }
   }
 
-  // Why: PI_CODING_AGENT_DIR is the user's config/session root; install only Orca-owned extension files, don't override it.
+  // Why: PI_CODING_AGENT_DIR is the user's config/session root; install only TeamRun-owned extension files, don't override it.
   if (opts.agentStatusHooksEnabled) {
     clearPiAgentShadowEnv(baseEnv, 'pi')
     clearPiAgentShadowEnv(baseEnv, 'omp')
@@ -1898,7 +1898,7 @@ export function buildPtyHostEnv(
       ? `${devCliBin}${delimiter}${inheritedPath}`
       : devCliBin
   } else if (process.platform === 'linux') {
-    // Why: bare-`orca` shim scoped to Orca PTYs — Linux CLI installs as `orca-ide` to avoid shadowing GNOME's /usr/bin/orca screen reader (stablyai/orca#7904).
+    // Why: bare-`orca` shim scoped to TeamRun PTYs — Linux CLI installs as `orca-ide` to avoid shadowing GNOME's /usr/bin/orca screen reader (stablyai/orca#7904).
     const shimDir = ensureLinuxTerminalOrcaCliShimDir({ userDataPath: opts.userDataPath })
     if (shimDir) {
       const inheritedEntries = readInheritedPath(baseEnv)
@@ -1910,7 +1910,7 @@ export function buildPtyHostEnv(
     opts.resourcesPath &&
     (process.platform === 'darwin' || process.platform === 'win32')
   ) {
-    // Why: global CLI registration is optional, but agents in Orca-managed PTYs must always reach this app's bundled CLI.
+    // Why: global CLI registration is optional, but agents in TeamRun-managed PTYs must always reach this app's bundled CLI.
     const bundledCliBin = join(opts.resourcesPath, 'bin')
     const inheritedPath = readInheritedPath(baseEnv)
     baseEnv[resolvePathEnvKey(baseEnv, process.platform)] = inheritedPath
@@ -6772,7 +6772,7 @@ export function registerPtyHandlers(
         }
         const relayResultId = getRelayPtyId(args.connectionId, result.id)
         if (store && args.connectionId) {
-          // Why: remote PTYs live in the SSH relay grace window after Orca detaches; persist IDs immediately so reconnect reattaches instead of spawning a fresh shell.
+          // Why: remote PTYs live in the SSH relay grace window after TeamRun detaches; persist IDs immediately so reconnect reattaches instead of spawning a fresh shell.
           store.upsertSshRemotePtyLease({
             targetId: args.connectionId,
             ptyId: relayResultId,

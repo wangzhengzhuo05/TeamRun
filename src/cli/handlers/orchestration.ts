@@ -131,7 +131,7 @@ function resolvePackagedWindowsCompatibilityCommand(): 'orca' | 'orca-ide' | und
   }
   throw new RuntimeClientError(
     'invalid_argument',
-    'The packaged Orca launcher did not provide a valid resume command. No question was created.'
+    'The packaged TeamRun launcher did not provide a valid resume command. No question was created.'
   )
 }
 
@@ -351,7 +351,7 @@ function throwNoActiveSenderTerminal(): never {
   throw new RuntimeClientError(
     'no_active_sender_terminal',
     'Could not determine the sender terminal for this orchestration command. ' +
-      'Pass --from <terminal-handle> or run the command inside a live Orca terminal with ORCA_TERMINAL_HANDLE set.'
+      'Pass --from <terminal-handle> or run the command inside a live TeamRun terminal with ORCA_TERMINAL_HANDLE set.'
   )
 }
 
@@ -865,7 +865,7 @@ export const ORCHESTRATION_HANDLERS: Record<string, CommandHandler> = {
       ) {
         throw new RuntimeClientError(
           'incompatible_runtime',
-          'The connected Orca runtime does not support worker model or effort overrides. Update or restart Orca and try again.'
+          'The connected TeamRun runtime does not support worker model or effort overrides. Update or restart TeamRun and try again.'
         )
       }
     }

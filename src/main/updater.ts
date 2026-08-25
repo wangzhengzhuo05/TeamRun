@@ -672,7 +672,7 @@ function deferHeadlessServeInstall(phase: 'download' | 'install', version: strin
     )
   }
   sendErrorStatus(
-    'This orca serve process was not started by an update-capable supervisor. Keep it running and update Orca through its service manager.',
+    'This orca serve process was not started by an update-capable supervisor. Keep it running and update TeamRun through its service manager.',
     true
   )
   return true
@@ -763,7 +763,7 @@ async function performQuitAndInstall(): Promise<void> {
           }
         )
         sendErrorStatus(
-          'Could not prepare the supervised server restart. Orca remains running.',
+          'Could not prepare the supervised server restart. TeamRun remains running.',
           true
         )
         resetQuitForUpdateState()
@@ -868,7 +868,7 @@ async function performQuitAndInstall(): Promise<void> {
         // A synchronous throw out of quitAndInstall carries the same installer text the 'error' event would have.
         message: quitAndInstallNativeInvokedBeforeReset
           ? withInstallFailureCause(getPreCommitInstallFailureMessage(), error)
-          : 'Could not restart to install the update. Quit and reopen Orca, then try again.'
+          : 'Could not restart to install the update. Quit and reopen TeamRun, then try again.'
       }
     )
   }
@@ -890,8 +890,8 @@ function resetQuitForUpdateState(): void {
  */
 function getPreCommitInstallFailureMessage(): string {
   return process.platform === 'darwin'
-    ? 'Could not restart to install the update. Quit and reopen Orca, then try again.'
-    : 'Could not start the update installer. Orca remains open.'
+    ? 'Could not restart to install the update. Quit and reopen TeamRun, then try again.'
+    : 'Could not start the update installer. TeamRun remains open.'
 }
 
 /**
@@ -1258,7 +1258,7 @@ function scheduleAutomaticUpdateCheck(delayMs: number): void {
     clearTimeout(autoUpdateCheckTimer)
   }
   autoUpdateCheckTimer = setTimeout(() => {
-    // Why: Orca runs for days, so keep the next background check scheduled in the main process rather than tying it to relaunches or renderer lifetime.
+    // Why: TeamRun runs for days, so keep the next background check scheduled in the main process rather than tying it to relaunches or renderer lifetime.
     if (!runBackgroundUpdateCheck()) {
       // Why: a deferred check reaches no outcome handler, so re-arm here or one deferral ends automatic checks for the process lifetime.
       scheduleAutomaticUpdateCheck(AUTO_UPDATE_CHECK_INTERVAL_MS)
@@ -1821,16 +1821,16 @@ const LINUX_PACKAGE_RECOVERY_MESSAGES: Record<LinuxPackageRecoveryUnavailableRea
   'not-regular':
     'The downloaded package is no longer a valid file in the update cache. Download the update again, or get it from the official release page.',
   'hash-mismatch':
-    'The downloaded package no longer matches the verified release, so Orca will not hand it to a package manager. Download the update again, or get it from the official release page.',
+    'The downloaded package no longer matches the verified release, so TeamRun will not hand it to a package manager. Download the update again, or get it from the official release page.',
   'read-failed':
-    'Orca could not read the downloaded package. Download the update again, or get it from the official release page.',
+    'TeamRun could not read the downloaded package. Download the update again, or get it from the official release page.',
   'no-sudo':
-    'No sudo command was found in the system directories, so Orca cannot build a safe install command. Show the package and install it with your package manager.',
+    'No sudo command was found in the system directories, so TeamRun cannot build a safe install command. Show the package and install it with your package manager.',
   'no-package-manager':
-    'No supported package manager was found in the system directories, so Orca cannot build a safe install command. Show the package and install it with your package manager.',
+    'No supported package manager was found in the system directories, so TeamRun cannot build a safe install command. Show the package and install it with your package manager.',
   // Defensive: capture only ever tracks absolute cache paths, so this reports a bug rather than a machine state.
   'invalid-package-path':
-    'The downloaded package is not at a usable path, so Orca cannot build a safe install command. Show the package and install it with your package manager.'
+    'The downloaded package is not at a usable path, so TeamRun cannot build a safe install command. Show the package and install it with your package manager.'
 }
 
 // Why: clearing the artifact alone would leave the renderer's actions enabled; the status must lose its recovery too.

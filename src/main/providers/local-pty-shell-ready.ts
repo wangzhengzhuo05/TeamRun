@@ -69,7 +69,7 @@ function shellReadyWrappersExist(root = getShellReadyWrapperRoot()): boolean {
   return getRequiredShellReadyWrapperPaths(root).every((path) => existsSync(path))
 }
 
-// Why: an Orca wrapper ZDOTDIR recurses; treat it as unset and fall back to HOME.
+// Why: an TeamRun wrapper ZDOTDIR recurses; treat it as unset and fall back to HOME.
 function normalizeOriginalZdotdirCandidate(value: string | undefined): string | null {
   if (!value) {
     return null
@@ -96,7 +96,7 @@ function resolveOriginalZshenvSourceDir(): string {
 }
 
 export function getBashShellReadyRcfileContent(): string {
-  return `# Orca bash shell-ready wrapper
+  return `# TeamRun bash shell-ready wrapper
 ${SHELL_STARTUP_IDENTITY_MARKER_BLOCK}
 [[ -f /etc/profile ]] && source /etc/profile
 if [[ -f "$HOME/.bash_profile" ]]; then
@@ -106,14 +106,14 @@ elif [[ -f "$HOME/.bash_login" ]]; then
 elif [[ -f "$HOME/.profile" ]]; then
   source "$HOME/.profile"
 fi
-# Why: enable bracketed paste so Orca can deliver a multiline startup prompt as
+# Why: enable bracketed paste so TeamRun can deliver a multiline startup prompt as
 # a single literal paste (ESC[200~…ESC[201~). Without it, older readline builds
 # treat each embedded newline as Enter and mangle the prompt into PS2
 # continuation. Modern readline defaults this on; force it for the rest.
 [[ $- == *i* ]] && bind 'set enable-bracketed-paste on' 2>/dev/null
 # Why: preserve bash's normal login-shell contract. Many users already source
 # ~/.bashrc from ~/.bash_profile; forcing ~/.bashrc again here would duplicate
-# PATH edits, hooks, and prompt init in Orca startup-command shells.
+# PATH edits, hooks, and prompt init in TeamRun startup-command shells.
 __orca_restore_agent_teams_path() {
   [[ -n "\${ORCA_AGENT_TEAMS_SHIM_DIR:-}" ]] || return 0
   case "$PATH" in
@@ -122,12 +122,12 @@ __orca_restore_agent_teams_path() {
   export PATH="\${ORCA_AGENT_TEAMS_SHIM_DIR}:$PATH"
 }
 __orca_restore_agent_teams_path
-# Why: user startup files may set the default OpenCode config after Orca's
-# spawn env; restore the Orca-managed config dir before the first prompt.
+# Why: user startup files may set the default OpenCode config after TeamRun's
+# spawn env; restore the TeamRun-managed config dir before the first prompt.
 [[ -n "\${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${ORCA_OPENCODE_CONFIG_DIR}"
 [[ -n "\${ORCA_MIMOCODE_HOME:-}" ]] && export MIMOCODE_HOME="\${ORCA_MIMOCODE_HOME}"
 ${getPosixOmpShellWrapper()}
-# Why: Codex must keep using Orca's runtime CODEX_HOME after profile scripts.
+# Why: Codex must keep using TeamRun's runtime CODEX_HOME after profile scripts.
 [[ -n "\${ORCA_CODEX_HOME:-}" ]] && export CODEX_HOME="\${ORCA_CODEX_HOME}"
 ${getPosixCodexShellLaunchPreflight()}
 # Why: emit OSC 133 C/D so terminal-command-lifecycle can drop stale agent
@@ -217,7 +217,7 @@ trap '__orca_osc133_preexec' DEBUG
 }
 
 export function getZshShellReadyRcfileContent(): string {
-  return `# Orca zsh shell-ready wrapper
+  return `# TeamRun zsh shell-ready wrapper
 ${getZshStartupFileSourceBlock({
   fileName: '.zshrc',
   interactiveOnly: true,
@@ -236,7 +236,7 @@ if [[ ! -o login ]]; then
   [[ -n "\${ORCA_OPENCODE_CONFIG_DIR:-}" ]] && export OPENCODE_CONFIG_DIR="\${ORCA_OPENCODE_CONFIG_DIR}"
 [[ -n "\${ORCA_MIMOCODE_HOME:-}" ]] && export MIMOCODE_HOME="\${ORCA_MIMOCODE_HOME}"
   ${getPosixOmpShellWrapper()}
-  # Why: Codex must keep using Orca's runtime CODEX_HOME after rc files.
+  # Why: Codex must keep using TeamRun's runtime CODEX_HOME after rc files.
   [[ -n "\${ORCA_CODEX_HOME:-}" ]] && export CODEX_HOME="\${ORCA_CODEX_HOME}"
   ${getPosixCodexShellLaunchPreflight()}
 fi
@@ -252,7 +252,7 @@ __orca_osc133_preexec() {
   printf "\\033]133;C\\007"
   __orca_in_command=1
 }
-# Why: prepend so Orca captures $? before user prompt hooks can overwrite it.
+# Why: prepend so TeamRun captures $? before user prompt hooks can overwrite it.
 precmd_functions=(__orca_osc133_precmd \${precmd_functions[@]})
 preexec_functions=(__orca_osc133_preexec \${preexec_functions[@]})
 if [[ ! -o login ]]; then
@@ -271,11 +271,11 @@ export function ensureShellReadyWrappersAt(root = getShellReadyWrapperRoot()): v
   const bashDir = `${root}/bash`
 
   const zshEnv = getZshEnvTemplate(zshDir)
-  const zshProfile = `# Orca zsh shell-ready wrapper
+  const zshProfile = `# TeamRun zsh shell-ready wrapper
 ${getZshStartupFileSourceBlock({ fileName: '.zprofile' })}
 `
   const zshRc = getZshShellReadyRcfileContent()
-  const zshLogin = `# Orca zsh shell-ready wrapper
+  const zshLogin = `# TeamRun zsh shell-ready wrapper
 ${getZshStartupFileSourceBlock({ fileName: '.zlogin', interactiveOnly: true })}
 __orca_restore_agent_teams_path() {
   [[ -n "\${ORCA_AGENT_TEAMS_SHIM_DIR:-}" ]] || return 0

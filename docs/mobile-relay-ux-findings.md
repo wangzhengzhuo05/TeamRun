@@ -132,7 +132,7 @@ Post-pairing phase:
 9. When the direct dial finally fails, the relay dial runs invisibly (same `migrateTo` mechanism
    as S2) → green. Worst case with a director resolution failure and grace-credential retry:
    ~29–58s under the old session's labels.
-10. The "Orca Relay" path label only renders once `state === 'connected'`
+10. The "TeamRun Relay" path label only renders once `state === 'connected'`
     (`src/components/MobileHostCard.tsx:23,47`) — the user learns the phone is using relay only
     after the wait ends, and `classifyConnection` has no relay-aware branch
     (`src/transport/connection-health.ts:45-100`).
@@ -228,7 +228,7 @@ and `tasks.tsx:10970`).
 - Direct→relay upgrade path has no sink at all (`src/transport/mobile-endpoint-lifecycle.ts:49-58`,
   `mobile-relay-direct-upgrade-controller.ts:19`).
 - Pairing relay path fully silent (S3 above); pairing logs never reach `connectionLogStore`.
-- Path label ("Orca Relay") gated on `connected` (`src/components/MobileHostCard.tsx:47`);
+- Path label ("TeamRun Relay") gated on `connected` (`src/components/MobileHostCard.tsx:47`);
   `classifyConnection` collapses `connecting`/`handshaking`/`reconnecting` and has no relay branch.
 - Regression suite for connect-label stalls exists for the direct path only
   (`src/transport/cellular-connecting-label-stall.test.ts`); no relay equivalent.
@@ -331,7 +331,7 @@ Approach: while the logical client is `suspended`/`'disconnected'`, have `migrat
 dialing session's state publishes (`connecting`/`handshaking`) to `publishState`, unbinding on
 success (normal bind takes over) or failure (restore `'disconnected'`). Guard: never downgrade a
 still-`'connected'` previous session (make-before-break migrations must stay green). Follow-on UI:
-show the path being dialed ("Connecting via Orca Relay…") by exposing the pending path, and let
+show the path being dialed ("Connecting via TeamRun Relay…") by exposing the pending path, and let
 `MobileHostCard`/`classifyConnection` render it while not yet connected.
 Files: `src/transport/stable-logical-rpc-client.ts` (+ its test), `src/transport/connection-health.ts`,
 `src/components/MobileHostCard.tsx`, `src/transport/mobile-connection-path-label.ts`.

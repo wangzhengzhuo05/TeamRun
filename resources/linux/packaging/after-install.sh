@@ -5,7 +5,7 @@
 # the exact hosts that need it most. deb/rpm both run this after unpacking.
 #
 # The shim resolves the real app by walking up from its own location, so a
-# symlink works. We discover the install dir instead of hardcoding /opt/Orca
+# symlink works. We discover the install dir instead of hardcoding /opt/TeamRun
 # because electron-builder's directory name can vary by productName sanitization.
 set -e
 

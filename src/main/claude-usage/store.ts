@@ -401,8 +401,8 @@ export class ClaudeUsageStore extends UsageProviderStoreLifecycle<
       topModel,
       topProject,
       // Why: the empty-state UX is scope/range specific. Using global persisted
-      // data here makes the Orca-only view render empty charts instead of the
-      // intended "no usage for this scope" message when only off-Orca logs exist.
+      // data here makes the TeamRun-only view render empty charts instead of the
+      // intended "no usage for this scope" message when only off-TeamRun logs exist.
       hasAnyClaudeData: filteredSessions.length > 0 || filteredDaily.length > 0
     }
   }
@@ -688,7 +688,7 @@ export class ClaudeUsageStore extends UsageProviderStoreLifecycle<
       estimatedCostUsd,
       estimatedCostSource: estimatedCostUsd === null ? null : 'api_equivalent',
       providerSessionId: session.sessionId,
-      // Why: Orca terminal tab ids and Claude usage session ids are different
+      // Why: TeamRun terminal tab ids and Claude usage session ids are different
       // systems today, so attribution is intentionally limited to one local
       // provider session in the run's worktree/time window.
       attribution: 'provider_session_time_window',

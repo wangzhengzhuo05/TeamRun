@@ -25,6 +25,13 @@ import { TeamRunEventClient } from '../teamrun/teamrun-event-client'
 import type { Store } from '../persistence'
 
 const idSchema = z.uuid()
+const signInSchema = z
+  .object({
+    apiUrl: z.string().max(2048).optional(),
+    sharedKey: z.string().max(1024).optional(),
+    devEmail: z.email().optional()
+  })
+  .optional()
 const teamRunClient = new TeamRunApiClient()
 
 function pathId(value: unknown): string {
@@ -38,8 +45,8 @@ export function registerTeamRunHandlers(store: Store): void {
   const workspaceReview = new TeamRunWorkspaceReviewService(store, teamRunClient, userDataPath)
   const events = new TeamRunEventClient(teamRunClient)
   ipcMain.handle('teamrun:authStatus', () => teamRunClient.auth.status())
-  ipcMain.handle('teamrun:signIn', (_event, args?: { devEmail?: string }) =>
-    teamRunClient.auth.signIn(args)
+  ipcMain.handle('teamrun:signIn', (_event, args) =>
+    teamRunClient.auth.signIn(signInSchema.parse(args))
   )
   ipcMain.handle('teamrun:signOut', () => teamRunClient.auth.signOut())
   ipcMain.handle('teamrun:sync:status', () => teamRunClient.syncStatus())

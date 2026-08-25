@@ -68,7 +68,7 @@ function readPersisted(userDataPath: string): PersistedSelfHostedRelayConfig {
     }
     return value as PersistedSelfHostedRelayConfig
   } catch {
-    // Why: a broken private config must fail closed instead of silently selecting Orca Relay.
+    // Why: a broken private config must fail closed instead of silently selecting TeamRun Relay.
     return {
       version: 1,
       backend: 'self-hosted',

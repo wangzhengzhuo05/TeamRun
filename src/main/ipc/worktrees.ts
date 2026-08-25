@@ -2033,7 +2033,7 @@ export function registerWorktreeHandlers(
   )
 
   // Why: gcStaleWorktreeMeta cannot stat a remote path, so SSH metadata outlives the worktree and the fallback
-  // above re-lists a worktree deleted outside Orca on every launch. An authoritative scan is the only proof of
+  // above re-lists a worktree deleted outside TeamRun on every launch. An authoritative scan is the only proof of
   // absence, so the renderer reports what it retired here and the row is dropped like a local GC would.
   ipcMain.handle(
     'worktrees:forgetRemovedForExecutionHost',
@@ -2660,10 +2660,10 @@ export function registerWorktreeHandlers(
             }
             if (await isAlreadyRemovedWorktreePath(repo, worktreePath, localWorktreeGitOptions)) {
               if (!args.force && !removedMeta) {
-                // Why: without persisted metadata, require the renderer recovery path before deleting Orca-only state for an unregistered path.
+                // Why: without persisted metadata, require the renderer recovery path before deleting TeamRun-only state for an unregistered path.
                 throw new Error(UNREGISTERED_MISSING_WORKTREE_MESSAGE)
               }
-              // Why: a manually deleted worktree is already gone; persisted metadata proves it was an Orca-known row, so no force is needed.
+              // Why: a manually deleted worktree is already gone; persisted metadata proves it was an TeamRun-known row, so no force is needed.
               if (repo.connectionId) {
                 await cleanupUnusedWorktreePushTargetRemoteSsh(
                   provider!,
@@ -3335,7 +3335,7 @@ export function registerWorktreeHandlers(
 
       const has = hasHooksFile(repo.path)
       const hooks = has ? loadHooks(repo.path) : null
-      // Why: unrecognised top-level keys mean the file is well-formed but from a newer Orca; suggest updating rather than "could not be parsed".
+      // Why: unrecognised top-level keys mean the file is well-formed but from a newer TeamRun; suggest updating rather than "could not be parsed".
       const mayNeedUpdate = has && !hooks && hasUnrecognizedOrcaYamlKeys(repo.path)
       return {
         status: 'ok',

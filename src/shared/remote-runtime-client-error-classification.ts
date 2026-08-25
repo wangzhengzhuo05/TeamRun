@@ -16,14 +16,19 @@ export const RECOVERABLE_CODES: ReadonlySet<string> = new Set([
 
 export const RECOVERABLE_MESSAGE_FRAGMENTS: readonly string[] = [
   'could not connect to the remote orca runtime',
+  'could not connect to the remote teamrun runtime',
   'remote orca runtime closed the connection',
+  'remote teamrun runtime closed the connection',
   'remote orca runtime connection closed',
+  'remote teamrun runtime connection closed',
   'remote orca runtime is not connected',
+  'remote teamrun runtime is not connected',
   RUNTIME_RPC_QUEUE_OVERLOAD_MESSAGE_FRAGMENT,
   'remote runtime connection closed',
   'remote runtime subscription closed before it started',
   'remote terminal stream is not connected',
-  'timed out waiting for the remote orca runtime'
+  'timed out waiting for the remote orca runtime',
+  'timed out waiting for the remote teamrun runtime'
 ]
 
 export function isRuntimeRpcQueueOverloadError(error: RemoteRuntimeClientErrorLike): boolean {

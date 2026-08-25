@@ -104,7 +104,7 @@ function appendDiscoveredFiles(target: string[], source: readonly string[]): voi
 }
 
 export function getCodexSessionsDirectory(): string {
-  // Why: Orca-launched Codex processes receive an Orca-owned CODEX_HOME, so
+  // Why: TeamRun-launched Codex processes receive an TeamRun-owned CODEX_HOME, so
   // callers that need the primary runtime path should not consult ambient
   // shell CODEX_HOME.
   return join(getOrcaManagedCodexHomePath(), 'sessions')
@@ -468,7 +468,7 @@ function isContainingPath(candidatePath: string, targetPath: string): boolean {
   // Why: on Windows, `path.relative('C:\\repo', 'D:\\other')` returns an
   // absolute `D:\\other` path instead of a `..`-prefixed relative. Treating
   // that as "contained" would attribute off-drive Codex usage to the wrong
-  // Orca worktree.
+  // TeamRun worktree.
   const isAbsoluteRelative = useWin32
     ? win32.isAbsolute(relativePath)
     : posix.isAbsolute(relativePath)
@@ -520,7 +520,7 @@ export async function attributeCodexUsageEvent(
       projectKey = `worktree:${worktree.worktreeId}`
       projectLabel = worktree.displayName
     } else {
-      // Why: all-local mode should still collapse repeated off-Orca sessions by
+      // Why: all-local mode should still collapse repeated off-TeamRun sessions by
       // location, but those keys must normalize slash/case differences so the
       // same folder does not fragment into multiple "projects" across platforms.
       projectKey = `cwd:${normalizeComparablePath(event.cwd)}`

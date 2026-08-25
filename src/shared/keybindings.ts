@@ -1098,7 +1098,7 @@ export const KEYBINDING_DEFINITIONS: readonly KeybindingDefinition[] = [
       linux: [],
       win32: []
     },
-    // Why: macOS uses Shift+Space as an input-source shortcut; Orca otherwise rejects Shift-only bindings to avoid stealing typed text.
+    // Why: macOS uses Shift+Space as an input-source shortcut; TeamRun otherwise rejects Shift-only bindings to avoid stealing typed text.
     allowShiftOnlyKeybindings: true
   },
   ...buildAgentTabKeybindingDefinitions()
@@ -1906,7 +1906,7 @@ export function keybindingIsActiveInContext(
   if (options.context !== 'terminal') {
     return true
   }
-  // Why: Orca-first keeps app shortcuts inside terminals; terminal-first is the escape hatch for shells and TUIs.
+  // Why: TeamRun-first keeps app shortcuts inside terminals; terminal-first is the escape hatch for shells and TUIs.
   if (normalizeTerminalShortcutPolicy(options.terminalShortcutPolicy) === 'orca-first') {
     return true
   }

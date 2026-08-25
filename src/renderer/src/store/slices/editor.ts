@@ -285,7 +285,7 @@ export type OpenFile = {
   pendingLiveDiskVerification?: boolean
   /** Blocks saves while a restored tab's filesystem authority is being replaced. */
   pendingOwnerMigration?: boolean
-  /** Why: routes an Orca-owned move's destination-watcher echo into content verification. On the tab so it survives the atomic rekey; operationId supersedes a stale verification on re-move. Not persisted. */
+  /** Why: routes an TeamRun-owned move's destination-watcher echo into content verification. On the tab so it survives the atomic rekey; operationId supersedes a stale verification on re-move. Not persisted. */
   pendingSelfMoveEcho?: { operationId: string; targetPath: string }
   /** Why: diff bodies are cached in EditorPanel; bump this on re-select so the panel refetches instead of reusing a stale snapshot. */
   diffContentReloadNonce?: number
@@ -543,7 +543,7 @@ export type EditorSlice = {
   setPendingDiskBaselineVerification: (fileId: string, value: boolean) => void
   setPendingLiveDiskVerification: (fileId: string, value: boolean) => void
   clearSelfMoveEcho: (fileId: string) => void
-  /** Atomically retargets open editor sessions across an Orca-owned move — one commit-only update migrating every path-derived id + all id-keyed state, no close/reopen. Returns collision/stale without mutating. */
+  /** Atomically retargets open editor sessions across an TeamRun-owned move — one commit-only update migrating every path-derived id + all id-keyed state, no close/reopen. Returns collision/stale without mutating. */
   rekeyOpenFilesForPathChange: (args: {
     rekeys: readonly OpenFilePathRekey[]
     /** When set, dirty autosave-capable destinations get move-echo provenance + a synchronous autosave gate so the watcher can content-verify the echo. */
@@ -1340,7 +1340,7 @@ function migrateHydratedEditorTabsAndGroups(
   }
 }
 
-/** One tab's migration in an Orca-owned move; precomputed by the move coordinator. */
+/** One tab's migration in an TeamRun-owned move; precomputed by the move coordinator. */
 export type OpenFilePathRekey = {
   oldFileId: string
   newFileId: string
@@ -4930,7 +4930,7 @@ export const createEditorSlice: StateCreator<AppState, [], [], EditorSlice> = (s
           showLocalPathOpenBlockedToast()
           return
         }
-        // Why: markdown file:// links need the same user-gesture authorization terminal links get, so external paths (e.g. /tmp screenshots) can open in Orca.
+        // Why: markdown file:// links need the same user-gesture authorization terminal links get, so external paths (e.g. /tmp screenshots) can open in TeamRun.
         await window.api.fs.authorizeExternalPath({ targetPath: target.absolutePath })
       } else {
         let stats: { isDirectory: boolean }

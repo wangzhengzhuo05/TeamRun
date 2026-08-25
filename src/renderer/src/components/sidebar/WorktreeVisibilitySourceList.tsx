@@ -299,7 +299,7 @@ export default function WorktreeVisibilitySourceList({
             {inputError ??
               translate(
                 'auto.components.sidebar.WorktreeVisibilitySourceList.rootHelp',
-                'Orca will recognize worktrees beneath this folder.'
+                'TeamRun will recognize worktrees beneath this folder.'
               )}
           </p>
         </form>

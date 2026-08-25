@@ -10,7 +10,7 @@ import { SettingsSubsectionHeader } from './SettingsFormControls'
 import { translate } from '@/i18n/i18n'
 
 // Do not deep-link to /stargazers: GitHub 404s that page for users without repo write access.
-const ORCA_GITHUB_URL = 'https://github.com/stablyai/orca'
+const ORCA_GITHUB_URL = 'https://github.com/wangzhengzhuo05/TeamRun'
 
 type SupportState =
   | 'loading'
@@ -123,7 +123,7 @@ function SupportSection({
             <SettingsSubsectionHeader
               title={translate(
                 'auto.components.settings.GeneralSupportSection.55a87e5fd1',
-                'Support Orca'
+                'Support TeamRun'
               )}
             />
             {state === 'loading' ? <SupportRowSkeleton /> : null}
@@ -160,7 +160,7 @@ function SupportRow({
     <SearchableSetting
       title={translate(
         'auto.components.settings.GeneralSupportSection.6922c1fa2b',
-        'Star Orca on GitHub'
+        'Star TeamRun on GitHub'
       )}
       description={translate(
         'auto.components.settings.GeneralSupportSection.511782265b',
@@ -172,7 +172,7 @@ function SupportRow({
       <Label>
         {translate(
           'auto.components.settings.GeneralSupportSection.6922c1fa2b',
-          'Star Orca on GitHub'
+          'Star TeamRun on GitHub'
         )}
       </Label>
       {state === 'starred' ? (

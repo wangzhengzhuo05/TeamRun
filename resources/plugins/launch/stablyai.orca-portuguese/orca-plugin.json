@@ -4,12 +4,19 @@
   "publisher": "stablyai",
   "name": "Português do Brasil",
   "version": "1.0.0",
-  "description": "Brazilian Portuguese translations for common Orca navigation.",
+  "description": "Brazilian Portuguese translations for common TeamRun navigation.",
   "repository": "https://github.com/stablyai/orca-portuguese",
-  "engines": { "orca": ">=1.4.0" },
+  "engines": {
+    "orca": ">=1.4.0"
+  },
   "pluginApi": 1,
   "contributes": {
-    "languagePacks": [{ "locale": "pt-BR", "path": "locales/pt-BR.json" }]
+    "languagePacks": [
+      {
+        "locale": "pt-BR",
+        "path": "locales/pt-BR.json"
+      }
+    ]
   },
   "capabilities": []
 }

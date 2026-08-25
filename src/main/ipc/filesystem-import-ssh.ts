@@ -43,7 +43,7 @@ export async function importExternalPathsSsh(
 
   if (options?.ensureDir) {
     // Why: terminal-drop staging needs `${worktree}/.orca/drops` to exist
-    // before the first upload. .orca/ is reserved as Orca-owned remote state;
+    // before the first upload. .orca/ is reserved as TeamRun-owned remote state;
     // see docs/terminal-drop-ssh.md.
     await ensureDropStagingDir(provider, destDir, options.assertCurrent)
   }

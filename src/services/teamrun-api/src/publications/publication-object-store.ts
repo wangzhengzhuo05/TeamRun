@@ -25,19 +25,23 @@ const DOWNLOAD_TTL_SECONDS = 5 * 60
 
 export class PublicationObjectStore {
   readonly #client: S3Client
+  readonly #signedClient: S3Client
   readonly #bucket: string
 
   constructor(config: TeamRunServiceConfig) {
     this.#bucket = config.TEAMRUN_S3_BUCKET
-    this.#client = new S3Client({
-      endpoint: config.TEAMRUN_S3_ENDPOINT,
+    const clientOptions = {
       region: config.TEAMRUN_S3_REGION,
       forcePathStyle: true,
       credentials: {
         accessKeyId: config.TEAMRUN_S3_ACCESS_KEY_ID,
         secretAccessKey: config.TEAMRUN_S3_SECRET_ACCESS_KEY
       }
-    })
+    }
+    this.#client = new S3Client({ ...clientOptions, endpoint: config.TEAMRUN_S3_ENDPOINT })
+    this.#signedClient = config.TEAMRUN_S3_PUBLIC_ENDPOINT
+      ? new S3Client({ ...clientOptions, endpoint: config.TEAMRUN_S3_PUBLIC_ENDPOINT })
+      : this.#client
   }
 
   async ensureBucket(allowCreate: boolean): Promise<void> {
@@ -68,7 +72,7 @@ export class PublicationObjectStore {
     })
     return {
       objectKey,
-      uploadUrl: await getSignedUrl(this.#client, command, { expiresIn: 15 * 60 }),
+      uploadUrl: await getSignedUrl(this.#signedClient, command, { expiresIn: 15 * 60 }),
       requiredHeaders: {
         'content-type': args.contentType,
         'content-length': String(args.byteSize),
@@ -104,7 +108,9 @@ export class PublicationObjectStore {
       ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`
     })
     return {
-      downloadUrl: await getSignedUrl(this.#client, command, { expiresIn: DOWNLOAD_TTL_SECONDS }),
+      downloadUrl: await getSignedUrl(this.#signedClient, command, {
+        expiresIn: DOWNLOAD_TTL_SECONDS
+      }),
       expiresAt: new Date(Date.now() + DOWNLOAD_TTL_SECONDS * 1000).toISOString()
     }
   }

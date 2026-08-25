@@ -9,7 +9,7 @@ export type ClientEnvironmentInfo = {
 }
 
 const FOOTER_MARKER = '---'
-const ORCA_LINE_PREFIX = 'Orca:'
+const ORCA_LINE_PREFIX = 'TeamRun:'
 
 // Why: match the whole prefilled block (optional Shell line included) so strip
 // keeps authored text both above and below — users who click past the footer

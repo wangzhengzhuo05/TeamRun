@@ -1,6 +1,7 @@
 import type { AgentStatusEntry } from '../../../shared/agent-status-types'
 import {
   findOrcaDispatchTaskMarkerIndex,
+  isOrcaDispatchStatusPrompt,
   ORCA_DISPATCH_STATUS_PREAMBLE_PREFIX,
   ORCA_DISPATCH_STATUS_TASK_MARKER
 } from '../../../shared/orca-dispatch-status-prompt'
@@ -17,9 +18,9 @@ const ORCA_DISPATCH_TASK_ID_SCAN_LIMIT = 1024
 // malformed multi-MB prompt without a marker never full-scans the task body.
 const ORCA_DISPATCH_TASK_MARKER_SCAN_LIMIT = 32_768
 
-/** True when the live prompt is still an Orca dispatch turn (not sticky metadata alone). */
+/** True when the live prompt is still an TeamRun dispatch turn (not sticky metadata alone). */
 export function isOrcaDispatchPrompt(prompt: string): boolean {
-  return prompt.trimStart().startsWith(ORCA_DISPATCH_PREAMBLE_PREFIX)
+  return isOrcaDispatchStatusPrompt(prompt)
 }
 
 /**
@@ -51,7 +52,7 @@ export function getAgentRowPrimaryText(
   // Why: prefer richer orchestration labels when they match the live dispatch,
   // then fall back to the TASK-body preview. Never surface the lifecycle
   // preamble itself — status prompts are single-line ~200-char folds, and the
-  // first characters are boilerplate ("You are working inside Orca…").
+  // first characters are boilerplate ("You are working inside TeamRun…").
   if (orchestrationLabelsMatchLiveDispatch(entry)) {
     return (
       entry.orchestration?.displayName?.trim() ||

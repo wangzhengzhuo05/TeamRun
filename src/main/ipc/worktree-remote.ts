@@ -1081,7 +1081,7 @@ async function prepareWorktreePushTargetSsh(
     const existingRemote = await findRemoteForUrl(execGit, repoPath, target.remoteUrl)
     if (existingRemote) {
       remoteName = existingRemote
-      // Why: a reused Orca-created fork remote must inherit ownership so deleting the final user can remove it.
+      // Why: a reused TeamRun-created fork remote must inherit ownership so deleting the final user can remove it.
       remoteCreated = store
         ? isPushTargetRemoteCreatedByKnownWorktree(
             store,

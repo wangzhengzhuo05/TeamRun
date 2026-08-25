@@ -1,7 +1,7 @@
 # Self-hosted Mobile Relay
 
-Orca can route its end-to-end encrypted mobile connection through a Relay you
-operate. This mode does not use an Orca account or the Orca Relay service. The
+TeamRun can route its end-to-end encrypted mobile connection through a Relay you
+operate. This mode does not use an TeamRun account or the TeamRun Relay service. The
 existing mobile app needs no server setting: every pairing code carries the
 selected Relay's public URL.
 
@@ -27,7 +27,7 @@ a canonical HTTPS origin such as `https://relay.example.com`, with no path.
 
 ## Build and run
 
-From an Orca source checkout:
+From an TeamRun source checkout:
 
 ```bash
 corepack pnpm install --frozen-lockfile
@@ -73,7 +73,7 @@ Do not expose port 8787 directly to the internet without TLS. Keep the access
 key out of proxy logs, shell history, and source control. Back up the state file
 with mode `0600` and rotate the access key if it is disclosed.
 
-## Connect Orca Desktop
+## Connect TeamRun Desktop
 
 1. Open **Settings → Mobile**.
 2. Under **Relay server**, choose **Use self-hosted Relay**.
@@ -81,7 +81,7 @@ with mode `0600` and rotate the access key if it is disclosed.
 4. Wait for the Relay status to become **Ready**, generate a new QR code, and
    pair the phone.
 
-Switching between Orca Relay and a self-hosted Relay does not migrate server-side
+Switching between TeamRun Relay and a self-hosted Relay does not migrate server-side
 resume credentials. Pair phones again after changing providers. LAN/Tailscale
 pairing remains available and does not require any Relay or account.
 

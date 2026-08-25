@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { Organization, Project, Repository, Task } from '../../../../shared/teamrun-api'
-import type { TeamRunAuthStatus, TeamRunSyncStatus } from '../../../../shared/teamrun-cloud'
+import type {
+  TeamRunAuthStatus,
+  TeamRunSignInArgs,
+  TeamRunSyncStatus
+} from '../../../../shared/teamrun-cloud'
 import { translate } from '@/i18n/i18n'
 
 type TeamSpaceWorkspace = {
@@ -17,7 +21,7 @@ type TeamSpaceWorkspace = {
   eventRevision: number
   syncStatus: TeamRunSyncStatus | null
   retrySync: () => Promise<void>
-  signIn: (devEmail?: string) => Promise<void>
+  signIn: (args: TeamRunSignInArgs) => Promise<void>
   signOut: () => Promise<void>
   selectOrganization: (id: string) => void
   selectProject: (id: string) => void
@@ -168,10 +172,10 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
   }, [projectId])
 
   const signIn = useCallback(
-    async (devEmail?: string) => {
+    async (args: TeamRunSignInArgs) => {
       try {
         setLoading(true)
-        const status = await window.api.teamRun.auth.signIn({ devEmail })
+        const status = await window.api.teamRun.auth.signIn(args)
         setAuth(status)
         if (status.state === 'signed-in') await loadOrganizations()
       } catch (error) {

@@ -30,7 +30,7 @@ function canonicalizeIfPresent(candidatePath: string): string {
 }
 
 /**
- * Proves a host managed home is an Orca-owned account directory and cannot
+ * Proves a host managed home is an TeamRun-owned account directory and cannot
  * resolve into the user's real CODEX_HOME before callers write launch state.
  */
 export function assertOwnedHostCodexManagedHomePath({
@@ -82,7 +82,7 @@ export function assertOwnedHostCodexManagedHomePath({
   try {
     markerIsRegularFile = lstatSync(markerPath).isFile()
   } catch (error) {
-    throw new Error('Managed Codex home is missing Orca ownership marker.', { cause: error })
+    throw new Error('Managed Codex home is missing TeamRun ownership marker.', { cause: error })
   }
   if (!markerIsRegularFile) {
     throw new Error('Managed Codex home ownership marker is not a regular file.')

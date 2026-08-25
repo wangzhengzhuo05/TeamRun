@@ -29,7 +29,7 @@ export type PreambleParams = {
     recentSubjects: string[]
   }
   // Why: prompt-returning agents should idle after worker_done, while bare
-  // shells have no agent prompt for Orca to reuse.
+  // shells have no agent prompt for TeamRun to reuse.
   workerKind?: 'prompt-returning-agent' | 'bare-shell'
 }
 
@@ -39,7 +39,7 @@ export type PreambleParams = {
 // cadence tuning is a single-line change (Q1 in DESIGN_DOC_PREAMBLE_FIX.md).
 const HEARTBEAT_INTERVAL_MIN = 5
 
-// Why: the dispatch preamble teaches agents about Orca's CLI commands for
+// Why: the dispatch preamble teaches agents about TeamRun's CLI commands for
 // structured communication. Behavioral rules (body summary, heartbeat cadence,
 // no-AskUserQuestion) live as inline comments above the relevant CLI example,
 // not as a separate prose block — LLM readers anchor on examples and skim
@@ -47,7 +47,7 @@ const HEARTBEAT_INTERVAL_MIN = 5
 export function buildDispatchPreamble(params: PreambleParams): string {
   // Why: in dev mode, agents must use orca-dev to connect to the dev runtime's
   // socket. Without this, agents inside the dev Electron app would call the
-  // production CLI and talk to the wrong Orca instance (Section 6.4).
+  // production CLI and talk to the wrong TeamRun instance (Section 6.4).
   const cli = params.devMode ? 'orca-dev' : (params.cliCommand ?? 'orca')
   const postDoneInstructions = buildPostWorkerDoneInstructions({
     cli,
@@ -57,7 +57,7 @@ export function buildDispatchPreamble(params: PreambleParams): string {
     ? ` --dispatch-capability ${params.dispatchCapability}`
     : ''
 
-  const header = `You are working inside Orca, a multi-agent IDE. You are a dispatched worker.
+  const header = `You are working inside TeamRun, a multi-agent IDE. You are a dispatched worker.
 Your coordinator's terminal handle is: ${params.coordinatorHandle}
 Your task ID is: ${params.taskId}
 
@@ -163,7 +163,7 @@ do NOT run a sleep/poll loop, and do NOT keep calling
 completion and expects no further output.
 
 Exit the shell after completion. Bare-shell workers have no idle agent
-prompt for Orca to reuse; if the coordinator has more for you it will
+prompt for TeamRun to reuse; if the coordinator has more for you it will
 dispatch or prompt another worker with a fresh TASK block.`
   }
 

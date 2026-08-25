@@ -1876,7 +1876,7 @@ function createTerminalRevealWarning(handle: string, error?: unknown): string {
       ? ` Reason: ${error.message.trim()}.`
       : ''
   return [
-    `Terminal ${handle} is running, but Orca could not make it discoverable.${reason}`,
+    `Terminal ${handle} is running, but TeamRun could not make it discoverable.${reason}`,
     `Run \`orca terminal focus --terminal ${handle}\` to reveal and focus it.`
   ].join(' ')
 }
@@ -2225,7 +2225,7 @@ function assertProjectHostSetupHostIsSupported(hostId: ExecutionHostId | null | 
     return
   }
   throw new Error(
-    'SSH hosts are not supported by this operation. Set the project up from the Orca desktop app, which owns the SSH connection.'
+    'SSH hosts are not supported by this operation. Set the project up from the TeamRun desktop app, which owns the SSH connection.'
   )
 }
 
@@ -10292,7 +10292,7 @@ export class OrcaRuntimeService {
     const recordTitle = this.ptysById.get(ptyId)?.lastOscTitle
     const normalizedTitle = tracker?.getLastNormalizedTitle() ?? null
     // Why: a record-fallback snapshot must not replay the bare cursor-agent literal over a
-    // tracker title Orca synthesized from hooks — but with no tracker title it is the pane's
+    // tracker title TeamRun synthesized from hooks — but with no tracker title it is the pane's
     // only Cursor identity, so restored/mobile tabs keep it (#10258).
     const rawTitle =
       recordTitle && (normalizedTitle === null || !isCursorNativeAgentTitle(recordTitle))
@@ -11385,7 +11385,7 @@ export class OrcaRuntimeService {
     )
   }
 
-  // Why: daemon-backed PTYs that the runtime adopted after an Orca relaunch
+  // Why: daemon-backed PTYs that the runtime adopted after an TeamRun relaunch
   // start with a fresh headless emulator that has zero scrollback, even though
   // the daemon's on-disk checkpoint and the desktop xterm both contain the
   // full prior history. Without this hydration, mobile subscribers see only
@@ -12928,7 +12928,7 @@ export class OrcaRuntimeService {
     title: string
     body?: string
   }): Promise<{ delivered: boolean }> {
-    // Why: prefix with the plugin id so a plugin cannot spoof an Orca system
+    // Why: prefix with the plugin id so a plugin cannot spoof an TeamRun system
     // notification or impersonate another plugin.
     const title = `${input.pluginId}: ${input.title}`
     const body = input.body ?? ''
@@ -21781,7 +21781,7 @@ export class OrcaRuntimeService {
       warnings.push({
         code: 'LINEAGE_PARENT_CONTEXT_MISSING',
         message:
-          'Worktree created, but Orca could not record lineage because instance identity was unavailable.',
+          'Worktree created, but TeamRun could not record lineage because instance identity was unavailable.',
         details: {
           childHasInstanceId: Boolean(childInstanceId),
           parentHasInstanceId: Boolean(parentInstanceId),
@@ -22753,7 +22753,7 @@ export class OrcaRuntimeService {
         ? { displayName: effectiveRequestedName }
         : {}
     const meta = this.store.setWorktreeMeta(worktreeId, {
-      // Why: worktree IDs are path-derived. If a path is deleted outside Orca
+      // Why: worktree IDs are path-derived. If a path is deleted outside TeamRun
       // and later recreated, creation must mint a fresh instance identity so
       // stale lineage records tied to the old occupant fail validation.
       instanceId: randomUUID(),
@@ -23635,7 +23635,7 @@ export class OrcaRuntimeService {
     ).finally(() => {
       // Why (§3.3 Lifecycle): evict on BOTH success and rejection. A
       // rejected entry that survived in the Map would wedge every future
-      // create on this repo until Orca restarted (the F2 bug §3.3 pins).
+      // create on this repo until TeamRun restarted (the F2 bug §3.3 pins).
       this.fetchInflight.delete(key)
     })
 
@@ -24486,7 +24486,7 @@ export class OrcaRuntimeService {
         throw error
       }
       // Why: delete requests can arrive after Git no longer lists the worktree.
-      // Only exact IDs with persisted Orca metadata are accepted here so
+      // Only exact IDs with persisted TeamRun metadata are accepted here so
       // branch/path selectors cannot resolve to an arbitrary missing path.
       return meta.pushTarget ? { ...removalTarget, pushTarget: meta.pushTarget } : removalTarget
     }
@@ -24948,7 +24948,7 @@ export class OrcaRuntimeService {
           ) {
             if (!force && !removedMeta) {
               // Why: without persisted metadata, require the renderer recovery
-              // path before deleting Orca-only state for an unregistered path.
+              // path before deleting TeamRun-only state for an unregistered path.
               throw new Error(UNREGISTERED_MISSING_WORKTREE_MESSAGE)
             }
             // Why: a manually deleted worktree is already gone from Git and disk.
@@ -29090,7 +29090,7 @@ export class OrcaRuntimeService {
       } catch {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
-          message: 'Worktree created, but Orca could not validate the environment parent context.',
+          message: 'Worktree created, but TeamRun could not validate the environment parent context.',
           details: { envParentWorkspace: input.envParentWorkspace }
         })
       }
@@ -29157,7 +29157,7 @@ export class OrcaRuntimeService {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
           message:
-            'Worktree created, but Orca could not validate the caller terminal as a parent context.',
+            'Worktree created, but TeamRun could not validate the caller terminal as a parent context.',
           details: { callerTerminalHandle: input.callerTerminalHandle }
         })
       }
@@ -29173,7 +29173,7 @@ export class OrcaRuntimeService {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
           message:
-            'Worktree created, but Orca could not validate the current directory as a parent context.',
+            'Worktree created, but TeamRun could not validate the current directory as a parent context.',
           details: { cwdParentWorktree: input.cwdParentWorktree }
         })
       }
@@ -29197,7 +29197,7 @@ export class OrcaRuntimeService {
         warnings: [
           {
             code: 'LINEAGE_PARENT_CONTEXT_CONFLICT',
-            message: 'Worktree created, but Orca could not prove which parent context caused it.',
+            message: 'Worktree created, but TeamRun could not prove which parent context caused it.',
             details: {
               terminalParentWorkspaceKey: candidates.find((c) => c.source === 'terminal-context')
                 ?.parent.workspaceKey,
@@ -29555,7 +29555,7 @@ export class OrcaRuntimeService {
       perRepoWorktrees.flat(),
       this.store?.getAllWorktreeLineage?.() ?? {}
     )
-    // Why: short TTL avoids shelling out on every frequent poll while still catching worktree changes made outside Orca.
+    // Why: short TTL avoids shelling out on every frequent poll while still catching worktree changes made outside TeamRun.
     // Why stamped on completion, not entry: a compute that spent longer than the TTL would otherwise publish an
     // already-expired entry, so the very next poll recomputes and every caller repeats the same slow path.
     if (generation === this.resolvedWorktreeGeneration) {
@@ -31057,7 +31057,7 @@ export class OrcaRuntimeService {
           ...tab,
           title: liveTab.title || tab.title,
           url: liveTab.url || tab.url,
-          // Why: bridge "active" means active BrowserView/webContents, not active Orca tab; preserve the renderer's session focus.
+          // Why: bridge "active" means active BrowserView/webContents, not active TeamRun tab; preserve the renderer's session focus.
           isActive: tab.isActive
         })
         continue
@@ -33423,7 +33423,7 @@ export class OrcaRuntimeService {
       if (!worktree) {
         throw new LinearAgentAccessError(
           'linear_issue_required',
-          'Run --current from inside an Orca-managed worktree or pass an issue id.'
+          'Run --current from inside an TeamRun-managed worktree or pass an issue id.'
         )
       }
     }
@@ -33431,7 +33431,7 @@ export class OrcaRuntimeService {
     if (!worktree) {
       throw new LinearAgentAccessError(
         'linear_issue_required',
-        'Run --current from inside an Orca-managed worktree or pass an issue id.'
+        'Run --current from inside an TeamRun-managed worktree or pass an issue id.'
       )
     }
 
@@ -33575,7 +33575,7 @@ export class OrcaRuntimeService {
         (cause) =>
           linearError(
             'linear_write_unconfirmed',
-            'Linear may have applied the state change, but Orca could not confirm it.',
+            'Linear may have applied the state change, but TeamRun could not confirm it.',
             {
               nextSteps: [
                 `Run \`orca linear issue ${target.issue.identifier} --workspace ${target.workspaceId} --json\` and check the current state before retrying.`
@@ -33623,7 +33623,7 @@ export class OrcaRuntimeService {
         (cause) =>
           linearError(
             'linear_write_unconfirmed',
-            'Linear may have applied the relation change, but Orca could not confirm it.',
+            'Linear may have applied the relation change, but TeamRun could not confirm it.',
             {
               nextSteps: [
                 `Run \`orca linear issue ${target.issue.identifier} --relations --workspace ${target.workspaceId} --json\` before retrying.`
@@ -33702,7 +33702,7 @@ export class OrcaRuntimeService {
           (cause) =>
             linearError(
               'linear_write_unconfirmed',
-              'Linear may have applied the issue save, but Orca could not confirm it.',
+              'Linear may have applied the issue save, but TeamRun could not confirm it.',
               {
                 nextSteps: [
                   `Run \`orca linear issue ${target.issue.identifier} --workspace ${target.workspaceId} --json\` before retrying.`
@@ -33751,7 +33751,7 @@ export class OrcaRuntimeService {
         (cause) =>
           linearError(
             'linear_write_unconfirmed',
-            'Linear may have applied the task update, but Orca could not confirm it.',
+            'Linear may have applied the task update, but TeamRun could not confirm it.',
             {
               nextSteps: [
                 `Run \`orca linear issue ${target.issue.identifier} --workspace ${target.workspaceId} --json\` and check the updated field before retrying.`
@@ -34765,7 +34765,7 @@ export class OrcaRuntimeService {
     }
     if (isLinearAuthError(error)) {
       return linearError('linear_auth_expired', 'Linear authentication expired.', {
-        nextSteps: ['Reconnect Linear from Orca settings.']
+        nextSteps: ['Reconnect Linear from TeamRun settings.']
       })
     }
     return linearError(classifyLinearError(error), linearMessage(error))
@@ -35087,7 +35087,7 @@ export class OrcaRuntimeService {
     }
     if (teams.length === 0 && (getLinearStatus().workspaces?.length ?? 0) === 0) {
       throw linearError('linear_not_connected', 'Linear is not connected.', {
-        nextSteps: ['Connect Linear from Orca settings, then retry the issue create.']
+        nextSteps: ['Connect Linear from TeamRun settings, then retry the issue create.']
       })
     }
     const matches = teams.filter(
@@ -35292,7 +35292,7 @@ export class OrcaRuntimeService {
           : ''
     return linearError(
       'linear_write_unconfirmed',
-      'Linear may have applied the write, but Orca could not confirm it.',
+      'Linear may have applied the write, but TeamRun could not confirm it.',
       {
         writeId,
         workspaceId,

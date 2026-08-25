@@ -138,7 +138,7 @@ function deleteRequestedDaemonEnvKeys(
   keys: readonly string[] | undefined
 ): void {
   // Why: the persistent daemon's inherited env can differ from Electron's.
-  // Compare ownership here so real-home routing neither leaks an Orca overlay
+  // Compare ownership here so real-home routing neither leaks an TeamRun overlay
   // nor deletes a user-owned CODEX_HOME chosen by the daemon's host context.
   const deleteOrcaOwnedCodexHome =
     keys?.includes('ORCA_CODEX_HOME') === true &&
@@ -266,7 +266,7 @@ function formatMissingDaemonPathError(kind: 'helper' | 'cwd', path: string): Dae
   const missingTarget = kind === 'helper' ? 'node-pty install' : 'working directory'
   const diag = daemonEnvironmentDiagSuffix()
   return new DaemonProtocolError(
-    `Daemon's ${missingTarget} is gone (worktree deleted?). Restart Orca. node-pty: ${step} failed: ENOENT (errno 2, No such file or directory) - ${detailName}='${path}'${diag}`
+    `Daemon's ${missingTarget} is gone (worktree deleted?). Restart TeamRun. node-pty: ${step} failed: ENOENT (errno 2, No such file or directory) - ${detailName}='${path}'${diag}`
   )
 }
 
@@ -624,10 +624,10 @@ export function createPtySubprocess(opts: PtySubprocessOptions): SubprocessHandl
     ...mergeGitConfigEnvProtocol(stripInheritedBuildModeEnv(process.env), opts.env),
     TERM: 'xterm-256color',
     COLORTERM: 'truecolor',
-    TERM_PROGRAM: 'Orca',
+    TERM_PROGRAM: 'TeamRun',
     // Why: TUIs feature-gate on TERM_PROGRAM_VERSION; ORCA_APP_VERSION is inherited from the forking main process.
     TERM_PROGRAM_VERSION: process.env.ORCA_APP_VERSION ?? '0.0.0-dev',
-    // Why: `supports-hyperlinks` gates OSC 8 on a TERM_PROGRAM allowlist excluding Orca; force it since xterm.js parses OSC 8 for clickable links.
+    // Why: `supports-hyperlinks` gates OSC 8 on a TERM_PROGRAM allowlist excluding TeamRun; force it since xterm.js parses OSC 8 for clickable links.
     FORCE_HYPERLINK: '1'
   } as Record<string, string>
   // Why: an older client may not ask a newly upgraded daemon to delete inherited shim state.

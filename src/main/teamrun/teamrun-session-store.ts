@@ -5,6 +5,7 @@ import { writeSecureJsonFile } from '../../shared/secure-file'
 
 export type TeamRunSession =
   | { mode: 'dev'; email: string }
+  | { mode: 'shared-key'; apiUrl: string; accessKey: string; email: string | null }
   | {
       mode: 'oidc'
       accessToken: string
@@ -40,6 +41,14 @@ function isSession(value: unknown): value is TeamRunSession {
   const session = value as Record<string, unknown>
   if (session.mode === 'dev') {
     return typeof session.email === 'string' && session.email.length > 0
+  }
+  if (session.mode === 'shared-key') {
+    return (
+      typeof session.apiUrl === 'string' &&
+      typeof session.accessKey === 'string' &&
+      session.accessKey.length >= 24 &&
+      (typeof session.email === 'string' || session.email === null)
+    )
   }
   return (
     session.mode === 'oidc' &&

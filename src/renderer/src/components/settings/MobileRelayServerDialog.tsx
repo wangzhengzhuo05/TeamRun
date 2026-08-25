@@ -131,7 +131,7 @@ export function MobileRelayServerDialog({
           <DialogDescription>
             {translate(
               'auto.components.settings.MobileRelayServerDialog.description',
-              'Use Orca Relay with your account, or route encrypted mobile traffic through a server you operate.'
+              'Use TeamRun Relay with your account, or route encrypted mobile traffic through a server you operate.'
             )}
           </DialogDescription>
         </DialogHeader>
@@ -152,7 +152,7 @@ export function MobileRelayServerDialog({
                 <SelectItem value="orca">
                   {translate(
                     'auto.components.settings.MobileRelayServerDialog.orcaRelay',
-                    'Orca Relay'
+                    'TeamRun Relay'
                   )}
                 </SelectItem>
                 <SelectItem value="self-hosted">

@@ -19,7 +19,7 @@ const teamRunIdentity = require('./teamrun/product-identity.json')
 
 // Why: dev-channel builds must carry the *release* identity — same bundle id,
 // Developer ID signature, and notarization ticket — or Squirrel.Mac refuses to
-// swap them over an installed Orca and macOS treats each build as a new app.
+// swap them over an installed TeamRun and macOS treats each build as a new app.
 const isMacHourly = process.env.ORCA_MAC_HOURLY === '1'
 const isMacDaily = process.env.ORCA_MAC_DAILY === '1'
 const isMacAdhoc = process.env.ORCA_MAC_ADHOC === '1'
@@ -41,7 +41,7 @@ const devChannelBuildVersion = isMacHourly
 // or a once-a-day cut cannot be picked up by someone who only meant to ride
 // main's hourlies.
 const appId = isSelfHostedDistribution ? 'com.wangzhengzhuo.orca.selfhosted' : teamRunIdentity.appId
-const productName = isSelfHostedDistribution ? 'Orca Self-Hosted' : teamRunIdentity.productName
+const productName = isSelfHostedDistribution ? 'TeamRun Self-Hosted' : teamRunIdentity.productName
 const packageName = isSelfHostedDistribution ? 'orca-self-hosted' : teamRunIdentity.packageName
 const desktopName = isSelfHostedDistribution
   ? 'orca-self-hosted.desktop'
@@ -295,7 +295,7 @@ module.exports = {
       chmodSync(join(resourcesDir, filename), 0o755)
     }
     if (context.electronPlatformName === 'darwin') {
-      await signMacComputerUseHelper(join(resourcesDir, 'Orca Computer Use.app'), context.packager)
+      await signMacComputerUseHelper(join(resourcesDir, 'TeamRun Computer Use.app'), context.packager)
       await signMacNotificationStatusHelper(
         join(resourcesDir, '..', 'MacOS', 'orca-notification-status'),
         context.packager
@@ -303,7 +303,7 @@ module.exports = {
     }
   },
   win: {
-    executableName: isSelfHostedDistribution ? 'Orca Self-Hosted' : teamRunIdentity.productName,
+    executableName: isSelfHostedDistribution ? 'TeamRun Self-Hosted' : teamRunIdentity.productName,
     // Why: Windows installers are signed after electron-builder packaging by
     // SignPath, so the packager cannot infer the updater publisherName.
     signtoolOptions: {
@@ -409,8 +409,8 @@ module.exports = {
         to: 'serve-sim'
       },
       {
-        from: 'native/computer-use-macos/.build/release/Orca Computer Use.app',
-        to: 'Orca Computer Use.app'
+        from: 'native/computer-use-macos/.build/release/TeamRun Computer Use.app',
+        to: 'TeamRun Computer Use.app'
       },
       featureWallResources
     ],
@@ -443,7 +443,7 @@ module.exports = {
       : 'teamrun-macos-${arch}.${ext}'
   },
   linux: {
-    // Why: Ubuntu desktop ships GNOME Orca as the `orca` package and /usr/bin/orca.
+    // Why: Ubuntu desktop ships GNOME TeamRun as the `orca` package and /usr/bin/orca.
     // The Linux installer should not claim those system package/file names.
     executableName: teamRunIdentity.linuxExecutableName,
     syncDesktopName: true,
@@ -534,10 +534,10 @@ module.exports = {
   // (node-pty) for each target architecture when producing dual-arch macOS
   // builds (x64 + arm64). With npmRebuild disabled, CI on an arm64 runner
   // packages arm64 binaries into the x64 DMG, causing "posix_spawnp failed"
-  // on Intel Macs. The beforeBuild hook performs Orca's targeted rebuild and
+  // on Intel Macs. The beforeBuild hook performs TeamRun's targeted rebuild and
   // returns false so electron-builder does not rebuild optional cpu-features.
   npmRebuild: true,
-  // TeamRun releases must never consume the upstream Orca update feed.
+  // TeamRun releases must never consume the upstream TeamRun update feed.
   publish: null
 }
 
@@ -576,7 +576,7 @@ function chmodMacServeSimHelpers(resourcesDir, electronPlatformName) {
 async function signMacComputerUseHelper(helperAppPath, packager) {
   if (!existsSync(helperAppPath)) {
     if (isMacRelease) {
-      throw new Error(`Missing Orca Computer Use helper app at ${helperAppPath}`)
+      throw new Error(`Missing TeamRun Computer Use helper app at ${helperAppPath}`)
     }
     return
   }
@@ -590,10 +590,10 @@ async function signMacComputerUseHelper(helperAppPath, packager) {
     findInstalledMacSigningIdentity(codeSigningInfo?.keychainFile) ??
     (isMacRelease ? null : '-')
   if (!identity) {
-    throw new Error('Missing signing identity for Orca Computer Use helper app')
+    throw new Error('Missing signing identity for TeamRun Computer Use helper app')
   }
   // Why: TCC grants attach to this nested app's code identity. Sign it before
-  // the outer Orca.app is sealed so production builds preserve that identity.
+  // the outer TeamRun.app is sealed so production builds preserve that identity.
   execFileSync('codesign', codesignArgs(identity, helperAppPath), { stdio: 'inherit' })
   execFileSync('codesign', ['--verify', '--deep', '--strict', helperAppPath], {
     stdio: 'inherit'
@@ -621,7 +621,7 @@ async function signMacNotificationStatusHelper(helperPath, packager) {
   // Why: macOS keys notification records to the code-signing identifier; the
   // binary embeds the app's CFBundleIdentifier in __TEXT,__info_plist so this
   // (and any later) `codesign --force` derives the correct identifier. Sign
-  // before the outer Orca.app is sealed, like the computer-use helper.
+  // before the outer TeamRun.app is sealed, like the computer-use helper.
   const args = ['--force', '--sign', identity]
   if (isMacRelease) {
     args.push('--options', 'runtime', '--timestamp')

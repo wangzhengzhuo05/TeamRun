@@ -1,8 +1,8 @@
 {
   "name": "teamrun",
-  "version": "1.4.178-rc.2",
+  "version": "1.4.178-rc.3",
   "description": "Human-agent collaboration workspace for software teams",
-  "homepage": "https://github.com/ZhengZhuoWang/TeamRun",
+  "homepage": "https://github.com/wangzhengzhuo05/TeamRun",
   "author": "TeamRun contributors",
   "bin": {
     "orca": "./out/cli/index.js",

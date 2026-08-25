@@ -165,7 +165,7 @@ async function getCreateRepoSelector(
   }
   throw new RuntimeClientError(
     'invalid_argument',
-    'Missing repo selector. Pass --repo or run from inside an Orca-managed worktree.'
+    'Missing repo selector. Pass --repo or run from inside an TeamRun-managed worktree.'
   )
 }
 
@@ -221,7 +221,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     ) {
       try {
         // Why: agent shells can lose ORCA_TERMINAL_HANDLE while still running
-        // inside an Orca worktree. Cwd keeps CLI-created children nestable and
+        // inside an TeamRun worktree. Cwd keeps CLI-created children nestable and
         // lets create infer the repo for the common current-workspace case.
         cwdParentWorktree = await resolveCurrentWorktreeSelector(cwd, client)
       } catch {

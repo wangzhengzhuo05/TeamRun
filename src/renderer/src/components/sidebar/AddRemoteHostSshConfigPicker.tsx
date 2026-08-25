@@ -72,7 +72,7 @@ export function AddRemoteHostSshConfigPicker({
         <DialogDescription>
           {translate(
             'auto.components.sidebar.AddRemoteHostDialog.sshConfigPickerDescription',
-            'Pick a host to fill the form, or add every new host to Orca’s host list.'
+            'Pick a host to fill the form, or add every new host to TeamRun’s host list.'
           )}
         </DialogDescription>
       </DialogHeader>
@@ -199,7 +199,7 @@ export function AddRemoteHostSshConfigPicker({
                     >
                       {translate(
                         'auto.components.sidebar.AddRemoteHostDialog.sshConfigPickerInOrca',
-                        'In Orca'
+                        'In TeamRun'
                       )}
                     </Badge>
                   ) : host.previouslyRemoved ? (
@@ -209,7 +209,7 @@ export function AddRemoteHostSshConfigPicker({
                     >
                       {translate(
                         'auto.components.sidebar.AddRemoteHostDialog.sshConfigPickerPreviouslyRemoved',
-                        'Removed from Orca'
+                        'Removed from TeamRun'
                       )}
                     </Badge>
                   ) : null}
@@ -246,10 +246,10 @@ export function AddRemoteHostSshConfigPicker({
             : newHostCount > 0
               ? translate(
                   'auto.components.sidebar.AddRemoteHostDialog.sshConfigPickerAddAll',
-                  'Add all {{value0}} to Orca',
+                  'Add all {{value0}} to TeamRun',
                   { value0: newHostCount }
                 )
-              : // Why: the remainder can be already-in-Orca or merely tombstoned, so the
+              : // Why: the remainder can be already-in-TeamRun or merely tombstoned, so the
                 // label cannot claim either one specifically.
                 totalHostCount > 0
                 ? translate(
@@ -258,7 +258,7 @@ export function AddRemoteHostSshConfigPicker({
                   )
                 : translate(
                     'auto.components.sidebar.AddRemoteHostDialog.sshConfigPickerAddAllEmpty',
-                    'Add all to Orca'
+                    'Add all to TeamRun'
                   )}
         </Button>
         <Button

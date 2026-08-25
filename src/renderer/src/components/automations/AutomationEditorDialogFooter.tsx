@@ -196,7 +196,7 @@ export function AutomationEditorDialogFooter({
         {isHermesTarget ? scheduleField : null}
       </div>
 
-      {/* Why: Hermes uses one compact footer row, while Orca adds agent,
+      {/* Why: Hermes uses one compact footer row, while TeamRun adds agent,
           session, schedule, and missed-run controls. Animate that row so
           switching the target changes the dialog height smoothly. */}
       <div

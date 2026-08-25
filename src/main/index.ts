@@ -571,7 +571,7 @@ function maybeAutoRenameBranchOnFirstWorkFromHook(event: {
       },
       canRenameOrcaCreatedBranch: (worktreeId) => {
         const meta = currentStore.getWorktreeMeta(worktreeId)
-        // Why: a user branch could coincidentally match a creature name; only Orca-stamped worktrees are safe to auto-rename.
+        // Why: a user branch could coincidentally match a creature name; only TeamRun-stamped worktrees are safe to auto-rename.
         return !!meta?.orcaCreationSource && meta.preserveBranchOnDelete !== true
       },
       setDisplayName: (worktreeId, displayName) => {
@@ -838,7 +838,7 @@ if (hasSingleInstanceLock) {
   installDevParentDisconnectQuit(shouldCoupleToDevParent)
   installDevParentWatchdog(shouldCoupleToDevParent)
   installDevParentSignalQuit(shouldCoupleToDevParent)
-  // Why: run after configureDevUserDataPath but before app.setName('Orca') (whenReady), which changes the resolved path on case-sensitive filesystems.
+  // Why: run after configureDevUserDataPath but before app.setName('TeamRun') (whenReady), which changes the resolved path on case-sensitive filesystems.
   initDataPath()
   // Why: use the canonical userData path — late app.getPath('userData') can resolve differently across restarts, defeating persistence.
   initSessionParseCachePersistence({
@@ -902,7 +902,7 @@ ipcMain.handle(
   }
 )
 
-/** A PTY that dies while Orca is down never runs the teardown that clears pane
+/** A PTY that dies while TeamRun is down never runs the teardown that clears pane
  *  state, so hydrate can rebuild a Claude subagent roster that no later hook can
  *  retire — pinning the pane 'working' and locking its agent out of hibernation
  *  for good. Once provider and hook hydration settle, targeted PTY liveness can
@@ -995,7 +995,7 @@ function startTerminalRuntimeStartupServices(): WindowsDesktopStartupServices {
       track('daemon_start_failed', classifyError(error))
     },
     onAgentHookServerError: (error) => {
-      // Why: hook callbacks are sidebar enrichment only; Orca must still boot if the loopback receiver fails.
+      // Why: hook callbacks are sidebar enrichment only; TeamRun must still boot if the loopback receiver fails.
       console.error('[agent-hooks] Failed to start local hook server:', error)
     }
   })
@@ -2670,7 +2670,7 @@ void app.whenReady().then(async () => {
   )
   runtimeService.setAccountServices({ claudeAccounts, codexAccounts, rateLimits })
   runtimeService.setCommitMessageAgentEnvironmentResolvers({
-    // Why: Codex hooks/auth live in Orca's managed runtime home even for the default path, so every launch must resolve CODEX_HOME via runtime-home.
+    // Why: Codex hooks/auth live in TeamRun's managed runtime home even for the default path, so every launch must resolve CODEX_HOME via runtime-home.
     prepareForCodexLaunch: prepareCodexRuntimeHomeForLaunch,
     prepareForClaudeLaunch: (target) => claudeRuntimeAuth!.prepareForClaudeLaunch(target)
   })
@@ -2815,7 +2815,7 @@ void app.whenReady().then(async () => {
   )
 
   // Emulator bridge (serve-sim). macOS-only feature (gated in CLI/runtime); always ship like agent-browser.
-  // Why: externally started serve-sim processes must stay independent — only Orca-managed/attached helpers belong to a workspace.
+  // Why: externally started serve-sim processes must stay independent — only TeamRun-managed/attached helpers belong to a workspace.
   const emulatorBridge = new EmulatorBridge()
   runtimeService.setEmulatorBridge(emulatorBridge)
   // Why: worktree deletion renames the checkout aside and deletes it in the background, so a quit or
@@ -2958,7 +2958,7 @@ void app.whenReady().then(async () => {
   if (isE2E && (!Number.isInteger(e2eWsPort) || e2eWsPort < 0 || e2eWsPort > 65_535)) {
     throw new Error(`Invalid ORCA_E2E_RUNTIME_WS_PORT value: ${requestedE2EWsPort}`)
   }
-  // Why: pin dev to 6769 so `pnpm dev` doesn't race packaged Orca on 6768 and fall back to a random port, breaking deterministic mobile pairing/repro (STA-1511).
+  // Why: pin dev to 6769 so `pnpm dev` doesn't race packaged TeamRun on 6768 and fall back to a random port, breaking deterministic mobile pairing/repro (STA-1511).
   const devWsPort = is.dev && !isE2E ? 6769 : undefined
   let serveOptions: ServeOptions | null = null
   try {

@@ -70,7 +70,7 @@ export async function resolveCurrentWorktreeSelector(
   if (!enclosingWorktree) {
     throw new RuntimeClientError(
       'selector_not_found',
-      `No Orca-managed worktree contains the current directory: ${currentPath}`
+      `No TeamRun-managed worktree contains the current directory: ${currentPath}`
     )
   }
 
@@ -215,7 +215,7 @@ export async function getComputerCommandTarget(
 export type EmulatorCliTarget = {
   worktree?: string
   device?: string
-  emulator?: string // Orca id from list
+  emulator?: string // TeamRun id from list
 }
 
 export async function getEmulatorWorktreeSelector(

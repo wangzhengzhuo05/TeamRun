@@ -42,7 +42,7 @@ export function useMacNotificationPermissionState(
     useState<MacNotificationPermissionState | null>(null)
 
   useEffect(() => {
-    // Why: while Orca's own notifications setting is off, the OS permission
+    // Why: while TeamRun's own notifications setting is off, the OS permission
     // is irrelevant — a green "notifications are enabled" card next to a
     // disabled toggle reads as a contradiction. Hide the card and skip the
     // readout polling entirely until the setting is back on.
@@ -157,7 +157,7 @@ export function MacNotificationPermissionCard({
               <BellRing className="size-4" />
               {translate(
                 'auto.components.onboarding.NotificationStep.95d99b52fa',
-                'Allow notifications for Orca'
+                'Allow notifications for TeamRun'
               )}
             </div>
             <p className="max-w-[58ch] text-[13px] leading-relaxed text-muted-foreground">

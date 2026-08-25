@@ -540,14 +540,14 @@ function createWebPreloadApi(): Partial<PreloadApi> {
       configured: false,
       state: 'unconfigured' as const,
       persistence: 'none' as const,
-      setupMessage: 'Orca Cloud sign-in is not available in the browser fallback.'
+      setupMessage: 'TeamRun Cloud sign-in is not available in the browser fallback.'
     })
 
   return {
     app: {
       getIdentity: () =>
         Promise.resolve({
-          name: 'Orca',
+          name: 'TeamRun',
           isDev: false,
           devLabel: null,
           devBranch: null,
@@ -1423,7 +1423,7 @@ function createRuntimeEnvironmentsApi(): NonNullable<Partial<PreloadApi>['runtim
     addFromPairingCode: async ({ name, pairingCode }) => {
       const offer = parseWebPairingInput(pairingCode)
       if (!offer) {
-        throw new Error('Invalid Orca pairing code.')
+        throw new Error('Invalid TeamRun pairing code.')
       }
       const previousEnvironment = activeEnvironment
       closeActiveRuntimeClients()
@@ -1496,7 +1496,7 @@ function createRuntimeEnvironmentsApi(): NonNullable<Partial<PreloadApi>['runtim
           kind: 'host-unreachable',
           message: translate(
             'auto.web.webPreloadApi.remotePairingUnreachable',
-            'Cannot reach Orca at {{endpoint}}.',
+            'Cannot reach TeamRun at {{endpoint}}.',
             { endpoint: parsed.value.displayEndpoint }
           )
         }
@@ -1522,7 +1522,7 @@ function createRuntimeEnvironmentsApi(): NonNullable<Partial<PreloadApi>['runtim
           kind: 'environment-save-failed',
           message: translate(
             'auto.web.webPreloadApi.remotePairingSaveFailed',
-            'Orca verified the host but could not save it. Check browser storage and try again.'
+            'TeamRun verified the host but could not save it. Check browser storage and try again.'
           )
         }
       }
@@ -2965,7 +2965,7 @@ function createCliApi(): NonNullable<Partial<PreloadApi>['cli']> {
     state: 'unsupported',
     currentTarget: null,
     unsupportedReason: 'launch_mode_unavailable',
-    detail: 'CLI registration is managed on the Orca server, not in the web browser.'
+    detail: 'CLI registration is managed on the TeamRun server, not in the web browser.'
   } as const
   return {
     getInstallStatus: () => Promise.resolve(status),
@@ -2999,7 +2999,7 @@ function createAgentHooksApi(): NonNullable<Partial<PreloadApi>['agentHooks']> {
       state: 'not_installed',
       configPath: '',
       managedHooksPresent: false,
-      detail: 'Agent hook status is only available on the Orca server.'
+      detail: 'Agent hook status is only available on the TeamRun server.'
     } as const)
   return {
     claudeStatus: () => status('claude'),
@@ -3066,7 +3066,7 @@ function createComputerUsePermissionsApi(): NonNullable<
         helperAppPath: null,
         openedSettings: false,
         launchedHelper: false,
-        nextStep: 'Computer-use permissions are managed on the Orca server.'
+        nextStep: 'Computer-use permissions are managed on the TeamRun server.'
       })),
     reset: () =>
       Promise.resolve({
@@ -3695,13 +3695,13 @@ function resolveEnvironment(selector: string): StoredWebRuntimeEnvironment {
   if (environment.compatibleEnvironmentIds?.includes(selector)) {
     return environment
   }
-  throw new Error(`Unknown Orca runtime environment: ${selector}`)
+  throw new Error(`Unknown TeamRun runtime environment: ${selector}`)
 }
 
 function requireActiveEnvironment(): StoredWebRuntimeEnvironment {
   activeEnvironment = activeEnvironment ?? readStoredWebRuntimeEnvironment()
   if (!activeEnvironment) {
-    throw new Error('Pair this web client with an Orca server first.')
+    throw new Error('Pair this web client with an TeamRun server first.')
   }
   return activeEnvironment
 }
@@ -3713,7 +3713,7 @@ function requireActiveEnvironmentOrNull(): StoredWebRuntimeEnvironment | null {
 
 function assertActiveEnvironment(environmentId: string): void {
   if (requireActiveEnvironment().id !== environmentId) {
-    throw new Error('The paired Orca server changed while the request was in progress.')
+    throw new Error('The paired TeamRun server changed while the request was in progress.')
   }
 }
 
@@ -3940,7 +3940,7 @@ function getStoredOnboarding(): OnboardingState {
     return closed
   }
   const closed = closeWebOnboarding(getDefaultOnboardingState())
-  // Why: paired clients already have an Orca server; skip desktop first-run onboarding that would probe browser-local tools.
+  // Why: paired clients already have an TeamRun server; skip desktop first-run onboarding that would probe browser-local tools.
   writeJson(ONBOARDING_STORAGE_KEY, closed)
   return closed
 }

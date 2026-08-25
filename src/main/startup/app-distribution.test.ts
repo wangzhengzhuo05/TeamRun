@@ -9,6 +9,7 @@ describe('app-distribution', () => {
   it('recognizes the self-hosted package and display names', () => {
     expect(resolveOrcaAppDistribution('orca-self-hosted')).toBe('self-hosted')
     expect(resolveOrcaAppDistribution('Orca Self-Hosted')).toBe('self-hosted')
+    expect(resolveOrcaAppDistribution('TeamRun Self-Hosted')).toBe('self-hosted')
     expect(resolveOrcaAppDistribution('orca')).toBe('official')
     expect(resolveOrcaAppDistribution('teamrun')).toBe('teamrun')
     expect(resolveOrcaAppDistribution('TeamRun')).toBe('teamrun')

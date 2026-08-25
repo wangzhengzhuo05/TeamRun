@@ -4,6 +4,7 @@ import { organizationInvitations, organizationMembers, users } from '../database
 import { ApiProblem } from '../http/api-problem.js'
 import type { TeamRunUser } from '../http/fastify-context.js'
 import { verifyOidcToken } from './oidc-token-verifier.js'
+import { matchesTeamRunSharedKey, teamRunSharedKeyIdentity } from './shared-key-authentication.js'
 import { appendTeamEvent } from '../events/team-event-writer.js'
 
 type IdentityClaims = {
@@ -97,7 +98,20 @@ export function registerAuthentication(app: FastifyInstance): void {
       }
       claims = parseDevIdentity(authorization.token)
     } else if (authorization.scheme.toLowerCase() === 'bearer') {
-      claims = await verifyOidcToken(authorization.token, app.teamRunConfig)
+      const sharedKey = app.teamRunConfig.TEAMRUN_SHARED_KEY
+      if (sharedKey && matchesTeamRunSharedKey(authorization.token, sharedKey)) {
+        claims = teamRunSharedKeyIdentity(app.teamRunConfig)
+      } else if (
+        app.teamRunConfig.TEAMRUN_OIDC_ISSUER &&
+        app.teamRunConfig.TEAMRUN_OIDC_AUDIENCE &&
+        app.teamRunConfig.TEAMRUN_OIDC_CLIENT_ID
+      ) {
+        claims = await verifyOidcToken(authorization.token, app.teamRunConfig)
+      } else if (sharedKey) {
+        throw new ApiProblem(401, 'invalid_shared_key', 'Team key is invalid')
+      } else {
+        claims = await verifyOidcToken(authorization.token, app.teamRunConfig)
+      }
     } else {
       throw new ApiProblem(401, 'unsupported_authentication', 'Unsupported authorization scheme')
     }

@@ -1,4 +1,4 @@
-// Wire-level handshake helpers for the Orca relay.
+// Wire-level handshake helpers for the TeamRun relay.
 
 import { dirname, join } from 'node:path'
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
