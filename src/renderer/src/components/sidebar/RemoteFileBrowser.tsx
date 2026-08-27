@@ -720,7 +720,6 @@ export function RemoteFileBrowser({
             // Directory has contents but the filter hides them all — distinct from an empty directory so copy stays accurate.
             <div className="flex items-center justify-center h-full">
               <p className="text-xs text-muted-foreground">{displayNoMatchesCopy}</p>
-              <p className="text-xs text-muted-foreground">{displayNoMatchesCopy}</p>
             </div>
           ) : (
             displayEntries.map((entry) => {

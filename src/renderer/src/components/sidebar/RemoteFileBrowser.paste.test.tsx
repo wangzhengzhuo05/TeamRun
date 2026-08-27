@@ -157,6 +157,11 @@ describe('RemoteFileBrowser paste-sized input', () => {
     expect(browseDir).not.toHaveBeenCalled()
     expect(container.textContent).toContain('No matches for this long input')
     expect(container.textContent).not.toContain('secret-token-value')
+    expect(
+      [...container.querySelectorAll('p')].filter(
+        (paragraph) => paragraph.textContent === 'No matches for this long input'
+      )
+    ).toHaveLength(1)
 
     await act(async () => {
       root.unmount()
