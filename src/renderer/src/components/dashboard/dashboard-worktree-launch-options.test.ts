@@ -73,6 +73,18 @@ describe('buildDashboardWorktreeLaunchOptions', () => {
     expect(options).toEqual({ 'worktree-1': ['codex', 'gemini'] })
   })
 
+  it('ignores a generic CLI default that is not an automatic launch option', () => {
+    const options = buildDashboardWorktreeLaunchOptions(
+      state({
+        detectedAgentIds: ['codex'],
+        settings: { defaultTuiAgent: 'generic-cli' } as LaunchState['settings']
+      }),
+      [card()]
+    )
+
+    expect(options).toEqual({ 'worktree-1': ['codex'] })
+  })
+
   it('publishes detected launch choices for workspaces without cards', () => {
     const workspace: DashboardWorkspace = {
       repoId: 'repo-1',
