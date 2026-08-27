@@ -49,9 +49,10 @@ replace preview release assets.
 sudo bash config/scripts/install-teamrun-preview-pull-deployment.sh
 ```
 
-The installed launcher prefers `/opt/teamrun-preview/teamrun-preview-linux-x64.AppImage`.
-Until that file exists, it launches the current source-built runtime, allowing
-the systemd units to be installed before the first CI build completes.
+The updater verifies the AppImage and extracts it without FUSE. The installed
+launcher prefers `/opt/teamrun-preview/current/AppRun`, retains the previous
+extracted runtime through the health-check window, and falls back to the current
+source-built runtime until the first CI build is deployed.
 
 After the first `TeamRun preview Linux` workflow run publishes the prerelease:
 

@@ -34,20 +34,64 @@ release_json=$staging_dir/release.json
 manifest_path=$staging_dir/$manifest_name
 appimage_path=$staging_dir/$asset_name
 current_appimage=$install_dir/$asset_name
+current_app_dir=$install_dir/current
+previous_app_dir=$install_dir/.previous-appdir
 deployed_manifest=$install_dir/$manifest_name
 deployed_commit=$install_dir/DEPLOYED_COMMIT
 rollbacks_dir=$install_dir/rollbacks
 promoted=0
+runtime_moved=0
 created_profile=0
 needs_recovery=0
 rollback_dir=
 rollback_new=
 profile_stage=$profile_dir.migrating
+service_user=$(systemctl show "$service_name" -p User --value)
+service_user=${service_user:-root}
+
+extract_appimage() {
+  local image_path=$1
+  local target_dir=$2
+  local extraction_root
+  extraction_root=$(mktemp -d "$install_dir/.extract.XXXXXX")
+  if ! (cd "$extraction_root" && "$image_path" --appimage-extract >/dev/null); then
+    rm -rf -- "$extraction_root"
+    return 1
+  fi
+  if [[ ! -x $extraction_root/squashfs-root/AppRun ]]; then
+    rm -rf -- "$extraction_root"
+    echo 'Extracted preview runtime has no executable AppRun' >&2
+    return 1
+  fi
+  chmod -R u=rwX,go=rX "$extraction_root/squashfs-root"
+  mv "$extraction_root/squashfs-root" "$target_dir"
+  rmdir "$extraction_root"
+}
+
+runtime_is_executable() {
+  runuser --user "$service_user" -- test -x "$current_app_dir/AppRun"
+}
+
+service_runs_current_runtime() {
+  local main_pid runtime_path
+  main_pid=$(systemctl show "$service_name" -p MainPID --value)
+  [[ $main_pid =~ ^[1-9][0-9]*$ ]] || return 1
+  runtime_path=$(readlink -f "/proc/$main_pid/exe") || return 1
+  [[ $runtime_path == "$current_app_dir/"* ]]
+}
 
 restore_previous_deployment() {
   local backup_dir=$rollback_dir
   [[ -d $backup_dir ]] || backup_dir=$rollback_new
   systemctl stop "$service_name" || true
+  if ((promoted || runtime_moved)); then
+    rm -rf -- "$current_app_dir"
+    if [[ -d $previous_app_dir ]]; then
+      mv "$previous_app_dir" "$current_app_dir"
+    elif [[ -f $backup_dir/$asset_name ]]; then
+      extract_appimage "$backup_dir/$asset_name" "$current_app_dir" || true
+    fi
+  fi
   if ((promoted)); then
     if [[ -f $backup_dir/$asset_name ]]; then
       cp -a "$backup_dir/$asset_name" "$current_appimage.recovering"
@@ -117,7 +161,7 @@ next_commit=$(jq -er '.commit' "$manifest_path")
 expected_sha256=$(jq -er '.artifact.sha256' "$manifest_path")
 expected_size=$(jq -er '.artifact.size' "$manifest_path")
 
-if [[ -x $current_appimage && -f $deployed_commit ]] && [[ $(<"$deployed_commit") == "$next_commit" ]]; then
+if runtime_is_executable && [[ -f $deployed_commit ]] && [[ $(<"$deployed_commit") == "$next_commit" ]]; then
   echo "TeamRun preview is already at $next_commit"
   exit 0
 fi
@@ -129,6 +173,8 @@ file_info=$(LC_ALL=C file "$appimage_path")
 grep -q 'ELF .* executable' <<<"$file_info"
 grep -q 'x86-64' <<<"$file_info"
 chmod 755 "$appimage_path"
+extracted_app_dir=$staging_dir/appdir
+extract_appimage "$appimage_path" "$extracted_app_dir"
 
 install -d -o root -g root -m 700 "$rollbacks_dir"
 rollback_new=$rollbacks_dir/$(date -u +%Y%m%dT%H%M%SZ)-$next_commit.new
@@ -147,13 +193,15 @@ if [[ -L $profile_dir ]]; then
   echo "Refusing symlinked preview profile: $profile_dir" >&2
   exit 1
 fi
-if [[ -d $profile_dir ]]; then
-  tar czf "$rollback_new/profile.tgz" -C "$(dirname "$profile_dir")" "$(basename "$profile_dir")"
-fi
+[[ ! -L $current_app_dir ]] || { echo "Refusing symlinked preview runtime: $current_app_dir" >&2; exit 1; }
+[[ ! -L $previous_app_dir ]] || { echo "Refusing symlinked previous runtime: $previous_app_dir" >&2; exit 1; }
 
 health_since=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
 needs_recovery=1
 systemctl stop "$service_name"
+if [[ -d $profile_dir ]]; then
+  tar czf "$rollback_new/profile.tgz" -C "$(dirname "$profile_dir")" "$(basename "$profile_dir")"
+fi
 
 if [[ ! -e $profile_dir && -d $legacy_profile_dir ]]; then
   install -d -o ubuntu -g ubuntu -m 700 "$(dirname "$profile_dir")"
@@ -164,14 +212,20 @@ if [[ ! -e $profile_dir && -d $legacy_profile_dir ]]; then
   chown -R ubuntu:ubuntu "$profile_dir"
 fi
 
+rm -rf -- "$previous_app_dir"
+if [[ -d $current_app_dir ]]; then
+  mv "$current_app_dir" "$previous_app_dir"
+  runtime_moved=1
+fi
 mv "$rollback_new" "$rollback_dir"
+promoted=1
 mv "$appimage_path" "$current_appimage"
+mv "$extracted_app_dir" "$current_app_dir"
 cp "$manifest_path" "$deployed_manifest.new"
 printf '%s\n' "$next_commit" > "$deployed_commit.new"
 chmod 644 "$deployed_manifest.new" "$deployed_commit.new"
 mv "$deployed_manifest.new" "$deployed_manifest"
 mv "$deployed_commit.new" "$deployed_commit"
-promoted=1
 
 systemctl reset-failed "$service_name"
 systemctl start "$service_name"
@@ -179,6 +233,7 @@ systemctl start "$service_name"
 healthy=0
 for _ in $(seq 1 45); do
   if systemctl is-active --quiet "$service_name" && \
+    service_runs_current_runtime && \
     curl -fsS --connect-timeout 3 --max-time 5 "$health_url" >/dev/null && \
     journalctl -u "$service_name" --since "$health_since" -o cat --no-pager | \
       jq -Rse 'split("\n") | map(fromjson? | select(.type == "orca_server_ready" and .schemaVersion == 1)) | length > 0' >/dev/null; then
@@ -194,6 +249,7 @@ if ((healthy == 0)); then
 fi
 
 needs_recovery=0
+rm -rf -- "$previous_app_dir"
 
 mapfile -d '' rollback_entries < <(
   find "$rollbacks_dir" -mindepth 1 -maxdepth 1 -type d -name '*.ready' -printf '%T@ %p\0' | sort -z -n

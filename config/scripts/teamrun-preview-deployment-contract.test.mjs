@@ -22,14 +22,19 @@ describe('TeamRun preview pull deployment contract', () => {
     )
   })
 
-  it('keeps the source runtime available until the first AppImage arrives', () => {
-    expect(launchScript).toContain('if [[ -x "$appimage" ]]')
+  it('keeps extracted, previous, and source runtimes available in fallback order', () => {
+    expect(launchScript).toContain('if [[ -x "$app_run" ]]')
+    expect(launchScript).toContain('if [[ -x "$previous_app_run" ]]')
     expect(launchScript).toContain('if [[ -x "$source_launcher" ]]')
   })
 
-  it('requires checksum, ELF, readiness, and HTTP verification before accepting an update', () => {
+  it('extracts without FUSE and verifies the artifact and deployed runtime', () => {
     expect(updateScript).toContain('sha256sum --check --status')
     expect(updateScript).toContain("grep -q 'ELF .* executable'")
+    expect(updateScript).toContain('--appimage-extract')
+    expect(updateScript).toContain('squashfs-root/AppRun')
+    expect(updateScript).toContain('chmod -R u=rwX,go=rX')
+    expect(updateScript).toContain('service_runs_current_runtime')
     expect(updateScript).toContain('.type == "orca_server_ready" and .schemaVersion == 1')
     expect(updateScript).toContain('curl -fsS --connect-timeout 3 --max-time 5 "$health_url"')
     expect(updateScript).toContain('restore_previous_deployment')
