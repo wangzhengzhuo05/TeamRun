@@ -3,7 +3,7 @@ name: TeamRun preview Linux
 on:
   push:
     branches:
-      - feat-init-demo
+      - main
   workflow_dispatch:
 
 permissions:

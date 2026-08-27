@@ -10,7 +10,7 @@ const updateTimer = readFileSync('config/systemd/teamrun-preview-update.timer', 
 
 describe('TeamRun preview pull deployment contract', () => {
   it('builds preview pushes in GitHub Actions and publishes immutable commit metadata', () => {
-    expect(workflow.on.push.branches).toContain('feat-init-demo')
+    expect(workflow.on.push.branches).toContain('main')
     expect(workflow.concurrency['cancel-in-progress']).toBe(true)
     const steps = workflow.jobs['build-and-publish'].steps
     expect(steps.find((step) => step.name === 'Validate source').run).toBe('pnpm run typecheck')
