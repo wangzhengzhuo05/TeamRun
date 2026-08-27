@@ -189,8 +189,8 @@ export function TeamAgentLauncher(props: Props) {
 
   return (
     <section className="rounded-lg border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="team-space-agent-launcher-header flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-[1_1_16rem]">
           <h3 className="text-sm font-semibold">
             {translate(
               'auto.components.team.space.TeamAgentLauncher.openTaskTitle',
@@ -222,7 +222,7 @@ export function TeamAgentLauncher(props: Props) {
               )}
         </Button>
       </div>
-      <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem] gap-3">
+      <div className="team-space-agent-launcher-fields mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem] gap-3">
         <Select value={workspaceValue} onValueChange={setWorkspaceValue}>
           <SelectTrigger className="w-full">
             <SelectValue

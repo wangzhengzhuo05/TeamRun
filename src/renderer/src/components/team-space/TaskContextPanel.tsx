@@ -35,8 +35,8 @@ export function TaskContextPanel({ snapshots, onCreate }: Props) {
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden">
-      <aside className="flex min-h-0 flex-col border-r border-border bg-muted/20">
+    <div className="team-space-context grid min-h-0 flex-1 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden">
+      <aside className="team-space-context-list flex min-h-0 flex-col border-r border-border bg-muted/20">
         <div className="border-b border-border p-2">
           <Button className="w-full" size="sm" onClick={create}>
             <Camera />{' '}
@@ -77,13 +77,15 @@ export function TaskContextPanel({ snapshots, onCreate }: Props) {
         {selected ? (
           <>
             <div className="mb-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <Badge variant="outline" className="shrink-0">
                   {translate('auto.components.team.space.TaskContextPanel.d2f82c4681', 'SHA-256')}
                 </Badge>
-                <code className="truncate text-xs text-muted-foreground">{selected.hash}</code>
+                <code className="min-w-0 truncate text-xs text-muted-foreground">
+                  {selected.hash}
+                </code>
               </div>
-              <Button variant="outline" size="sm" onClick={copy}>
+              <Button variant="outline" size="sm" className="shrink-0" onClick={copy}>
                 {copied ? <Check /> : <Copy />}{' '}
                 {copied
                   ? translate('auto.components.team.space.TaskContextPanel.4cd7e8b7c8', 'Copied')

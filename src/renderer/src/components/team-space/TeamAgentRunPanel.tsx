@@ -160,8 +160,8 @@ export function TeamAgentRunPanel(props: Props) {
             const checks = props.verifications[run.id] ?? []
             return (
               <article key={run.id} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Bot className="size-4 text-muted-foreground" />
                     <span className="text-sm font-medium">
                       {getAgentLabel(run.agentKind as TuiAgent)}
@@ -179,7 +179,7 @@ export function TeamAgentRunPanel(props: Props) {
                       </Badge>
                     ) : null}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <RunVerificationDialog run={run} onCompleted={props.onRefresh} />
                     {run.status === 'working' || run.status === 'needs_input' ? (
                       <Button variant="outline" size="sm" onClick={() => markReady(run)}>
@@ -207,7 +207,7 @@ export function TeamAgentRunPanel(props: Props) {
                     </Button>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span>
                     {run.baseRevision.kind === 'git'
                       ? run.baseRevision.objectId.slice(0, 12)

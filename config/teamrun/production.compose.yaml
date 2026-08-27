@@ -64,7 +64,7 @@ services:
       TEAMRUN_SHARED_KEY_EMAIL: ${TEAMRUN_SHARED_KEY_EMAIL:-team@teamrun.local}
       TEAMRUN_SHARED_KEY_DISPLAY_NAME: ${TEAMRUN_SHARED_KEY_DISPLAY_NAME:-TeamRun Team}
       TEAMRUN_DEV_AUTH: '0'
-      TEAMRUN_CORS_ORIGINS: https://${TEAMRUN_DOMAIN}
+      TEAMRUN_CORS_ORIGINS: https://${TEAMRUN_DOMAIN},https://preview.runteam.site
       TEAMRUN_S3_ENDPOINT: http://minio:9000
       TEAMRUN_S3_PUBLIC_ENDPOINT: https://storage.${TEAMRUN_DOMAIN}
       TEAMRUN_S3_REGION: us-east-1
@@ -93,6 +93,8 @@ services:
       - '80:80'
       - '443:443'
       - '443:443/udp'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - teamrun-caddy-data:/data

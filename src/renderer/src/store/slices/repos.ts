@@ -3162,10 +3162,13 @@ export const createRepoSlice: StateCreator<AppState, [], [], RepoSlice> = (set, 
         get().clearOrcaHookTrustForRepo(repo.id)
       }
       set((s) => {
-        if (s.repos.some((r) => getRepoHostIdentity(r) === repoIdentity)) {
-          return s
-        }
-        const nextRepos = [...s.repos, repo]
+        const nextRepos = reconcileFetchedRepos(
+          s.repos,
+          s.repos.some((r) => getRepoHostIdentity(r) === repoIdentity)
+            ? s.repos.map((entry) => (getRepoHostIdentity(entry) === repoIdentity ? repo : entry))
+            : [...s.repos, repo]
+        )
+        if (nextRepos === s.repos) return s
         const hostId = getRepoExecutionHostId(repo)
         return {
           repos: nextRepos,

@@ -583,6 +583,12 @@ import type { EmulatorBridge } from '../emulator/emulator-bridge'
 import { getRuntimeFileTargetExecutionHostId, RuntimeFileCommands } from './orca-runtime-files'
 import { RuntimeGitCommands } from './orca-runtime-git'
 import { RuntimeTeamRunCommands } from './orca-runtime-teamrun'
+import { TeamRunCloudCommandService } from '../teamrun/teamrun-cloud-command-service'
+import {
+  streamTeamRunCloudEvents,
+  type TeamRunCloudEventFrame
+} from '../teamrun/teamrun-cloud-event-stream'
+import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
 import {
   activateClientSessionTabSelection,
   ClientSessionTabSelectionStore,
@@ -9212,6 +9218,35 @@ export class OrcaRuntimeService {
     this.teamRunCommands.runVerification.bind(this.teamRunCommands)
   prepareTeamRunPublication: RuntimeTeamRunCommands['preparePublication'] =
     this.teamRunCommands.preparePublication.bind(this.teamRunCommands)
+
+  private teamRunCloudCommandService: TeamRunCloudCommandService | null = null
+
+  invokeTeamRunCloudOperation(operation: TeamRunCloudOperation, args?: unknown): Promise<unknown> {
+    return this.getTeamRunCloudCommandService().invoke(operation, args)
+  }
+
+  streamTeamRunCloudEvents(
+    organizationId: string,
+    cursor: number | undefined,
+    signal: AbortSignal,
+    emit: (frame: TeamRunCloudEventFrame) => void
+  ): Promise<void> {
+    return streamTeamRunCloudEvents(
+      this.getTeamRunCloudCommandService().client,
+      organizationId,
+      cursor,
+      signal,
+      emit
+    )
+  }
+
+  private getTeamRunCloudCommandService(): TeamRunCloudCommandService {
+    this.teamRunCloudCommandService ??= new TeamRunCloudCommandService(
+      this.requireStore(),
+      app.getPath('userData')
+    )
+    return this.teamRunCloudCommandService
+  }
 
   private async resolveRuntimeGitTarget(worktreeSelector: string): Promise<{
     worktree: ResolvedWorktree
@@ -19032,6 +19067,26 @@ export class OrcaRuntimeService {
       return runtimeRepoMatchesExecutionHost(repo, executionHostId)
     })
     if (existing) {
+      if (kind === 'git' && existing.kind === 'folder') {
+        const detected = await detectRepoIconAndUpstream({ repoPath: path, kind: 'git' })
+        const upgraded = this.store.updateRepo(existing.id, {
+          ...detected,
+          kind: 'git',
+          externalWorktreeVisibility: 'hide',
+          ...(existing.executionHostId == null &&
+          parseExecutionHostId(executionHostId)?.kind === 'runtime'
+            ? { executionHostId }
+            : {})
+        })
+        if (!upgraded) {
+          throw new Error(`Project disappeared while upgrading it to Git: ${existing.id}`)
+        }
+        await prepareLocalWorktreeRootForRepo(this.store, upgraded)
+        this.invalidateResolvedWorktreeCache()
+        this.invalidateWorktreeScanCacheForRepo(existing.id)
+        this.notifyReposChanged()
+        return upgraded
+      }
       // Only a runtime host backfills a legacy unstamped repo. An unstamped repo is
       // indistinguishable from a genuine local repo (both have null executionHostId and
       // connectionId), so we never stamp local/ssh onto it — that would re-attribute a
@@ -29090,7 +29145,8 @@ export class OrcaRuntimeService {
       } catch {
         warnings.push({
           code: 'LINEAGE_PARENT_CONTEXT_MISSING',
-          message: 'Worktree created, but TeamRun could not validate the environment parent context.',
+          message:
+            'Worktree created, but TeamRun could not validate the environment parent context.',
           details: { envParentWorkspace: input.envParentWorkspace }
         })
       }
@@ -29197,7 +29253,8 @@ export class OrcaRuntimeService {
         warnings: [
           {
             code: 'LINEAGE_PARENT_CONTEXT_CONFLICT',
-            message: 'Worktree created, but TeamRun could not prove which parent context caused it.',
+            message:
+              'Worktree created, but TeamRun could not prove which parent context caused it.',
             details: {
               terminalParentWorkspaceKey: candidates.find((c) => c.source === 'terminal-context')
                 ?.parent.workspaceKey,

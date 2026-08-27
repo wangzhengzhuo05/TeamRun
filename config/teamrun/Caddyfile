@@ -6,3 +6,8 @@
 storage.{$TEAMRUN_DOMAIN} {
   reverse_proxy minio:9000
 }
+
+preview.runteam.site {
+  encode zstd gzip
+  reverse_proxy host.docker.internal:6768
+}

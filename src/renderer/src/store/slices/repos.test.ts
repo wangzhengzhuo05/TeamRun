@@ -218,6 +218,30 @@ describe('repo slice runtime routing', () => {
     expect(orcaProfileFindProjectProfiles).not.toHaveBeenCalled()
   })
 
+  it('replaces an existing folder row when the runtime upgrades it to Git', async () => {
+    const folderRepo = {
+      ...remoteRepo,
+      kind: 'folder' as const,
+      executionHostId: 'runtime:env-1' as const
+    }
+    const gitRepo = { ...folderRepo, kind: 'git' as const }
+    runtimeEnvironmentCall.mockResolvedValue({
+      id: 'rpc-upgrade',
+      ok: true,
+      result: { repo: gitRepo },
+      _meta: { runtimeId: 'runtime-remote' }
+    })
+    const store = createTestStore()
+    store.setState({
+      settings: { activeRuntimeEnvironmentId: 'env-1' } as never,
+      repos: [folderRepo]
+    })
+
+    await store.getState().addRepoPath(folderRepo.path, 'git')
+
+    expect(store.getState().repos).toEqual([gitRepo])
+  })
+
   it('warns when a local project is already present in another profile', async () => {
     reposAdd.mockResolvedValue({ repo: localRepo })
     orcaProfileFindProjectProfiles.mockResolvedValue({

@@ -1,0 +1,105 @@
+name: TeamRun preview Linux
+
+on:
+  push:
+    branches:
+      - feat-init-demo
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: teamrun-preview-linux
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      PREVIEW_RELEASE_TAG: teamrun-preview-linux
+      PREVIEW_APPIMAGE: teamrun-preview-linux-x64.AppImage
+      PREVIEW_MANIFEST: teamrun-preview-linux-x64.manifest.json
+      PREVIEW_CHECKSUMS: teamrun-preview-linux-x64.SHA256SUMS
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi gir1.2-atspi-2.0 at-spi2-core xclip xdotool
+          npm install -g node-gyp@11.5.0
+          echo "npm_config_node_gyp=$(npm root -g)/node-gyp/bin/node-gyp.js" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate source
+        run: pnpm run typecheck
+
+      - name: Build preview assets
+        run: |
+          pnpm run build:relay
+          pnpm run build:cli
+          pnpm run build:electron-vite
+          pnpm run verify:built-skills-cli
+          pnpm run build:web-from-renderer
+
+      - name: Package preview AppImage
+        run: |
+          pnpm run ensure:electron-runtime
+          pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage --x64 --publish never
+          mv dist/teamrun-linux.AppImage "dist/$PREVIEW_APPIMAGE"
+
+      - name: Create deployment manifest
+        run: |
+          artifact_sha256=$(sha256sum "dist/$PREVIEW_APPIMAGE" | cut -d ' ' -f 1)
+          artifact_size=$(stat -c '%s' "dist/$PREVIEW_APPIMAGE")
+          jq -n \
+            --arg commit "$GITHUB_SHA" \
+            --arg createdAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg assetName "$PREVIEW_APPIMAGE" \
+            --arg sha256 "$artifact_sha256" \
+            --argjson size "$artifact_size" \
+            '{schemaVersion: 1, channel: "preview", commit: $commit, createdAt: $createdAt, artifact: {name: $assetName, sha256: $sha256, size: $size}}' \
+            > "dist/$PREVIEW_MANIFEST"
+          (
+            cd dist
+            sha256sum "$PREVIEW_APPIMAGE" "$PREVIEW_MANIFEST" > "$PREVIEW_CHECKSUMS"
+          )
+
+      - name: Publish mutable preview release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf 'Commit: `%s`\n\nBuilt by [workflow run](%s/actions/runs/%s).\n' \
+            "$GITHUB_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" \
+            > dist/PREVIEW_RELEASE_NOTES.md
+          if gh release view "$PREVIEW_RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$PREVIEW_RELEASE_TAG" \
+              --title "TeamRun Linux preview" \
+              --prerelease \
+              --notes-file dist/PREVIEW_RELEASE_NOTES.md
+          else
+            gh release create "$PREVIEW_RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "TeamRun Linux preview" \
+              --prerelease \
+              --notes-file dist/PREVIEW_RELEASE_NOTES.md
+          fi
+          gh release upload "$PREVIEW_RELEASE_TAG" \
+            "dist/$PREVIEW_APPIMAGE" \
+            "dist/$PREVIEW_MANIFEST" \
+            "dist/$PREVIEW_CHECKSUMS" \
+            --clobber

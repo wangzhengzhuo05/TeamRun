@@ -1903,6 +1903,36 @@ describe('repos:add + repos:clone', () => {
     )
   })
 
+  it('upgrades a same-path local folder record when it is re-added as Git', async () => {
+    const existing = {
+      id: 'folder-repo',
+      path: '/tmp/from-add',
+      displayName: 'from-add',
+      badgeColor: '#8b5cf6',
+      addedAt: 1,
+      kind: 'folder' as const
+    }
+    const upgraded = { ...existing, kind: 'git' as const }
+    mockStore.getRepos.mockReturnValue([existing])
+    mockStore.updateRepo.mockReturnValue(upgraded)
+
+    const result = await handlers.get('repos:add')!(null, {
+      path: existing.path,
+      kind: 'git'
+    })
+
+    expect(mockStore.updateRepo).toHaveBeenCalledWith(
+      existing.id,
+      expect.objectContaining({
+        kind: 'git',
+        externalWorktreeVisibility: 'hide'
+      })
+    )
+    expect(result).toEqual({ repo: upgraded })
+    expect(prepareLocalWorktreeRootForRepoMock).toHaveBeenCalledWith(mockStore, upgraded)
+    expect(mockStore.addRepo).not.toHaveBeenCalled()
+  })
+
   it('canonicalizes local git repos:add to the detected root path', async () => {
     vi.mocked(getGitRepoRoot).mockReturnValue('/tmp/from-add')
 

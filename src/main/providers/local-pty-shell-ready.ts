@@ -178,6 +178,10 @@ __orca_normalize_prompt_command() {
     done
     PROMPT_COMMAND="$__orca_joined"
   fi
+  # Why: an inherited trailing separator would form an empty command when TeamRun appends its hooks.
+  while [[ "\${PROMPT_COMMAND:-}" == *[[:space:]\\;] ]]; do
+    PROMPT_COMMAND="\${PROMPT_COMMAND%?}"
+  done
 }
 __orca_prepend_prompt_command() {
   __orca_normalize_prompt_command

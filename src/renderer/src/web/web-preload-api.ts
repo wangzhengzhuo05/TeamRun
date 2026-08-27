@@ -6,6 +6,10 @@ import type {
   NativeChatApi,
   NativeChatAppendedMessages
 } from '../../../preload/api-types'
+import type { TeamRunApi } from '../../../preload/api/teamrun-api'
+import type { TeamEvent } from '../../../shared/teamrun-api'
+import type { TeamRunSyncStatus } from '../../../shared/teamrun-cloud'
+import type { TeamRunCloudOperation } from '../../../shared/teamrun-cloud-operations'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
 import { parseHostAccessLink } from '../../../shared/remote-pairing-address'
 import { verifyRemotePairingRuntimeStatus } from '../../../shared/remote-pairing-verification'
@@ -837,6 +841,7 @@ function createWebPreloadApi(): Partial<PreloadApi> {
       }
     },
     runtime: createRuntimeApi(),
+    teamRun: createTeamRunApi(),
     nativeChat: createNativeChatApi(),
     runtimeEnvironments: createRuntimeEnvironmentsApi(),
     repos: createReposApi(),
@@ -1392,6 +1397,151 @@ function createNativeChatApi(): NativeChatApi {
       return () => {
         cancelled = true
         handle?.unsubscribe()
+      }
+    }
+  }
+}
+
+function createTeamRunApi(): TeamRunApi {
+  const syncListeners = new Set<(status: TeamRunSyncStatus) => void>()
+  const eventListeners = new Set<(event: TeamEvent) => void>()
+  const errorListeners = new Set<(message: string) => void>()
+  let eventSubscription: { unsubscribe: () => void } | null = null
+  let eventGeneration = 0
+
+  const invoke = <T>(operation: TeamRunCloudOperation, args?: unknown): Promise<T> =>
+    callRuntimeResult<T>('teamrun.cloudInvoke', {
+      operation,
+      ...(args === undefined ? {} : { args })
+    })
+  const notifySync = (status: TeamRunSyncStatus): TeamRunSyncStatus => {
+    for (const listener of syncListeners) listener(status)
+    return status
+  }
+
+  return {
+    auth: {
+      status: () =>
+        invoke<Awaited<ReturnType<TeamRunApi['auth']['status']>>>('auth.status').catch((error) => ({
+          state: 'error',
+          apiUrl: '',
+          devAuth: false,
+          sharedKeyAuth: false,
+          message:
+            error instanceof Error ? error.message : 'Team Space requires a newer TeamRun server.'
+        })),
+      signIn: (args) => invoke('auth.signIn', args),
+      signOut: () => invoke('auth.signOut')
+    },
+    sync: {
+      status: () => invoke<TeamRunSyncStatus>('sync.status').then(notifySync),
+      flush: () => invoke<TeamRunSyncStatus>('sync.flush').then(notifySync),
+      onStatus: (listener) => {
+        syncListeners.add(listener)
+        return () => syncListeners.delete(listener)
+      }
+    },
+    organizations: {
+      list: () => invoke('organizations.list'),
+      create: (args) => invoke('organizations.create', args),
+      listMembers: (organizationId) => invoke('organizations.listMembers', organizationId),
+      addMember: (args) => invoke('organizations.addMember', args),
+      removeMember: (args) => invoke('organizations.removeMember', args),
+      listInvitations: (organizationId) => invoke('organizations.listInvitations', organizationId),
+      invite: (args) => invoke('organizations.invite', args),
+      revokeInvitation: (args) => invoke('organizations.revokeInvitation', args)
+    },
+    projects: {
+      list: (organizationId) => invoke('projects.list', organizationId),
+      create: (args) => invoke('projects.create', args),
+      update: (args) => invoke('projects.update', args),
+      listRepositories: (projectId) => invoke('projects.listRepositories', projectId),
+      createRepository: (args) => invoke('projects.createRepository', args)
+    },
+    collaboration: {
+      listChannels: (projectId) => invoke('collaboration.listChannels', projectId),
+      createChannel: (args) => invoke('collaboration.createChannel', args),
+      listMessages: (channelId) => invoke('collaboration.listMessages', channelId),
+      createMessage: (args) => invoke('collaboration.createMessage', args),
+      listTeamAgents: (projectId) => invoke('collaboration.listTeamAgents', projectId),
+      createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args)
+    },
+    tasks: {
+      list: (projectId) => invoke('tasks.list', projectId),
+      get: (taskId) => invoke('tasks.get', taskId),
+      create: (args) => invoke('tasks.create', args),
+      update: (args) => invoke('tasks.update', args),
+      listComments: (taskId) => invoke('tasks.listComments', taskId),
+      createComment: (args) => invoke('tasks.createComment', args),
+      listSnapshots: (taskId) => invoke('tasks.listSnapshots', taskId),
+      createSnapshot: (args) => invoke('tasks.createSnapshot', args)
+    },
+    runs: {
+      list: (taskId) => invoke('runs.list', taskId),
+      create: (args) => invoke('runs.create', args),
+      createLinked: (args) => invoke('runs.createLinked', args),
+      resolveWorkspace: (clientRunId) => invoke('runs.resolveWorkspace', clientRunId),
+      reviewWorkspace: (args) => invoke('runs.reviewWorkspace', args),
+      updateStatus: (args) => invoke('runs.updateStatus', args),
+      listVerifications: (runId) => invoke('runs.listVerifications', runId),
+      listVerificationCommands: (clientRunId) =>
+        invoke('runs.listVerificationCommands', clientRunId),
+      runVerification: (args) => invoke('runs.runVerification', args)
+    },
+    publications: {
+      list: (taskId) => invoke('publications.list', taskId),
+      listArtifacts: (publicationId) => invoke('publications.listArtifacts', publicationId),
+      prepare: (request) => invoke('publications.prepare', request),
+      finalize: (args) => invoke('publications.finalize', args),
+      publishSelected: (args) => invoke('publications.publishSelected', args)
+    },
+    events: {
+      start: async (args) => {
+        const generation = ++eventGeneration
+        eventSubscription?.unsubscribe()
+        eventSubscription = null
+        const environment = requireActiveEnvironment()
+        const subscription = await getClientForEnvironment(environment).subscribe(
+          'teamrun.events.subscribe',
+          args,
+          {
+            onResponse: (response) => {
+              if (!response.ok) {
+                for (const listener of errorListeners) listener(response.error.message)
+                return
+              }
+              const frame = response.result as
+                | { type: 'status'; status: TeamRunSyncStatus }
+                | { type: 'event'; event: TeamEvent }
+                | { type: 'error'; message: string }
+              if (frame.type === 'status') notifySync(frame.status)
+              else if (frame.type === 'event') {
+                for (const listener of eventListeners) listener(frame.event)
+              } else if (frame.type === 'error') {
+                for (const listener of errorListeners) listener(frame.message)
+              }
+            },
+            onError: (error) => {
+              const message = error instanceof Error ? error.message : String(error)
+              for (const listener of errorListeners) listener(message)
+            }
+          }
+        )
+        if (generation !== eventGeneration) subscription.unsubscribe()
+        else eventSubscription = subscription
+      },
+      stop: async () => {
+        eventGeneration++
+        eventSubscription?.unsubscribe()
+        eventSubscription = null
+      },
+      onEvent: (listener) => {
+        eventListeners.add(listener)
+        return () => eventListeners.delete(listener)
+      },
+      onError: (listener) => {
+        errorListeners.add(listener)
+        return () => errorListeners.delete(listener)
       }
     }
   }

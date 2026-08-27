@@ -49,8 +49,8 @@ export function TaskConversationPanel({
   return (
     <div className="scrollbar-sleek min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-start justify-between gap-5">
-          <div className="min-w-0">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="min-w-0 flex-[1_1_20rem]">
             <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span>#{task.number}</span>
               {task.externalSource ? (
@@ -59,10 +59,10 @@ export function TaskConversationPanel({
             </div>
             <h2 className="text-xl font-semibold tracking-tight">{task.title}</h2>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="grid min-w-0 flex-[1_1_20rem] grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] gap-2">
             <Select value={task.ownerUserId} onValueChange={onOwnerChange}>
               <SelectTrigger
-                className="w-44"
+                className="w-full"
                 aria-label={translate(
                   'auto.components.team.space.TaskConversationPanel.ownerLabel',
                   'Task owner'
@@ -84,7 +84,7 @@ export function TaskConversationPanel({
               onValueChange={(value) => onStatusChange(value as TaskStatus)}
             >
               <SelectTrigger
-                className="w-36"
+                className="w-full"
                 aria-label={translate(
                   'auto.components.team.space.TaskConversationPanel.statusLabel',
                   'Task status'

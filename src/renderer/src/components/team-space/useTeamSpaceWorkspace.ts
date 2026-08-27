@@ -7,6 +7,7 @@ import type {
   TeamRunSyncStatus
 } from '../../../../shared/teamrun-cloud'
 import { translate } from '@/i18n/i18n'
+import { normalizeTeamRunAuthStatus } from './teamrun-auth-status'
 
 type TeamSpaceWorkspace = {
   auth: TeamRunAuthStatus | null
@@ -84,8 +85,9 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     let active = true
     void window.api.teamRun.auth
       .status()
-      .then(async (status) => {
+      .then(async (value) => {
         if (!active) return
+        const status = normalizeTeamRunAuthStatus(value)
         setAuth(status)
         if (status.state === 'signed-in') await loadOrganizations()
       })
@@ -175,7 +177,7 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     async (args: TeamRunSignInArgs) => {
       try {
         setLoading(true)
-        const status = await window.api.teamRun.auth.signIn(args)
+        const status = normalizeTeamRunAuthStatus(await window.api.teamRun.auth.signIn(args))
         setAuth(status)
         if (status.state === 'signed-in') await loadOrganizations()
       } catch (error) {
@@ -188,7 +190,7 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
   )
 
   const signOut = useCallback(async () => {
-    setAuth(await window.api.teamRun.auth.signOut())
+    setAuth(normalizeTeamRunAuthStatus(await window.api.teamRun.auth.signOut()))
     setOrganizations([])
     setOrganizationId(null)
   }, [])

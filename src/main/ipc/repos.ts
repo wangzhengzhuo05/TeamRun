@@ -302,14 +302,32 @@ async function addLocalRepoFromPath(
 
   const resolvedPath = repoKind === 'git' ? getGitRepoRoot(path) : path
   const pathKey = normalizeRuntimePathForComparison(path)
+  const resolvedPathKey = normalizeRuntimePathForComparison(resolvedPath)
+  const reuseExisting = async (
+    existing: Repo
+  ): Promise<{ repo: Repo; alreadyExisted: boolean }> => {
+    if (repoKind !== 'git' || !isFolderRepo(existing)) {
+      return { repo: existing, alreadyExisted: true }
+    }
+    const detected = await detectRepoIconAndUpstream({ repoPath: resolvedPath, kind: 'git' })
+    const upgraded = store.updateRepo(existing.id, {
+      ...detected,
+      kind: 'git',
+      externalWorktreeVisibility: 'hide'
+    })
+    if (!upgraded) {
+      throw new Error(`Project disappeared while upgrading it to Git: ${existing.id}`)
+    }
+    await prepareLocalWorktreeRootForRepo(store, upgraded)
+    return { repo: upgraded, alreadyExisted: true }
+  }
   const existing = store
     .getRepos()
     .find((repo) => !repo.connectionId && normalizeRuntimePathForComparison(repo.path) === pathKey)
-  if (existing) {
-    return { repo: existing, alreadyExisted: true }
+  if (existing && (resolvedPathKey === pathKey || !isFolderRepo(existing))) {
+    return reuseExisting(existing)
   }
 
-  const resolvedPathKey = normalizeRuntimePathForComparison(resolvedPath)
   if (resolvedPathKey !== pathKey) {
     const existingAfterRootResolve = store
       .getRepos()
@@ -318,7 +336,7 @@ async function addLocalRepoFromPath(
           !repo.connectionId && normalizeRuntimePathForComparison(repo.path) === resolvedPathKey
       )
     if (existingAfterRootResolve) {
-      return { repo: existingAfterRootResolve, alreadyExisted: true }
+      return reuseExisting(existingAfterRootResolve)
     }
   }
 

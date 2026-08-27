@@ -2999,3 +2999,51 @@ html.native-shell .app-layout {
     inset 0 1px 0 0 color-mix(in srgb, var(--foreground) 5%, transparent),
     0 10px 24px rgba(0, 0, 0, 0.18);
 }
+
+.team-space-shell {
+  container-type: inline-size;
+}
+
+@container (max-width: 46rem) {
+  .team-space-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team-space-body[data-task-selected='true'] .team-space-task-list,
+  .team-space-body[data-task-selected='false'] .team-space-task-detail {
+    display: none;
+  }
+
+  .team-space-compact-back {
+    display: inline-flex;
+  }
+}
+
+@container (max-width: 32rem) {
+  .team-space-context {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .team-space-context-list {
+    max-height: 12rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .team-space-agent-launcher-header {
+    flex-wrap: wrap;
+  }
+
+  .team-space-agent-launcher-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team-space-tab-label {
+    display: none;
+  }
+
+  .team-space-compact-tab-tooltip {
+    display: block;
+  }
+}

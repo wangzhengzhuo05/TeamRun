@@ -1,0 +1,12 @@
+[Unit]
+Description=Check for TeamRun Linux preview updates
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10min
+RandomizedDelaySec=1min
+Persistent=true
+Unit=teamrun-preview-update.service
+
+[Install]
+WantedBy=timers.target
