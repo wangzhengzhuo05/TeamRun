@@ -92,7 +92,7 @@ export type TeamRunApi = {
       projectId: string
       teamAgent: CreateTeamAgentRequest
     }) => Promise<TeamAgent>
-    credentialStatus: (agentId: string) => Promise<{ configured: boolean }>
+    credentialStatus: (agentId: string) => Promise<{ configured: boolean; baseUrl?: string | null }>
     saveCredential: (args: {
       agentId: string
       apiKey: string

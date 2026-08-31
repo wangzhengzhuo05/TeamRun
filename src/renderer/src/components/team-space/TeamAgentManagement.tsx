@@ -61,6 +61,11 @@ export function TeamAgentManagement({ projectId, active }: Props) {
         setConfiguredAgentIds(
           statuses.filter((status) => status.configured).map((status) => status.agentId)
         )
+        setBaseUrlInputs(
+          Object.fromEntries(
+            statuses.flatMap((status) => (status.baseUrl ? [[status.agentId, status.baseUrl]] : []))
+          )
+        )
       })
       .catch(reportError)
   }, [active, projectId])
@@ -177,11 +182,6 @@ export function TeamAgentManagement({ projectId, active }: Props) {
               'The command is shared with project members. Keep credentials in the host environment.'
             )}
           </p>
-          <Input
-            value={baseUrl}
-            onChange={(event) => setBaseUrl(event.target.value)}
-            placeholder="Base URL (optional)"
-          />
         </div>
       ) : null}
       {teamAgentRequiresApiKey(agentKind) ? (
@@ -203,6 +203,11 @@ export function TeamAgentManagement({ projectId, active }: Props) {
               'Stored only on this runtime with operating-system credential protection.'
             )}
           </p>
+          <Input
+            value={baseUrl}
+            onChange={(event) => setBaseUrl(event.target.value)}
+            placeholder="Base URL (optional)"
+          />
         </div>
       ) : null}
       <Textarea
@@ -228,8 +233,12 @@ export function TeamAgentManagement({ projectId, active }: Props) {
         {teamAgents.map((agent) => (
           <div key={agent.id} className="rounded-md border border-border p-3">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">{agent.name}</span>
-              <span className="text-xs text-muted-foreground">{agent.agentKind}</span>
+              <span className="text-sm font-medium">
+                {teamAgentDisplayName(agent, teamAgentKindLabel(agent.agentKind, catalog))}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {teamAgentKindLabel(agent.agentKind, catalog)}
+              </span>
             </div>
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
               {agent.instructionsMarkdown ||
@@ -314,4 +323,15 @@ function reportError(error: unknown): void {
           'Unable to load Team Agents'
         )
   )
+}
+
+function teamAgentKindLabel(
+  agentKind: string,
+  catalog: ReturnType<typeof getAgentCatalog>
+): string {
+  return catalog.find((entry) => entry.id === agentKind)?.label ?? agentKind
+}
+
+function teamAgentDisplayName(agent: TeamAgent, agentKindLabel: string): string {
+  return agent.agentKind === 'claude' && agent.name === 'Claude' ? agentKindLabel : agent.name
 }

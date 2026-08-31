@@ -5,7 +5,10 @@ import {
   createTeamAgentRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
-import { hasTeamAgentCredential, saveTeamAgentCredential } from './team-agent-credential-store'
+import {
+  readTeamAgentCredentialConfig,
+  saveTeamAgentCredential
+} from './team-agent-credential-store'
 import type { TeamAgentChatService } from './team-agent-chat-service'
 import type { TeamRunApiClient } from './teamrun-api-client'
 
@@ -53,8 +56,10 @@ export async function invokeTeamRunCollaborationOperation(
         body: parsed.teamAgent
       })
     }
-    case 'collaboration.credentialStatus':
-      return { configured: hasTeamAgentCredential(idSchema.parse(args)) }
+    case 'collaboration.credentialStatus': {
+      const credential = readTeamAgentCredentialConfig(idSchema.parse(args))
+      return { configured: credential !== null, baseUrl: credential?.baseUrl ?? null }
+    }
     case 'collaboration.saveCredential': {
       const parsed = z
         .object({

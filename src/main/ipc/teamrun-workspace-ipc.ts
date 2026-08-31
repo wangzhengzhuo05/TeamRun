@@ -10,7 +10,7 @@ import {
 } from '../../packages/teamrun-contracts/src/index'
 import type { TeamAgentChatService } from '../teamrun/team-agent-chat-service'
 import {
-  hasTeamAgentCredential,
+  readTeamAgentCredentialConfig,
   saveTeamAgentCredential
 } from '../teamrun/team-agent-credential-store'
 import type { TeamRunApiClient } from '../teamrun/teamrun-api-client'
@@ -143,9 +143,10 @@ export function registerTeamRunWorkspaceHandlers(
       body: parsed.teamAgent
     })
   })
-  ipcMain.handle('teamrun:teamAgents:credentialStatus', (_event, agentId) => ({
-    configured: hasTeamAgentCredential(pathId(agentId))
-  }))
+  ipcMain.handle('teamrun:teamAgents:credentialStatus', (_event, agentId) => {
+    const credential = readTeamAgentCredentialConfig(pathId(agentId))
+    return { configured: credential !== null, baseUrl: credential?.baseUrl ?? null }
+  })
   ipcMain.handle('teamrun:teamAgents:saveCredential', (_event, args) => {
     const parsed = z
       .object({
