@@ -56,8 +56,14 @@ export async function invokeTeamRunCollaborationOperation(
     case 'collaboration.credentialStatus':
       return { configured: hasTeamAgentCredential(idSchema.parse(args)) }
     case 'collaboration.saveCredential': {
-      const parsed = z.object({ agentId: idSchema, apiKey: z.string().max(1024) }).parse(args)
-      saveTeamAgentCredential(parsed.agentId, parsed.apiKey)
+      const parsed = z
+        .object({
+          agentId: idSchema,
+          apiKey: z.string().max(1024),
+          baseUrl: z.string().max(2048).nullable().optional()
+        })
+        .parse(args)
+      saveTeamAgentCredential(parsed.agentId, parsed.apiKey, parsed.baseUrl)
       return { configured: true }
     }
     case 'collaboration.reply': {

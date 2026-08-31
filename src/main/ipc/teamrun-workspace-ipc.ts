@@ -147,8 +147,14 @@ export function registerTeamRunWorkspaceHandlers(
     configured: hasTeamAgentCredential(pathId(agentId))
   }))
   ipcMain.handle('teamrun:teamAgents:saveCredential', (_event, args) => {
-    const parsed = z.object({ agentId: idSchema, apiKey: z.string().max(1024) }).parse(args)
-    saveTeamAgentCredential(parsed.agentId, parsed.apiKey)
+    const parsed = z
+      .object({
+        agentId: idSchema,
+        apiKey: z.string().max(1024),
+        baseUrl: z.string().max(2048).nullable().optional()
+      })
+      .parse(args)
+    saveTeamAgentCredential(parsed.agentId, parsed.apiKey, parsed.baseUrl)
     return { configured: true }
   })
   ipcMain.handle('teamrun:teamAgents:reply', (_event, args) => {

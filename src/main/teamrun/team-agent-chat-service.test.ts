@@ -49,7 +49,7 @@ describe('TeamAgentChatService', () => {
       )
     const executeReply = vi.fn(async () => 'Ready.')
     const service = new TeamAgentChatService({ request } as unknown as TeamRunApiClient, {
-      readCredential: () => 'sk-local-test-key',
+      readCredential: () => ({ apiKey: 'sk-local-test-key', baseUrl: null }),
       executeReply
     })
 
@@ -60,7 +60,10 @@ describe('TeamAgentChatService', () => {
       bodyMarkdown: '@Release assistant please review the release notes.'
     })
 
-    expect(executeReply).toHaveBeenCalledWith(agent, [expect.any(Object)], 'sk-local-test-key')
+    expect(executeReply).toHaveBeenCalledWith(agent, [expect.any(Object)], {
+      apiKey: 'sk-local-test-key',
+      baseUrl: null
+    })
     expect(request).toHaveBeenNthCalledWith(1, `/v1/projects/${projectId}/team-agents`, {
       cache: false
     })

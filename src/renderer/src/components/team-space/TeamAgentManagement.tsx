@@ -35,8 +35,10 @@ export function TeamAgentManagement({ projectId, active }: Props) {
   const [agentKind, setAgentKind] = useState<string>(catalog[0]?.id ?? 'codex')
   const [launchCommand, setLaunchCommand] = useState('')
   const [apiKey, setApiKey] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
   const [instructions, setInstructions] = useState('')
   const [credentialInputs, setCredentialInputs] = useState<Record<string, string>>({})
+  const [baseUrlInputs, setBaseUrlInputs] = useState<Record<string, string>>({})
   const [savingCredentialId, setSavingCredentialId] = useState<string | null>(null)
   const [configuredAgentIds, setConfiguredAgentIds] = useState<string[]>([])
 
@@ -80,7 +82,8 @@ export function TeamAgentManagement({ projectId, active }: Props) {
       if (teamAgentRequiresApiKey(agentKind)) {
         await window.api.teamRun.collaboration.saveCredential({
           agentId: created.id,
-          apiKey: apiKey.trim()
+          apiKey: apiKey.trim(),
+          baseUrl: baseUrl.trim() || null
         })
         setConfiguredAgentIds((current) => [...current, created.id])
       }
@@ -88,6 +91,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
       setAgentName('')
       setLaunchCommand('')
       setApiKey('')
+      setBaseUrl('')
       setInstructions('')
     } catch (error) {
       reportTeamRunMutation(
@@ -107,7 +111,11 @@ export function TeamAgentManagement({ projectId, active }: Props) {
     }
     setSavingCredentialId(agentId)
     try {
-      await window.api.teamRun.collaboration.saveCredential({ agentId, apiKey: value })
+      await window.api.teamRun.collaboration.saveCredential({
+        agentId,
+        apiKey: value,
+        baseUrl: baseUrlInputs[agentId]?.trim() || null
+      })
       setCredentialInputs((current) => ({ ...current, [agentId]: '' }))
       setConfiguredAgentIds((current) => [...new Set([...current, agentId])])
     } catch (error) {
@@ -169,6 +177,11 @@ export function TeamAgentManagement({ projectId, active }: Props) {
               'The command is shared with project members. Keep credentials in the host environment.'
             )}
           </p>
+          <Input
+            value={baseUrl}
+            onChange={(event) => setBaseUrl(event.target.value)}
+            placeholder="Base URL (optional)"
+          />
         </div>
       ) : null}
       {teamAgentRequiresApiKey(agentKind) ? (
@@ -239,6 +252,16 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                       )}
                 </p>
                 <div className="flex gap-2">
+                  <Input
+                    value={baseUrlInputs[agent.id] ?? ''}
+                    onChange={(event) =>
+                      setBaseUrlInputs((current) => ({
+                        ...current,
+                        [agent.id]: event.target.value
+                      }))
+                    }
+                    placeholder="Base URL (optional)"
+                  />
                   <Input
                     type="password"
                     value={credentialInputs[agent.id] ?? ''}

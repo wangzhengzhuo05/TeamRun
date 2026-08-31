@@ -9,7 +9,10 @@ import {
   teamAgentRequiresApiKey
 } from '../../shared/team-agent-runtime-protocol'
 import type { TeamRunApiClient } from './teamrun-api-client'
-import { readTeamAgentCredential } from './team-agent-credential-store'
+import {
+  readTeamAgentCredentialConfig,
+  type TeamAgentCredential
+} from './team-agent-credential-store'
 
 const execFileAsync = promisify(execFile)
 const MAX_REPLY_LENGTH = 16_000
@@ -18,9 +21,9 @@ const MAX_CONTEXT_LENGTH = 12_000
 type AgentReplyExecutor = (
   agent: TeamAgent,
   messages: ChannelMessage[],
-  apiKey: string | null
+  credential: TeamAgentCredential | null
 ) => Promise<string>
-type CredentialReader = (agentId: string) => string | null
+type CredentialReader = (agentId: string) => TeamAgentCredential | null
 
 export class TeamAgentChatService {
   readonly #readCredential: CredentialReader
@@ -33,7 +36,7 @@ export class TeamAgentChatService {
       executeReply?: AgentReplyExecutor
     } = {}
   ) {
-    this.#readCredential = dependencies.readCredential ?? readTeamAgentCredential
+    this.#readCredential = dependencies.readCredential ?? readTeamAgentCredentialConfig
     this.#executeReply = dependencies.executeReply ?? runTeamAgentReply
   }
 
@@ -65,29 +68,29 @@ export class TeamAgentChatService {
 
   async #runAgent(agent: TeamAgent, messages: ChannelMessage[]): Promise<string> {
     const requiresApiKey = teamAgentRequiresApiKey(agent.agentKind)
-    const apiKey = requiresApiKey ? this.#readCredential(agent.id) : null
-    if (requiresApiKey && !apiKey) {
+    const credential = this.#readCredential(agent.id)
+    if (requiresApiKey && !credential) {
       throw new Error('team_agent_api_key_missing')
     }
     if (!supportsTeamAgentChat(agent.agentKind)) {
       throw new Error('team_agent_chat_unsupported')
     }
-    return this.#executeReply(agent, messages, apiKey)
+    return this.#executeReply(agent, messages, credential)
   }
 }
 
 async function runTeamAgentReply(
   agent: TeamAgent,
   messages: ChannelMessage[],
-  apiKey: string | null
+  credential: TeamAgentCredential | null
 ): Promise<string> {
   if (agent.agentKind === 'codex') {
-    return runCodexAgentReply(agent, messages, apiKey!)
+    return runCodexAgentReply(agent, messages, credential!)
   }
   if (agent.agentKind === 'claude') {
-    return runClaudeAgentReply(agent, messages, apiKey!)
+    return runClaudeAgentReply(agent, messages, credential!)
   }
-  return runOpenCodeAgentReply(agent, messages)
+  return runOpenCodeAgentReply(agent, messages, credential)
 }
 
 function chatPrompt(agent: TeamAgent, messages: ChannelMessage[]): string {
@@ -104,7 +107,7 @@ function chatPrompt(agent: TeamAgent, messages: ChannelMessage[]): string {
 async function runCodexAgentReply(
   agent: TeamAgent,
   messages: ChannelMessage[],
-  apiKey: string
+  credential: TeamAgentCredential
 ): Promise<string> {
   const outputDirectory = await mkdtemp(join(tmpdir(), 'teamrun-agent-reply-'))
   const outputPath = join(outputDirectory, 'reply.md')
@@ -123,7 +126,11 @@ async function runCodexAgentReply(
         prompt
       ],
       {
-        env: { ...process.env, OPENAI_API_KEY: apiKey },
+        env: {
+          ...process.env,
+          OPENAI_API_KEY: credential.apiKey,
+          ...(credential.baseUrl ? { OPENAI_BASE_URL: credential.baseUrl } : {})
+        },
         timeout: 120_000,
         maxBuffer: MAX_REPLY_LENGTH * 2
       }
@@ -141,7 +148,7 @@ async function runCodexAgentReply(
 async function runClaudeAgentReply(
   agent: TeamAgent,
   messages: ChannelMessage[],
-  apiKey: string
+  credential: TeamAgentCredential
 ): Promise<string> {
   const { stdout } = await execFileAsync(
     'claude',
@@ -156,7 +163,11 @@ async function runClaudeAgentReply(
       chatPrompt(agent, messages)
     ],
     {
-      env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
+      env: {
+        ...process.env,
+        ANTHROPIC_API_KEY: credential.apiKey,
+        ...(credential.baseUrl ? { ANTHROPIC_BASE_URL: credential.baseUrl } : {})
+      },
       timeout: 120_000,
       maxBuffer: MAX_REPLY_LENGTH * 2
     }
@@ -166,10 +177,15 @@ async function runClaudeAgentReply(
 
 async function runOpenCodeAgentReply(
   agent: TeamAgent,
-  messages: ChannelMessage[]
+  messages: ChannelMessage[],
+  credential: TeamAgentCredential | null
 ): Promise<string> {
   const { stdout } = await execFileAsync('opencode', ['run', chatPrompt(agent, messages)], {
-    env: process.env,
+    env: {
+      ...process.env,
+      ...(credential ? { OPENAI_API_KEY: credential.apiKey } : {}),
+      ...(credential?.baseUrl ? { OPENAI_BASE_URL: credential.baseUrl } : {})
+    },
     timeout: 120_000,
     maxBuffer: MAX_REPLY_LENGTH * 2
   })
