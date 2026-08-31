@@ -15318,7 +15318,9 @@
             "createAgentError": "Unable to create Team Agent",
             "genericCli": "Generic CLI",
             "launchCommand": "Command that accepts task context as its final argument",
-            "launchCommandHint": "The command is shared with project members. Keep credentials in the host environment."
+            "launchCommandHint": "The command is shared with project members. Keep credentials in the host environment.",
+            "agents": "Agents",
+            "agentManagement": "Agent management"
           },
           "TeamMembersDialog": {
             "78911cff23": "Revoke {{value0}}",
@@ -15349,7 +15351,9 @@
             "dc9763afa5": "Project",
             "023381a7e7": "Organization",
             "4b5d94ac3e": "Signed in",
-            "60190506d5": "Team Space"
+            "60190506d5": "Team Space",
+            "groupConversation": "Team conversation",
+            "taskCount": "{{value0}} total"
           },
           "TeamSpaceSetupDialogs": {
             "49e78f6731": "Connect",
@@ -15424,6 +15428,45 @@
           "GenericCliCommandConfirmation": {
             "commandLabel": "Command from this project",
             "confirm": "I trust this command to run on the selected execution host."
+          },
+          "TeamSpaceChatPanel": {
+            "teamMember": "Team member",
+            "you": "You",
+            "agent": "Agent",
+            "noProject": "No project yet",
+            "noProjectHint": "Create or choose a project from More to start a team chat.",
+            "loading": "Loading chat…",
+            "startConversation": "Start the team conversation",
+            "startConversationHint": "Create a general channel for people and Agents to coordinate in one place.",
+            "createGeneral": "Start group chat",
+            "channel": "Channel",
+            "participants": "{{value0}} participants",
+            "firstMessage": "Send the first message to your team.",
+            "messageLabel": "Message",
+            "messagePlaceholder": "Message #{{value0}} or @ an Agent",
+            "chooseChannel": "Choose a channel",
+            "mentionAgent": "Mention Agent",
+            "send": "Send message",
+            "sendHint": "Send · Enter"
+          },
+          "TeamSpaceDock": {
+            "features": "Team Space features",
+            "chat": "Chat",
+            "tasks": "Tasks"
+          },
+          "TeamSpaceMorePopover": {
+            "more": "More",
+            "workspace": "Team workspace",
+            "organization": "Organization",
+            "project": "Project",
+            "chooseProject": "Choose a project",
+            "signOut": "Sign out"
+          },
+          "useTeamSpaceChat": {
+            "loadError": "Unable to load chat",
+            "sendError": "Unable to send message",
+            "generalDescription": "Team conversation",
+            "createChannelError": "Unable to start chat"
           }
         }
       }

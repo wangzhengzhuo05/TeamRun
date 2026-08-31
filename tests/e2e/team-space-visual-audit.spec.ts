@@ -45,7 +45,13 @@ async function installTeamRunMocks(electronApp: ElectronApplication): Promise<vo
     const handlers = new Map<string, unknown>([
       [
         'teamrun:authStatus',
-        { state: 'signed-in', email: 'developer@teamrun.local', apiUrl: 'https://teamrun.local' }
+        {
+          state: 'signed-in',
+          email: 'developer@teamrun.local',
+          apiUrl: 'https://teamrun.local',
+          devAuth: true,
+          sharedKeyAuth: false
+        }
       ],
       ['teamrun:sync:status', { connection: 'online', pendingMutations: 0 }],
       [
@@ -367,7 +373,9 @@ async function expectNoInteractiveOverlaps(page: Page): Promise<void> {
           Math.min(leftRect.right, rightRect.right) - Math.max(leftRect.left, rightRect.left)
         const overlapHeight =
           Math.min(leftRect.bottom, rightRect.bottom) - Math.max(leftRect.top, rightRect.top)
-        if (overlapWidth <= 1 || overlapHeight <= 1) continue
+        if (overlapWidth <= 1 || overlapHeight <= 1) {
+          continue
+        }
         failures.push(`${label(left)} <> ${label(right)}`)
       }
     }
@@ -384,7 +392,8 @@ test('audits primary app and Team Space layouts', async ({ electronApp, orcaPage
   }
   await setViewport(orcaPage, 1600, 900)
   await orcaPage.getByRole('button', { name: 'Team Space', exact: true }).click()
-  await expect(orcaPage.getByText(/Prevent toolbar actions/)).toBeVisible()
+  await expect(orcaPage.getByText(/Please validate both light and dark themes/)).toBeVisible()
+  await expect(orcaPage.getByLabel('Message', { exact: true })).toBeVisible()
 
   for (const width of [1600, 1280, 1100, 960]) {
     await setViewport(orcaPage, width)
@@ -393,6 +402,8 @@ test('audits primary app and Team Space layouts', async ({ electronApp, orcaPage
   }
 
   await setViewport(orcaPage, 1280)
+  const teamSpaceDock = orcaPage.locator('.team-space-dock')
+  await teamSpaceDock.getByRole('button', { name: 'Tasks', exact: true }).click()
   await orcaPage.getByText('#128', { exact: false }).click()
   await expect(orcaPage.getByRole('tab', { name: 'Overview' })).toBeVisible()
   for (const tab of ['Overview', 'Context', 'Agent runs', 'Results']) {
@@ -401,14 +412,25 @@ test('audits primary app and Team Space layouts', async ({ electronApp, orcaPage
     await screenshot(orcaPage, testInfo, `team-space-${tab.toLowerCase().replaceAll(' ', '-')}`)
   }
 
-  for (const trigger of [
-    'Collaborate',
-    'Members',
-    'New organization',
-    'New project',
-    'Add repository'
-  ]) {
-    await orcaPage.getByRole('button', { name: trigger, exact: true }).click()
+  await teamSpaceDock.getByRole('button', { name: 'Agents', exact: true }).click()
+  await expect(orcaPage.getByRole('dialog')).toBeVisible()
+  await screenshot(orcaPage, testInfo, 'team-space-dialog-agents')
+  await orcaPage.keyboard.press('Escape')
+
+  await teamSpaceDock.getByRole('button', { name: 'Members', exact: true }).click()
+  await expect(orcaPage.getByRole('dialog')).toBeVisible()
+  await screenshot(orcaPage, testInfo, 'team-space-dialog-members')
+  await orcaPage.keyboard.press('Escape')
+
+  const moreButton = teamSpaceDock.getByRole('button', { name: 'More', exact: true })
+  await moreButton.click()
+  await screenshot(orcaPage, testInfo, 'team-space-more')
+  for (const trigger of ['New organization', 'New project', 'Add repository']) {
+    const triggerButton = orcaPage.getByRole('button', { name: trigger, exact: true })
+    if (!(await triggerButton.isVisible())) {
+      await moreButton.click()
+    }
+    await triggerButton.click()
     await expect(orcaPage.getByRole('dialog')).toBeVisible()
     await screenshot(
       orcaPage,
@@ -417,8 +439,14 @@ test('audits primary app and Team Space layouts', async ({ electronApp, orcaPage
     )
     await orcaPage.keyboard.press('Escape')
   }
+  await moreButton.click()
 
-  await orcaPage.getByRole('main').getByRole('button', { name: 'Tasks', exact: true }).click()
+  const taskBackButton = orcaPage
+    .getByRole('main')
+    .getByRole('button', { name: 'Tasks', exact: true })
+  if (await taskBackButton.isVisible()) {
+    await taskBackButton.click()
+  }
   for (const trigger of ['New task', 'Import']) {
     await orcaPage.getByRole('button', { name: trigger, exact: true }).click()
     await expect(orcaPage.getByRole('dialog')).toBeVisible()

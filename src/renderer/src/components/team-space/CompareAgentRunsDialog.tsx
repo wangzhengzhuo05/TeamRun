@@ -111,7 +111,9 @@ export function CompareAgentRunsDialog({ runs }: Props) {
     const selected = selectedIds
       .map((id) => eligible.find((run) => run.id === id))
       .filter((run): run is AgentRun => Boolean(run))
-    if (selected.length === 0) return
+    if (selected.length === 0) {
+      return
+    }
     setLoading(true)
     try {
       const next = await Promise.all(
@@ -212,7 +214,7 @@ export function CompareAgentRunsDialog({ runs }: Props) {
                 )}
           </Button>
         </div>
-        <div className="grid min-h-0 gap-3 overflow-auto md:grid-cols-2">
+        <div className="scrollbar-sleek grid min-h-0 gap-3 overflow-auto md:grid-cols-2">
           <ReviewPane
             state={reviews[0]}
             label={translate(

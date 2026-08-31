@@ -3046,4 +3046,17 @@ html.native-shell .app-layout {
   .team-space-compact-tab-tooltip {
     display: block;
   }
+
+  .team-space-dock-label,
+  .team-space-sync-label {
+    display: none;
+  }
+
+  .team-space-dock [data-slot='button'] > span {
+    display: none;
+  }
+
+  .team-space-compact-dock-tooltip {
+    display: block;
+  }
 }

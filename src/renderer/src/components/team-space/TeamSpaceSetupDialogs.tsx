@@ -25,9 +25,10 @@ function failure(error: unknown): boolean {
 
 type OrganizationDialogProps = {
   onCreate: (slug: string, name: string) => Promise<void>
+  compact?: boolean
 }
 
-export function CreateOrganizationDialog({ onCreate }: OrganizationDialogProps) {
+export function CreateOrganizationDialog({ onCreate, compact = false }: OrganizationDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -50,7 +51,11 @@ export function CreateOrganizationDialog({ onCreate }: OrganizationDialogProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button
+          variant={compact ? 'ghost' : 'outline'}
+          size="sm"
+          className={compact ? 'w-full justify-start' : undefined}
+        >
           <UsersRound />{' '}
           {translate(
             'auto.components.team.space.TeamSpaceSetupDialogs.e460bbbd46',
@@ -108,9 +113,10 @@ export function CreateOrganizationDialog({ onCreate }: OrganizationDialogProps) 
 type ProjectDialogProps = {
   disabled: boolean
   onCreate: (key: string, name: string, contextMarkdown: string) => Promise<void>
+  compact?: boolean
 }
 
-export function CreateProjectDialog({ disabled, onCreate }: ProjectDialogProps) {
+export function CreateProjectDialog({ disabled, onCreate, compact = false }: ProjectDialogProps) {
   const [open, setOpen] = useState(false)
   const [key, setKey] = useState('')
   const [name, setName] = useState('')
@@ -136,7 +142,12 @@ export function CreateProjectDialog({ disabled, onCreate }: ProjectDialogProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
+        <Button
+          variant={compact ? 'ghost' : 'outline'}
+          size="sm"
+          className={compact ? 'w-full justify-start' : undefined}
+          disabled={disabled}
+        >
           <Plus />{' '}
           {translate('auto.components.team.space.TeamSpaceSetupDialogs.ae1a7d6d76', 'New project')}
         </Button>
@@ -204,6 +215,7 @@ export function CreateProjectDialog({ disabled, onCreate }: ProjectDialogProps) 
 
 type RepositoryDialogProps = {
   disabled: boolean
+  compact?: boolean
   onCreate: (input: {
     provider: 'github' | 'gitlab' | 'other'
     remoteUrl: string
@@ -212,7 +224,11 @@ type RepositoryDialogProps = {
   }) => Promise<void>
 }
 
-export function CreateRepositoryDialog({ disabled, onCreate }: RepositoryDialogProps) {
+export function CreateRepositoryDialog({
+  disabled,
+  onCreate,
+  compact = false
+}: RepositoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [remoteUrl, setRemoteUrl] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -247,7 +263,12 @@ export function CreateRepositoryDialog({ disabled, onCreate }: RepositoryDialogP
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
+        <Button
+          variant={compact ? 'ghost' : 'outline'}
+          size="sm"
+          className={compact ? 'w-full justify-start' : undefined}
+          disabled={disabled}
+        >
           <FolderGit2 />{' '}
           {translate(
             'auto.components.team.space.TeamSpaceSetupDialogs.5c7025d090',

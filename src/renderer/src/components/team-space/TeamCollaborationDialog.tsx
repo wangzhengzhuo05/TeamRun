@@ -21,10 +21,21 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
 
-export function TeamCollaborationDialog({ projectId }: { projectId: string | null }) {
+type Props = {
+  projectId: string | null
+  compact?: boolean
+  initialTab?: 'channels' | 'agents'
+}
+
+export function TeamCollaborationDialog({
+  projectId,
+  compact = false,
+  initialTab = 'channels'
+}: Props) {
   const catalog = useMemo(() => getAgentCatalog(), [])
   const [open, setOpen] = useState(false)
   const [channels, setChannels] = useState<Channel[]>([])
@@ -37,9 +48,14 @@ export function TeamCollaborationDialog({ projectId }: { projectId: string | nul
   const [agentKind, setAgentKind] = useState<string>(catalog[0]?.id ?? 'codex')
   const [launchCommand, setLaunchCommand] = useState('')
   const [instructions, setInstructions] = useState('')
+  const triggerLabel = compact
+    ? translate('auto.components.team.space.TeamCollaborationDialog.agents', 'Agents')
+    : translate('auto.components.team.space.TeamCollaborationDialog.b945e8ba1c', 'Collaborate')
 
   useEffect(() => {
-    if (!open || !projectId) return
+    if (!open || !projectId) {
+      return
+    }
     void Promise.all([
       window.api.teamRun.collaboration.listChannels(projectId),
       window.api.teamRun.collaboration.listTeamAgents(projectId)
@@ -68,7 +84,9 @@ export function TeamCollaborationDialog({ projectId }: { projectId: string | nul
   }, [channelId])
 
   const createChannel = async () => {
-    if (!projectId || !channelName.trim()) return
+    if (!projectId || !channelName.trim()) {
+      return
+    }
     try {
       const created = await window.api.teamRun.collaboration.createChannel({
         projectId,
@@ -86,13 +104,16 @@ export function TeamCollaborationDialog({ projectId }: { projectId: string | nul
             'Unable to create channel'
           )
         )
-      )
+      ) {
         setChannelName('')
+      }
     }
   }
 
   const sendMessage = async () => {
-    if (!channelId || !message.trim()) return
+    if (!channelId || !message.trim()) {
+      return
+    }
     try {
       const created = await window.api.teamRun.collaboration.createMessage({
         channelId,
@@ -109,13 +130,16 @@ export function TeamCollaborationDialog({ projectId }: { projectId: string | nul
             'Unable to send message'
           )
         )
-      )
+      ) {
         setMessage('')
+      }
     }
   }
 
   const createTeamAgent = async () => {
-    if (!projectId || !agentName.trim()) return
+    if (!projectId || !agentName.trim()) {
+      return
+    }
     try {
       const created = await window.api.teamRun.collaboration.createTeamAgent({
         projectId,
@@ -148,25 +172,43 @@ export function TeamCollaborationDialog({ projectId }: { projectId: string | nul
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={!projectId}>
-          <MessagesSquare />{' '}
-          {translate(
-            'auto.components.team.space.TeamCollaborationDialog.b945e8ba1c',
-            'Collaborate'
-          )}
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button
+              variant={compact ? 'ghost' : 'outline'}
+              size="sm"
+              aria-label={triggerLabel}
+              disabled={!projectId}
+            >
+              {compact ? <Bot /> : <MessagesSquare />}{' '}
+              <span className={compact ? 'team-space-dock-label' : undefined}>{triggerLabel}</span>
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          sideOffset={4}
+          className={compact ? 'team-space-compact-dock-tooltip hidden' : 'hidden'}
+        >
+          {triggerLabel}
+        </TooltipContent>
+      </Tooltip>
       <DialogContent className="max-h-[80vh] max-w-3xl overflow-hidden">
         <DialogHeader>
           <DialogTitle>
-            {translate(
-              'auto.components.team.space.TeamCollaborationDialog.d08c4fdd59',
-              'Project collaboration'
-            )}
+            {initialTab === 'agents'
+              ? translate(
+                  'auto.components.team.space.TeamCollaborationDialog.agentManagement',
+                  'Agent management'
+                )
+              : translate(
+                  'auto.components.team.space.TeamCollaborationDialog.d08c4fdd59',
+                  'Project collaboration'
+                )}
           </DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="channels" className="min-h-0">
+        <Tabs defaultValue={initialTab} className="min-h-0">
           <TabsList>
             <TabsTrigger value="channels">
               <MessagesSquare />{' '}

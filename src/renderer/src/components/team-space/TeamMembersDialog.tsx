@@ -24,21 +24,29 @@ import {
 } from '@/components/ui/select'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 type Props = {
   organizationId: string | null
   canManage: boolean
+  compact?: boolean
 }
 
-export function TeamMembersDialog({ organizationId, canManage }: Props) {
+export function TeamMembersDialog({ organizationId, canManage, compact = false }: Props) {
   const [open, setOpen] = useState(false)
   const [members, setMembers] = useState<OrganizationMember[]>([])
   const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'admin' | 'member'>('member')
+  const triggerLabel = translate(
+    'auto.components.team.space.TeamMembersDialog.785f97f193',
+    'Members'
+  )
 
   const load = useCallback(async () => {
-    if (!organizationId) return
+    if (!organizationId) {
+      return
+    }
     const [nextMembers, nextInvitations] = await Promise.all([
       window.api.teamRun.organizations.listMembers(organizationId),
       canManage
@@ -50,7 +58,7 @@ export function TeamMembersDialog({ organizationId, canManage }: Props) {
   }, [canManage, organizationId])
 
   useEffect(() => {
-    if (open)
+    if (open) {
       void load().catch((error) =>
         toast.error(
           error instanceof Error
@@ -61,10 +69,13 @@ export function TeamMembersDialog({ organizationId, canManage }: Props) {
               )
         )
       )
+    }
   }, [load, open])
 
   const invite = async () => {
-    if (!organizationId) return
+    if (!organizationId) {
+      return
+    }
     try {
       await window.api.teamRun.organizations.invite({ organizationId, email: email.trim(), role })
       setEmail('')
@@ -77,12 +88,16 @@ export function TeamMembersDialog({ organizationId, canManage }: Props) {
           'Unable to invite member'
         )
       )
-      if (queued) setEmail('')
+      if (queued) {
+        setEmail('')
+      }
     }
   }
 
   const removeMember = async (userId: string) => {
-    if (!organizationId) return
+    if (!organizationId) {
+      return
+    }
     try {
       await window.api.teamRun.organizations.removeMember({ organizationId, userId })
       await load()
@@ -98,7 +113,9 @@ export function TeamMembersDialog({ organizationId, canManage }: Props) {
   }
 
   const revoke = async (invitationId: string) => {
-    if (!organizationId) return
+    if (!organizationId) {
+      return
+    }
     try {
       await window.api.teamRun.organizations.revokeInvitation({ organizationId, invitationId })
       await load()
@@ -115,12 +132,28 @@ export function TeamMembersDialog({ organizationId, canManage }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={!organizationId}>
-          <Users />{' '}
-          {translate('auto.components.team.space.TeamMembersDialog.785f97f193', 'Members')}
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button
+              variant={compact ? 'ghost' : 'outline'}
+              size="sm"
+              aria-label={triggerLabel}
+              disabled={!organizationId}
+            >
+              <Users />{' '}
+              <span className={compact ? 'team-space-dock-label' : undefined}>{triggerLabel}</span>
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          sideOffset={4}
+          className={compact ? 'team-space-compact-dock-tooltip hidden' : 'hidden'}
+        >
+          {triggerLabel}
+        </TooltipContent>
+      </Tooltip>
       <DialogContent className="max-h-[80vh] overflow-hidden sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
