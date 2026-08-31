@@ -69,7 +69,6 @@ async function handleStaticRequest(
     'Content-Type',
     STATIC_WEB_CONTENT_TYPES.get(extname(absolutePath)) ?? 'application/octet-stream'
   )
-  response.setHeader('Content-Length', fileStat.size)
   response.setHeader('Cache-Control', 'no-cache')
   if (pathname === '/web-index.html' && request.method === 'GET') {
     const content = await readFile(absolutePath, 'utf8')
