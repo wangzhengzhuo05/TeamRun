@@ -9,6 +9,7 @@ import type {
 import { supportsTeamAgentChat } from '../../../../shared/team-agent-runtime-protocol'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type TeamSpaceChat = {
   channels: Channel[]
@@ -27,9 +28,10 @@ type TeamSpaceChat = {
 
 function reportError(error: unknown): void {
   toast.error(
-    error instanceof Error
-      ? error.message
-      : translate('auto.components.team.space.useTeamSpaceChat.loadError', 'Unable to load chat')
+    teamRunErrorMessage(
+      error,
+      translate('auto.components.team.space.useTeamSpaceChat.loadError', 'Unable to load chat')
+    )
   )
 }
 

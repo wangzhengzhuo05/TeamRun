@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import CommentMarkdown from '@/components/sidebar/CommentMarkdown'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = { publications: ResultPublication[] }
 
@@ -26,12 +27,13 @@ export function TaskResultsPanel({ publications }: Props) {
       .then((entries) => active && setArtifacts(Object.fromEntries(entries)))
       .catch((error) =>
         toast.error(
-          error instanceof Error
-            ? error.message
-            : translate(
-                'auto.components.team.space.TaskResultsPanel.loadFailed',
-                'Unable to load published artifacts'
-              )
+          teamRunErrorMessage(
+            error,
+            translate(
+              'auto.components.team.space.TaskResultsPanel.loadFailed',
+              'Unable to load published artifacts'
+            )
+          )
         )
       )
     return () => {

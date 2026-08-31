@@ -8,6 +8,7 @@ import type {
 } from '../../../../shared/teamrun-cloud'
 import { translate } from '@/i18n/i18n'
 import { normalizeTeamRunAuthStatus } from './teamrun-auth-status'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type TeamSpaceWorkspace = {
   auth: TeamRunAuthStatus | null
@@ -28,6 +29,7 @@ type TeamSpaceWorkspace = {
   selectProject: (id: string) => void
   selectTask: (id: string | null) => void
   createOrganization: (slug: string, name: string) => Promise<void>
+  joinTeam: (code: string) => Promise<void>
   createProject: (key: string, name: string, contextMarkdown: string) => Promise<void>
   createRepository: (input: {
     provider: 'github' | 'gitlab' | 'other'
@@ -43,12 +45,13 @@ type TeamSpaceWorkspace = {
 
 function reportError(error: unknown): void {
   toast.error(
-    error instanceof Error
-      ? error.message
-      : translate(
-          'auto.components.team.space.useTeamSpaceWorkspace.e3e738a0bb',
-          'TeamRun request failed'
-        )
+    teamRunErrorMessage(
+      error,
+      translate(
+        'auto.components.team.space.useTeamSpaceWorkspace.e3e738a0bb',
+        'TeamRun request failed'
+      )
+    )
   )
 }
 
@@ -206,6 +209,15 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     setOrganizationId(created.id)
   }, [])
 
+  const joinTeam = useCallback(async (code: string) => {
+    const joined = await window.api.teamRun.organizations.redeemInviteCode(code)
+    setOrganizations((current) => [
+      ...current.filter((organization) => organization.id !== joined.id),
+      joined
+    ])
+    setOrganizationId(joined.id)
+  }, [])
+
   const createProject = useCallback(
     async (key: string, name: string, contextMarkdown: string) => {
       if (!organizationId) return
@@ -260,6 +272,7 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     selectProject: setProjectId,
     selectTask: setTaskId,
     createOrganization,
+    joinTeam,
     createProject,
     createRepository,
     createTask,

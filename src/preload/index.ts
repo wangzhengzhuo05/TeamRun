@@ -577,6 +577,16 @@ const api = {
         ipcRenderer.invoke('teamrun:organizations:listMembers', organizationId),
       addMember: (args) => ipcRenderer.invoke('teamrun:organizations:addMember', args),
       removeMember: (args) => ipcRenderer.invoke('teamrun:organizations:removeMember', args),
+      updateMemberRole: (args) =>
+        ipcRenderer.invoke('teamrun:organizations:updateMemberRole', args),
+      listInviteCodes: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:listInviteCodes', organizationId),
+      createInviteCode: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:createInviteCode', organizationId),
+      revokeInviteCode: (args) =>
+        ipcRenderer.invoke('teamrun:organizations:revokeInviteCode', args),
+      redeemInviteCode: (code) =>
+        ipcRenderer.invoke('teamrun:organizations:redeemInviteCode', code),
       listInvitations: (organizationId) =>
         ipcRenderer.invoke('teamrun:organizations:listInvitations', organizationId),
       invite: (args) => ipcRenderer.invoke('teamrun:organizations:invite', args),

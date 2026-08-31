@@ -29,6 +29,7 @@ type Props = {
   runs: AgentRun[]
   publications: ResultPublication[]
   verifications: Record<string, VerificationResult[]>
+  canDevelop: boolean
   onRefresh: () => Promise<void>
   onTaskChanged: () => Promise<void>
 }
@@ -68,6 +69,9 @@ export function TeamAgentRunPanel(props: Props) {
   }, [props.runs])
 
   useEffect(() => {
+    if (!props.canDevelop) {
+      return
+    }
     void agentStatusEpoch
     const entries = Object.values(useAppStore.getState().agentStatusByPaneKey)
     const updates: Promise<unknown>[] = []
@@ -106,7 +110,7 @@ export function TeamAgentRunPanel(props: Props) {
     if (updates.length > 0) {
       void Promise.allSettled(updates).then(() => props.onRefresh().catch(() => undefined))
     }
-  }, [agentStatusEpoch, props.onRefresh, props.runs, workspaceIds])
+  }, [agentStatusEpoch, props.canDevelop, props.onRefresh, props.runs, workspaceIds])
   const openWorkspace = async (run: AgentRun) => {
     const workspace = await window.api.teamRun.runs.resolveWorkspace(run.clientRunId)
     if (!workspace || !activateAndRevealWorktree(workspace.workspaceId)) {
@@ -144,13 +148,22 @@ export function TeamAgentRunPanel(props: Props) {
   return (
     <div className="scrollbar-sleek min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-4xl">
-        <TeamAgentLauncher
-          taskId={props.taskId}
-          projectId={props.projectId}
-          taskTitle={props.taskTitle}
-          latestSnapshot={props.snapshots[0] ?? null}
-          onRefresh={props.onRefresh}
-        />
+        {props.canDevelop ? (
+          <TeamAgentLauncher
+            taskId={props.taskId}
+            projectId={props.projectId}
+            taskTitle={props.taskTitle}
+            latestSnapshot={props.snapshots[0] ?? null}
+            onRefresh={props.onRefresh}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {translate(
+              'auto.components.team.space.TeamAgentRunPanel.ownerAdminOnly',
+              'Only the Team Owner or an Admin can launch Team Agent runs.'
+            )}
+          </p>
+        )}
         <div className="mt-5 flex justify-end">
           <CompareAgentRunsDialog runs={props.runs} />
         </div>
@@ -180,8 +193,11 @@ export function TeamAgentRunPanel(props: Props) {
                     ) : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <RunVerificationDialog run={run} onCompleted={props.onRefresh} />
-                    {run.status === 'working' || run.status === 'needs_input' ? (
+                    {props.canDevelop ? (
+                      <RunVerificationDialog run={run} onCompleted={props.onRefresh} />
+                    ) : null}
+                    {props.canDevelop &&
+                    (run.status === 'working' || run.status === 'needs_input') ? (
                       <Button variant="outline" size="sm" onClick={() => markReady(run)}>
                         {translate(
                           'auto.components.team.space.TeamAgentRunPanel.cecf8c7075',
@@ -189,7 +205,7 @@ export function TeamAgentRunPanel(props: Props) {
                         )}
                       </Button>
                     ) : null}
-                    {run.status === 'review' ? (
+                    {props.canDevelop && run.status === 'review' ? (
                       <PublishAgentResultDialog
                         run={run}
                         verifications={checks}

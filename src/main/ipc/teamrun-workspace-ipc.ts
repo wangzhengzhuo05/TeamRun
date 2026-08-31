@@ -53,6 +53,41 @@ export function registerTeamRunWorkspaceHandlers(
       method: 'DELETE'
     })
   })
+  ipcMain.handle('teamrun:organizations:updateMemberRole', (_event, args) => {
+    const parsed = z
+      .object({
+        organizationId: idSchema,
+        userId: idSchema,
+        role: z.enum(['admin', 'member'])
+      })
+      .parse(args)
+    return client.request(`/v1/organizations/${parsed.organizationId}/members/${parsed.userId}`, {
+      method: 'PATCH',
+      body: { role: parsed.role }
+    })
+  })
+  ipcMain.handle('teamrun:organizations:listInviteCodes', (_event, organizationId) =>
+    client.request(`/v1/organizations/${pathId(organizationId)}/invite-codes`)
+  )
+  ipcMain.handle('teamrun:organizations:createInviteCode', (_event, organizationId) =>
+    client.request(`/v1/organizations/${pathId(organizationId)}/invite-codes`, {
+      method: 'POST',
+      body: {}
+    })
+  )
+  ipcMain.handle('teamrun:organizations:revokeInviteCode', (_event, args) => {
+    const parsed = z.object({ organizationId: idSchema, inviteCodeId: idSchema }).parse(args)
+    return client.request(
+      `/v1/organizations/${parsed.organizationId}/invite-codes/${parsed.inviteCodeId}`,
+      { method: 'DELETE' }
+    )
+  })
+  ipcMain.handle('teamrun:organizations:redeemInviteCode', (_event, code) =>
+    client.request('/v1/team-invite-codes/redeem', {
+      method: 'POST',
+      body: { code: z.string().min(1).max(128).parse(code) }
+    })
+  )
   ipcMain.handle('teamrun:organizations:listInvitations', (_event, organizationId) =>
     client.request(`/v1/organizations/${pathId(organizationId)}/invitations`)
   )

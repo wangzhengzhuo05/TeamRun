@@ -25,6 +25,7 @@ type Props = {
   task: Task
   members: OrganizationMember[]
   comments: TaskComment[]
+  canManageTask: boolean
   onStatusChange: (status: TaskStatus) => Promise<void>
   onOwnerChange: (ownerUserId: string) => Promise<void>
   onComment: (bodyMarkdown: string) => Promise<void>
@@ -34,6 +35,7 @@ export function TaskConversationPanel({
   task,
   members,
   comments,
+  canManageTask,
   onStatusChange,
   onOwnerChange,
   onComment
@@ -60,7 +62,11 @@ export function TaskConversationPanel({
             <h2 className="text-xl font-semibold tracking-tight">{task.title}</h2>
           </div>
           <div className="grid min-w-0 flex-[1_1_20rem] grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] gap-2">
-            <Select value={task.ownerUserId} onValueChange={onOwnerChange}>
+            <Select
+              value={task.ownerUserId}
+              disabled={!canManageTask}
+              onValueChange={onOwnerChange}
+            >
               <SelectTrigger
                 className="w-full"
                 aria-label={translate(
@@ -81,6 +87,7 @@ export function TaskConversationPanel({
             </Select>
             <Select
               value={task.status}
+              disabled={!canManageTask}
               onValueChange={(value) => onStatusChange(value as TaskStatus)}
             >
               <SelectTrigger

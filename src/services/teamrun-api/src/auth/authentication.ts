@@ -1,11 +1,10 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
-import { organizationInvitations, organizationMembers, users } from '../database/schema.js'
+import { users } from '../database/schema.js'
 import { ApiProblem } from '../http/api-problem.js'
 import type { TeamRunUser } from '../http/fastify-context.js'
 import { verifyOidcToken } from './oidc-token-verifier.js'
 import { matchesTeamRunSharedKey, teamRunSharedKeyIdentity } from './shared-key-authentication.js'
-import { appendTeamEvent } from '../events/team-event-writer.js'
 
 type IdentityClaims = {
   subject: string
@@ -49,41 +48,6 @@ async function upsertUser(app: FastifyInstance, claims: IdentityClaims): Promise
   if (!user) {
     throw new ApiProblem(500, 'user_upsert_failed', 'Authenticated user could not be loaded')
   }
-  const invitations = await app.teamRunDatabase
-    .select()
-    .from(organizationInvitations)
-    .where(
-      and(
-        eq(organizationInvitations.email, claims.email.toLowerCase()),
-        eq(organizationInvitations.status, 'pending')
-      )
-    )
-  if (invitations.length > 0) {
-    await app.teamRunDatabase.transaction(async (transaction) => {
-      for (const invitation of invitations) {
-        if (invitation.expiresAt.getTime() <= Date.now()) continue
-        await transaction
-          .insert(organizationMembers)
-          .values({
-            organizationId: invitation.organizationId,
-            userId: user.id,
-            role: invitation.role
-          })
-          .onConflictDoNothing()
-        await transaction
-          .update(organizationInvitations)
-          .set({ status: 'accepted' })
-          .where(eq(organizationInvitations.id, invitation.id))
-        await appendTeamEvent(transaction, {
-          organizationId: invitation.organizationId,
-          type: 'organization.membership_changed',
-          entityId: invitation.id,
-          actorUserId: user.id,
-          data: { userId: user.id, role: invitation.role }
-        })
-      }
-    })
-  }
   return user
 }
 
@@ -124,16 +88,4 @@ export function registerAuthentication(app: FastifyInstance): void {
     }
     await app.authenticateTeamRunRequest(request, reply)
   })
-}
-
-export async function findUserByEmail(
-  app: FastifyInstance,
-  email: string
-): Promise<TeamRunUser | null> {
-  const [user] = await app.teamRunDatabase
-    .select()
-    .from(users)
-    .where(eq(users.email, email.toLowerCase()))
-    .limit(1)
-  return user ?? null
 }

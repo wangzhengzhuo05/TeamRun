@@ -15,12 +15,20 @@ export function normalizeTeamRunAuthStatus(value: unknown): TeamRunAuthStatus {
   }
   if (status.state === 'signed-in') {
     if (typeof status.email !== 'string' && status.email !== null) return invalidAuthStatus()
+    if (
+      status.userId !== undefined &&
+      typeof status.userId !== 'string' &&
+      status.userId !== null
+    ) {
+      return invalidAuthStatus()
+    }
     return {
       state: 'signed-in',
       apiUrl: status.apiUrl,
       devAuth: status.devAuth,
       sharedKeyAuth: status.sharedKeyAuth,
-      email: status.email
+      email: status.email,
+      userId: typeof status.userId === 'string' ? status.userId : null
     }
   }
   if (status.state === 'signed-out' || status.state === 'unconfigured') {

@@ -12,6 +12,7 @@ import type {
 } from '../../../../shared/teamrun-api'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type TeamTaskWorkspace = {
   task: Task | null
@@ -31,12 +32,10 @@ type TeamTaskWorkspace = {
 
 function reportError(error: unknown): void {
   toast.error(
-    error instanceof Error
-      ? error.message
-      : translate(
-          'auto.components.team.space.useTeamTaskWorkspace.d72b3e04bf',
-          'Unable to load task'
-        )
+    teamRunErrorMessage(
+      error,
+      translate('auto.components.team.space.useTeamTaskWorkspace.d72b3e04bf', 'Unable to load task')
+    )
   )
 }
 

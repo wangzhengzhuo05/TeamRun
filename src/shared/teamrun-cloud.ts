@@ -11,6 +11,7 @@ export type TeamRunAuthStatus =
       devAuth: boolean
       sharedKeyAuth: boolean
       email: string | null
+      userId?: string | null
     }
   | {
       state: 'error'

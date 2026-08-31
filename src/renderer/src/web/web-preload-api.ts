@@ -1449,6 +1449,12 @@ function createTeamRunApi(): TeamRunApi {
       listMembers: (organizationId) => invoke('organizations.listMembers', organizationId),
       addMember: (args) => invoke('organizations.addMember', args),
       removeMember: (args) => invoke('organizations.removeMember', args),
+      updateMemberRole: (args) => invoke('organizations.updateMemberRole', args),
+      listInviteCodes: (organizationId) => invoke('organizations.listInviteCodes', organizationId),
+      createInviteCode: (organizationId) =>
+        invoke('organizations.createInviteCode', organizationId),
+      revokeInviteCode: (args) => invoke('organizations.revokeInviteCode', args),
+      redeemInviteCode: (code) => invoke('organizations.redeemInviteCode', code),
       listInvitations: (organizationId) => invoke('organizations.listInvitations', organizationId),
       invite: (args) => invoke('organizations.invite', args),
       revokeInvitation: (args) => invoke('organizations.revokeInvitation', args)

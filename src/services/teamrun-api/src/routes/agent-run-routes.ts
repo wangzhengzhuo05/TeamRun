@@ -70,7 +70,12 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     if (!task) {
       throw new ApiProblem(404, 'task_not_found', 'Task was not found')
     }
-    await requireOrganizationRole(app.teamRunDatabase, task.organizationId, request.teamRunUser.id)
+    await requireOrganizationRole(
+      app.teamRunDatabase,
+      task.organizationId,
+      request.teamRunUser.id,
+      ['owner', 'admin']
+    )
     const [snapshot] = await app.teamRunDatabase
       .select()
       .from(contextSnapshots)
@@ -148,6 +153,10 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     const { runId } = request.params as { runId: string }
     const body = updateAgentRunStatusRequestSchema.parse(request.body)
     const run = await requireRun(app, runId, request.teamRunUser.id)
+    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id, [
+      'owner',
+      'admin'
+    ])
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(403, 'run_status_forbidden', 'Only the run owner can report status')
     }
@@ -222,6 +231,10 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     const { runId } = request.params as { runId: string }
     const body = createVerificationResultRequestSchema.parse(request.body)
     const run = await requireRun(app, runId, request.teamRunUser.id)
+    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id, [
+      'owner',
+      'admin'
+    ])
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(
         403,

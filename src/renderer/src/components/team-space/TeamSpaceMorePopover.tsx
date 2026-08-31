@@ -17,12 +17,14 @@ import {
   CreateProjectDialog,
   CreateRepositoryDialog
 } from './TeamSpaceSetupDialogs'
+import { JoinTeamDialog } from './JoinTeamDialog'
 
 type Props = {
   organizations: Organization[]
   projects: Project[]
   organizationId: string | null
   projectId: string | null
+  canDevelopTeam: boolean
   onSelectOrganization: (id: string) => void
   onSelectProject: (id: string) => void
   onCreateOrganization: (slug: string, name: string) => Promise<void>
@@ -33,6 +35,7 @@ type Props = {
     displayName: string
     defaultBranch: string
   }) => Promise<void>
+  onJoinTeam: (code: string) => Promise<void>
   onSignOut: () => Promise<void>
 }
 
@@ -110,15 +113,16 @@ export function TeamSpaceMorePopover(props: Props) {
           </div>
         </div>
         <div className="mt-3 border-t border-border pt-2">
+          <JoinTeamDialog onJoin={props.onJoinTeam} />
           <CreateOrganizationDialog compact onCreate={props.onCreateOrganization} />
           <CreateProjectDialog
             compact
-            disabled={!props.organizationId}
+            disabled={!props.organizationId || !props.canDevelopTeam}
             onCreate={props.onCreateProject}
           />
           <CreateRepositoryDialog
             compact
-            disabled={!props.projectId}
+            disabled={!props.projectId || !props.canDevelopTeam}
             onCreate={props.onCreateRepository}
           />
         </div>

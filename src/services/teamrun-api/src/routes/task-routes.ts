@@ -104,7 +104,8 @@ export async function registerTaskRoutes(app: FastifyInstance): Promise<void> {
     await requireOrganizationRole(
       app.teamRunDatabase,
       project.organizationId,
-      request.teamRunUser.id
+      request.teamRunUser.id,
+      ['owner', 'admin']
     )
     const key = requireIdempotencyKey(request.headers['idempotency-key'] as string | undefined)
     const result = await runIdempotentMutation(app.teamRunDatabase, {
@@ -165,6 +166,9 @@ export async function registerTaskRoutes(app: FastifyInstance): Promise<void> {
     const { taskId } = request.params as { taskId: string }
     const body = updateTaskRequestSchema.parse(request.body)
     const { task, role } = await requireTask(app, taskId, request.teamRunUser.id)
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ApiProblem(403, 'insufficient_role', 'Owner or Admin role is required')
+    }
     if (body.status && body.status !== task.status) {
       if (!allowedTaskTransitions[task.status].includes(body.status)) {
         throw new ApiProblem(409, 'invalid_task_transition', 'Task status transition is invalid')

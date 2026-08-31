@@ -4,8 +4,7 @@ import type { Organization, Project } from '../../../../shared/teamrun-api'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { translate } from '@/i18n/i18n'
-import { TeamCollaborationDialog } from './TeamCollaborationDialog'
-import { TeamMembersDialog } from './TeamMembersDialog'
+import { TeamManagementDialog } from './TeamManagementDialog'
 import { TeamSpaceMorePopover } from './TeamSpaceMorePopover'
 
 export type TeamSpaceView = 'chat' | 'tasks'
@@ -16,7 +15,8 @@ type Props = {
   projects: Project[]
   organizationId: string | null
   projectId: string | null
-  canManageMembers: boolean
+  canManageTeam: boolean
+  canDevelopTeam: boolean
   onViewChange: (view: TeamSpaceView) => void
   onSelectOrganization: (id: string) => void
   onSelectProject: (id: string) => void
@@ -28,6 +28,7 @@ type Props = {
     displayName: string
     defaultBranch: string
   }) => Promise<void>
+  onJoinTeam: (code: string) => Promise<void>
   onSignOut: () => Promise<void>
 }
 
@@ -85,11 +86,10 @@ export function TeamSpaceDock(props: Props) {
           icon={<ListTodo />}
           onClick={() => props.onViewChange('tasks')}
         />
-        <TeamCollaborationDialog compact initialTab="agents" projectId={props.projectId} />
-        <TeamMembersDialog
-          compact
+        <TeamManagementDialog
           organizationId={props.organizationId}
-          canManage={props.canManageMembers}
+          projectId={props.projectId}
+          canManage={props.canManageTeam}
         />
         <div className="ml-auto h-5 w-px bg-border" />
         <TeamSpaceMorePopover
@@ -97,11 +97,13 @@ export function TeamSpaceDock(props: Props) {
           projects={props.projects}
           organizationId={props.organizationId}
           projectId={props.projectId}
+          canDevelopTeam={props.canDevelopTeam}
           onSelectOrganization={props.onSelectOrganization}
           onSelectProject={props.onSelectProject}
           onCreateOrganization={props.onCreateOrganization}
           onCreateProject={props.onCreateProject}
           onCreateRepository={props.onCreateRepository}
+          onJoinTeam={props.onJoinTeam}
           onSignOut={props.onSignOut}
         />
       </div>

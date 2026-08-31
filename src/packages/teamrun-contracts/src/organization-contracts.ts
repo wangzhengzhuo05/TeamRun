@@ -42,6 +42,23 @@ export const organizationInvitationSchema = z.object({
   createdAt: timestampSchema
 })
 
+export const teamInviteCodeSchema = z.object({
+  id: entityIdSchema,
+  organizationId: entityIdSchema,
+  codeHint: z.string().length(4),
+  status: z.enum(['active', 'redeemed', 'revoked', 'expired']),
+  createdByUserId: entityIdSchema,
+  redeemedByUserId: entityIdSchema.nullable(),
+  expiresAt: timestampSchema,
+  redeemedAt: timestampSchema.nullable(),
+  revokedAt: timestampSchema.nullable(),
+  createdAt: timestampSchema
+})
+
+export const createdTeamInviteCodeSchema = teamInviteCodeSchema.extend({
+  code: z.string().min(1)
+})
+
 export const organizationSchema = z.object({
   id: entityIdSchema,
   slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,62}$/),
@@ -91,6 +108,8 @@ export const createRepositoryRequestSchema = repositorySchema.pick({
 export type Organization = z.infer<typeof organizationSchema>
 export type OrganizationMember = z.infer<typeof organizationMemberSchema>
 export type OrganizationInvitation = z.infer<typeof organizationInvitationSchema>
+export type TeamInviteCode = z.infer<typeof teamInviteCodeSchema>
+export type CreatedTeamInviteCode = z.infer<typeof createdTeamInviteCodeSchema>
 export type OrganizationRole = z.infer<typeof organizationRoleSchema>
 export type Project = z.infer<typeof projectSchema>
 export type Repository = z.infer<typeof repositorySchema>

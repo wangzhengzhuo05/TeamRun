@@ -55,6 +55,16 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
       }
       polling = true
       try {
+        try {
+          await requireOrganizationRole(
+            app.teamRunDatabase,
+            query.organizationId,
+            request.teamRunUser.id
+          )
+        } catch {
+          reply.raw.end()
+          return
+        }
         while (pending && !reply.raw.destroyed) {
           pending = false
           const events = await app.teamRunDatabase

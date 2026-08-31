@@ -9,10 +9,11 @@ import { translate } from '@/i18n/i18n'
 
 type Props = {
   snapshots: ContextSnapshot[]
+  canCreate: boolean
   onCreate: () => Promise<ContextSnapshot | null>
 }
 
-export function TaskContextPanel({ snapshots, onCreate }: Props) {
+export function TaskContextPanel({ snapshots, canCreate, onCreate }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(snapshots[0]?.id ?? null)
   const [copied, setCopied] = useState(false)
 
@@ -38,7 +39,7 @@ export function TaskContextPanel({ snapshots, onCreate }: Props) {
     <div className="team-space-context grid min-h-0 flex-1 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden">
       <aside className="team-space-context-list flex min-h-0 flex-col border-r border-border bg-muted/20">
         <div className="border-b border-border p-2">
-          <Button className="w-full" size="sm" onClick={create}>
+          <Button className="w-full" size="sm" disabled={!canCreate} onClick={create}>
             <Camera />{' '}
             {translate('auto.components.team.space.TaskContextPanel.0476dbda6b', 'Freeze context')}
           </Button>

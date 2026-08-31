@@ -5,6 +5,7 @@ import {
   createTaskCommentRequestSchema,
   externalTaskSourceSchema
 } from '@teamrun/contracts'
+import { requireOrganizationRole } from '../auth/organization-access.js'
 import { renderTaskContext } from '../context/task-context-renderer.js'
 import { agentRuns, contextSnapshots, projects, taskComments, tasks } from '../database/schema.js'
 import { appendTeamEvent } from '../events/team-event-writer.js'
@@ -74,6 +75,12 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
     const { taskId } = request.params as { taskId: string }
     const body = createContextSnapshotRequestSchema.parse(request.body)
     const { task } = await requireTask(app, taskId, request.teamRunUser.id)
+    await requireOrganizationRole(
+      app.teamRunDatabase,
+      task.organizationId,
+      request.teamRunUser.id,
+      ['owner', 'admin']
+    )
     if (task.version !== body.taskVersion) {
       throw new ApiProblem(409, 'task_version_conflict', 'Task changed before snapshot creation')
     }

@@ -12,6 +12,7 @@ import type {
   CreateTaskCommentRequest,
   CreateTaskRequest,
   CreateTeamAgentRequest,
+  CreatedTeamInviteCode,
   FinalizePublicationRequest,
   Organization,
   OrganizationInvitation,
@@ -26,6 +27,7 @@ import type {
   TaskComment,
   TeamAgent,
   TeamEvent,
+  TeamInviteCode,
   UpdateAgentRunStatusRequest,
   UpdateProjectRequest,
   UpdateTaskRequest,
@@ -61,6 +63,15 @@ export type TeamRunApi = {
       role: 'admin' | 'member'
     }) => Promise<OrganizationMember>
     removeMember: (args: { organizationId: string; userId: string }) => Promise<void>
+    updateMemberRole: (args: {
+      organizationId: string
+      userId: string
+      role: 'admin' | 'member'
+    }) => Promise<void>
+    listInviteCodes: (organizationId: string) => Promise<TeamInviteCode[]>
+    createInviteCode: (organizationId: string) => Promise<CreatedTeamInviteCode>
+    revokeInviteCode: (args: { organizationId: string; inviteCodeId: string }) => Promise<void>
+    redeemInviteCode: (code: string) => Promise<Organization>
     listInvitations: (organizationId: string) => Promise<OrganizationInvitation[]>
     invite: (args: {
       organizationId: string

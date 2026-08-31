@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = {
   auth: Exclude<TeamRunAuthStatus, { state: 'signed-in' }> | null
@@ -49,7 +50,13 @@ export function TeamSpaceSignIn({ auth, loading, onSignIn }: Props) {
         ) : null}
         {auth?.state === 'error' ? (
           <div className="mt-5 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            {auth.message}
+            {teamRunErrorMessage(
+              auth.message,
+              translate(
+                'auto.components.team.space.TeamSpaceSignIn.connectionError',
+                'Unable to connect to Team Space. Check the service address and credentials.'
+              )
+            )}
           </div>
         ) : null}
         {devAuth ? (

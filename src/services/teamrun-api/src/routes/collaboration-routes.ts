@@ -182,6 +182,12 @@ export async function registerCollaborationRoutes(app: FastifyInstance): Promise
     const { projectId } = request.params as { projectId: string }
     const body = createTeamAgentRequestSchema.parse(request.body)
     const project = await requireProject(app, projectId, request.teamRunUser.id)
+    await requireOrganizationRole(
+      app.teamRunDatabase,
+      project.organizationId,
+      request.teamRunUser.id,
+      ['owner']
+    )
     const key = requireIdempotencyKey(request.headers['idempotency-key'] as string | undefined)
     const result = await runIdempotentMutation(app.teamRunDatabase, {
       userId: request.teamRunUser.id,

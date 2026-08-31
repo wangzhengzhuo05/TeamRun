@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  index,
   integer,
   pgEnum,
   pgTable,
@@ -68,6 +69,31 @@ export const organizationInvitations = pgTable(
     uniqueIndex('organization_invitations_pending_email')
       .on(table.organizationId, table.email)
       .where(sql`${table.status} = 'pending'`)
+  ]
+)
+
+export const teamInviteCodes = pgTable(
+  'team_invite_codes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull().unique(),
+    codeHint: text('code_hint').notNull(),
+    createdByUserId: uuid('created_by_user_id')
+      .notNull()
+      .references(() => users.id),
+    redeemedByUserId: uuid('redeemed_by_user_id').references(() => users.id, {
+      onDelete: 'set null'
+    }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    redeemedAt: timestamp('redeemed_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('team_invite_codes_organization_created').on(table.organizationId, table.createdAt)
   ]
 )
 

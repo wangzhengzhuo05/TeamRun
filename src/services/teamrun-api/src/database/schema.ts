@@ -23,6 +23,7 @@ export {
   organizationRoleEnum,
   organizations,
   invitationStatusEnum,
+  teamInviteCodes,
   projects,
   repositories,
   users

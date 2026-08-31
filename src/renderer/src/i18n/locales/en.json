@@ -15284,7 +15284,8 @@
             "50e9904340": "Started {{value0}} TeamRun agent workspace{{value1}}.",
             "partialFailure": "{{value0}} agent workspace{{value1}} could not be started.",
             "openTaskTitle": "Open task in TeamRun",
-            "openInTeamRun": "Open in TeamRun"
+            "openInTeamRun": "Open in TeamRun",
+            "setupPolicyRequired": "Choose a setup policy for this repository before launching TeamRun agents."
           },
           "TeamAgentRunPanel": {
             "72ba875f87": "No agent runs for this task.",
@@ -15295,7 +15296,8 @@
             "cecf8c7075": "Ready for review",
             "3412fc359a": "Stale context",
             "872ca19575": "This agent workspace is not available on this device.",
-            "markReadyError": "Unable to mark the run ready for review"
+            "markReadyError": "Unable to mark the run ready for review",
+            "ownerAdminOnly": "Only the Team Owner or an Admin can launch Team Agent runs."
           },
           "TeamCollaborationDialog": {
             "9bca007245": "TeamRun collaboration request failed",
@@ -15338,6 +15340,49 @@
             "6dc33dd63f": "Unable to load members",
             "removeError": "Unable to remove member",
             "revokeError": "Unable to revoke invitation"
+          },
+          "TeamMemberManagement": {
+            "loadError": "Unable to load Team members",
+            "loadCodesError": "Invite codes require an updated Team Server",
+            "createCodeError": "Unable to create invite code",
+            "codeCopied": "Invite code copied",
+            "revokeCodeError": "Unable to revoke invite code",
+            "updateRoleError": "Unable to update member role",
+            "removeError": "Unable to remove member",
+            "inviteTitle": "One-time invite code",
+            "inviteDescription": "The code expires in 7 days and adds one person as a Member.",
+            "creatingCode": "Creating…",
+            "createCode": "Create code",
+            "copy": "Copy",
+            "codeEnding": "Code ending in {{value0}} · expires {{value1}}",
+            "revokeCode": "Revoke code ending in {{value0}}",
+            "members": "Members",
+            "removeMember": "Remove {{value0}}",
+            "roleOwner": "Owner",
+            "roleAdmin": "Admin",
+            "roleMember": "Member",
+            "statusActive": "Active",
+            "statusRedeemed": "Redeemed",
+            "statusRevoked": "Revoked",
+            "statusExpired": "Expired",
+            "inviteCode": "Invite code",
+            "role": "Role"
+          },
+          "TeamManagementDialog": {
+            "management": "Team management",
+            "ownerDescription": "Manage Team access, roles, and reusable Team Agents.",
+            "memberDescription": "View Team members and reusable Team Agents.",
+            "members": "Members",
+            "agents": "Team Agents"
+          },
+          "JoinTeamDialog": {
+            "joinError": "Unable to join Team",
+            "joinTeam": "Join Team",
+            "title": "Join a Team",
+            "description": "Enter a one-time invite code from the Team Owner. You will join as a Member.",
+            "code": "Invite code",
+            "joining": "Joining…",
+            "join": "Join"
           },
           "TeamSpacePage": {
             "3598cbd1e2": "total",
@@ -15392,7 +15437,8 @@
             "teamKey": "Team key",
             "keyHint": "Use the HTTPS address and team key shared by your TeamRun administrator.",
             "connectKey": "Connect with team key",
-            "serviceUrlPlaceholder": "https://teamrun.example.com"
+            "serviceUrlPlaceholder": "https://teamrun.example.com",
+            "connectionError": "Unable to connect to Team Space. Check the service address and credentials."
           },
           "TeamTaskDetail": {
             "b4dbc18417": "Agent runs",
@@ -15447,7 +15493,9 @@
             "chooseChannel": "Choose a channel",
             "mentionAgent": "Mention Agent",
             "send": "Send message",
-            "sendHint": "Send · Enter"
+            "sendHint": "Send · Enter",
+            "unknownAgent": "Team Agent",
+            "agentReplying": "{{value0}} is replying…"
           },
           "TeamSpaceDock": {
             "features": "Team Space features",
@@ -15466,7 +15514,50 @@
             "loadError": "Unable to load chat",
             "sendError": "Unable to send message",
             "generalDescription": "Team conversation",
-            "createChannelError": "Unable to start chat"
+            "createChannelError": "Unable to start chat",
+            "agentReplyError": "Agent could not reply. Check that its local API key is configured."
+          },
+          "TeamAgentManagement": {
+            "createAgentError": "Unable to create Team Agent",
+            "saveCredentialError": "Unable to save API key",
+            "name": "Team Agent name",
+            "genericCli": "Generic CLI",
+            "launchCommand": "Command that accepts task context as its final argument",
+            "launchCommandHint": "The command is shared with project members. Keep credentials in the host environment.",
+            "apiKey": "API key for chat replies",
+            "apiKeyHint": "Stored only on this runtime with operating-system credential protection.",
+            "baseUrl": "Base URL (optional)",
+            "instructions": "Reusable instructions added before the frozen task context",
+            "create": "Create Team Agent",
+            "noInstructions": "No additional instructions",
+            "keyConfigured": "Local API key configured",
+            "keyMissing": "Local API key required for chat replies",
+            "updateKey": "Set or replace local API key",
+            "saving": "Saving…",
+            "saveKey": "Save key",
+            "loadError": "Unable to load Team Agents",
+            "ownerOnly": "Only the Team Owner can create or configure Team Agents."
+          },
+          "TeamAgentManagementDialog": {
+            "agents": "Agents",
+            "title": "Agent management"
+          },
+          "teamrunErrorMessage": {
+            "httpsRequired": "Use HTTPS for remote TeamRun services.",
+            "teamKeyRequired": "Enter a valid team key.",
+            "developmentEmailRequired": "Enter a valid development email.",
+            "authenticationFailed": "TeamRun could not verify these credentials.",
+            "sessionExpired": "Your TeamRun session expired. Sign in again.",
+            "singleSignOnUnavailable": "Single sign-on is not configured correctly.",
+            "serviceUnconfigured": "Set the TeamRun service address before continuing.",
+            "accessDenied": "You do not have permission to perform this action.",
+            "versionConflict": "This item changed on the server. Refresh and try again.",
+            "memberNotSignedIn": "This member must sign in to TeamRun before being added.",
+            "inviteCodeInvalid": "This invite code is invalid.",
+            "inviteCodeUsed": "This invite code has already been used.",
+            "inviteCodeUnavailable": "This invite code has expired or was revoked.",
+            "alreadyTeamMember": "You are already a member of this Team.",
+            "ownerChangeForbidden": "The Team Owner role cannot be changed or removed."
           }
         }
       }

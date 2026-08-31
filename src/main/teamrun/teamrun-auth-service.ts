@@ -30,6 +30,12 @@ const tokenSchema = z.object({
   expires_in: z.number().positive().default(3600)
 })
 
+const identitySchema = z.object({
+  userId: z.string().min(1),
+  email: z.email(),
+  displayName: z.string().min(1)
+})
+
 type ServiceAuthConfig = z.infer<typeof authConfigSchema>
 type OidcDiscovery = z.infer<typeof discoverySchema>
 
@@ -87,6 +93,23 @@ async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
   return response.json()
 }
 
+async function fetchCurrentIdentity(
+  apiUrl: string,
+  authorization: string
+): Promise<z.infer<typeof identitySchema> | null> {
+  const response = await fetch(`${apiUrl}/v1/auth/me`, {
+    headers: { authorization },
+    signal: AbortSignal.timeout(15_000)
+  })
+  if (response.status === 404) {
+    return null
+  }
+  if (!response.ok) {
+    throw new Error(`teamrun_auth_http_${response.status}`)
+  }
+  return identitySchema.parse(await response.json())
+}
+
 export class TeamRunAuthService {
   #configCache: { apiUrl: string; value: ServiceAuthConfig; expiresAt: number } | null = null
   #refreshPromise: Promise<Extract<TeamRunSession, { mode: 'oidc' }>> | null = null
@@ -116,13 +139,17 @@ export class TeamRunAuthService {
     try {
       const config = await this.#authConfig()
       const session = readTeamRunSession()
+      const identity = session
+        ? await fetchCurrentIdentity(apiUrl, await this.authorizationHeader())
+        : null
       return session
         ? {
             state: 'signed-in',
             apiUrl,
             devAuth: config.devAuth,
             sharedKeyAuth: config.sharedKeyAuth,
-            email: session.email
+            email: identity?.email ?? session.email,
+            userId: identity?.userId ?? null
           }
         : {
             state: 'signed-out',

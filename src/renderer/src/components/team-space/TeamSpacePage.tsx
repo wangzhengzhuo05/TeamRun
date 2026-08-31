@@ -36,7 +36,8 @@ export default function TeamSpacePage() {
   )
   const selectedProject = workspace.projects.find((project) => project.id === workspace.projectId)
   const selectedChannel = chat.channels.find((channel) => channel.id === chat.channelId)
-  const canManageMembers =
+  const canManageTeam = selectedOrganization?.role === 'owner'
+  const canDevelopTeam =
     selectedOrganization?.role === 'owner' || selectedOrganization?.role === 'admin'
   const syncLabel =
     workspace.syncStatus?.connection === 'online'
@@ -107,7 +108,7 @@ export default function TeamSpacePage() {
       {view === 'chat' ? (
         <TeamSpaceChatPanel
           projectId={workspace.projectId}
-          authEmail={workspace.auth.email}
+          authUserId={workspace.auth.userId ?? null}
           channels={chat.channels}
           channelId={chat.channelId}
           messages={chat.messages}
@@ -141,7 +142,7 @@ export default function TeamSpacePage() {
               </div>
               <CreateTeamTaskDialog
                 repositories={workspace.repositories}
-                disabled={!workspace.projectId}
+                disabled={!workspace.projectId || !canDevelopTeam}
                 onCreate={workspace.createTask}
               />
             </div>
@@ -154,6 +155,7 @@ export default function TeamSpacePage() {
           <main className="team-space-task-detail min-h-0 overflow-hidden">
             <TeamTaskDetail
               taskId={workspace.taskId}
+              canDevelop={canDevelopTeam}
               eventRevision={workspace.eventRevision}
               onTaskChanged={workspace.refreshTasks}
               onBack={() => workspace.selectTask(null)}
@@ -167,13 +169,15 @@ export default function TeamSpacePage() {
         projects={workspace.projects}
         organizationId={workspace.organizationId}
         projectId={workspace.projectId}
-        canManageMembers={canManageMembers}
+        canManageTeam={canManageTeam}
+        canDevelopTeam={canDevelopTeam}
         onViewChange={setView}
         onSelectOrganization={workspace.selectOrganization}
         onSelectProject={workspace.selectProject}
         onCreateOrganization={workspace.createOrganization}
         onCreateProject={workspace.createProject}
         onCreateRepository={workspace.createRepository}
+        onJoinTeam={workspace.joinTeam}
         onSignOut={workspace.signOut}
       />
     </div>

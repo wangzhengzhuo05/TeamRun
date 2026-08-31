@@ -41,7 +41,7 @@ describe('TeamAgentManagement', () => {
   })
 
   it('uses the Claude Code label for an existing default Claude agent', async () => {
-    render(<TeamAgentManagement projectId="project-1" active />)
+    render(<TeamAgentManagement projectId="project-1" active canManage />)
 
     await waitFor(() => expect(screen.getByText('Claude Code')).toBeInTheDocument())
     expect(screen.queryByText('Claude')).not.toBeInTheDocument()

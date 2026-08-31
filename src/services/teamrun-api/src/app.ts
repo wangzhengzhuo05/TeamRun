@@ -90,6 +90,11 @@ export async function createTeamRunApp(config: TeamRunServiceConfig): Promise<Fa
     devAuth: config.TEAMRUN_DEV_AUTH === '1',
     sharedKeyAuth: Boolean(config.TEAMRUN_SHARED_KEY)
   }))
+  app.get('/v1/auth/me', async (request) => ({
+    userId: request.teamRunUser.id,
+    email: request.teamRunUser.email,
+    displayName: request.teamRunUser.displayName
+  }))
 
   await registerOrganizationRoutes(app)
   await registerProjectRoutes(app)

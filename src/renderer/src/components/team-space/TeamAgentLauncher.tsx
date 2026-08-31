@@ -145,7 +145,10 @@ export function TeamAgentLauncher(props: Props) {
           promptDelivery: agent === 'generic-cli' ? 'auto-submit' : 'submit-after-ready',
           openModalFallback: () =>
             toast.error(
-              'Choose a setup policy for this repository before launching TeamRun agents.'
+              translate(
+                'auto.components.team.space.TeamAgentLauncher.setupPolicyRequired',
+                'Choose a setup policy for this repository before launching TeamRun agents.'
+              )
             ),
           onWorkspaceCreated: (workspace) => {
             const linking = linkWorkspace({

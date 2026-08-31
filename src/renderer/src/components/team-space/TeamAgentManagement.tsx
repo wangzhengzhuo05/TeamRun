@@ -19,13 +19,15 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = {
   projectId: string | null
   active: boolean
+  canManage: boolean
 }
 
-export function TeamAgentManagement({ projectId, active }: Props) {
+export function TeamAgentManagement({ projectId, active, canManage }: Props) {
   const catalog = useMemo(
     () => getAgentCatalog().filter((agent) => supportsTeamAgentChat(agent.id)),
     []
@@ -49,14 +51,16 @@ export function TeamAgentManagement({ projectId, active }: Props) {
     void window.api.teamRun.collaboration
       .listTeamAgents(projectId)
       .then(async (agents) => {
-        const statuses = await Promise.all(
-          agents
-            .filter((agent) => teamAgentRequiresApiKey(agent.agentKind))
-            .map(async (agent) => ({
-              agentId: agent.id,
-              ...(await window.api.teamRun.collaboration.credentialStatus(agent.id))
-            }))
-        )
+        const statuses = canManage
+          ? await Promise.all(
+              agents
+                .filter((agent) => teamAgentRequiresApiKey(agent.agentKind))
+                .map(async (agent) => ({
+                  agentId: agent.id,
+                  ...(await window.api.teamRun.collaboration.credentialStatus(agent.id))
+                }))
+            )
+          : []
         setTeamAgents(agents)
         setConfiguredAgentIds(
           statuses.filter((status) => status.configured).map((status) => status.agentId)
@@ -68,7 +72,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
         )
       })
       .catch(reportError)
-  }, [active, projectId])
+  }, [active, canManage, projectId])
 
   const createTeamAgent = async () => {
     if (!projectId || !agentName.trim()) {
@@ -138,97 +142,112 @@ export function TeamAgentManagement({ projectId, active }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[minmax(0,1fr)_12rem] gap-2">
-        <Input
-          value={agentName}
-          onChange={(event) => setAgentName(event.target.value)}
-          placeholder={translate(
-            'auto.components.team.space.TeamAgentManagement.name',
-            'Team Agent name'
-          )}
-        />
-        <Select value={agentKind} onValueChange={setAgentKind}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {catalog.map((entry) => (
-              <SelectItem key={entry.id} value={entry.id}>
-                {entry.label}
-              </SelectItem>
-            ))}
-            <SelectItem value="generic-cli">
-              {translate(
-                'auto.components.team.space.TeamAgentManagement.genericCli',
-                'Generic CLI'
+      {canManage ? (
+        <>
+          <div className="grid grid-cols-[minmax(0,1fr)_12rem] gap-2">
+            <Input
+              value={agentName}
+              onChange={(event) => setAgentName(event.target.value)}
+              placeholder={translate(
+                'auto.components.team.space.TeamAgentManagement.name',
+                'Team Agent name'
               )}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {agentKind === 'generic-cli' ? (
-        <div className="space-y-2">
-          <Input
-            value={launchCommand}
-            onChange={(event) => setLaunchCommand(event.target.value)}
+            />
+            <Select value={agentKind} onValueChange={setAgentKind}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {catalog.map((entry) => (
+                  <SelectItem key={entry.id} value={entry.id}>
+                    {entry.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value="generic-cli">
+                  {translate(
+                    'auto.components.team.space.TeamAgentManagement.genericCli',
+                    'Generic CLI'
+                  )}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {agentKind === 'generic-cli' ? (
+            <div className="space-y-2">
+              <Input
+                value={launchCommand}
+                onChange={(event) => setLaunchCommand(event.target.value)}
+                placeholder={translate(
+                  'auto.components.team.space.TeamAgentManagement.launchCommand',
+                  'Command that accepts task context as its final argument'
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                {translate(
+                  'auto.components.team.space.TeamAgentManagement.launchCommandHint',
+                  'The command is shared with project members. Keep credentials in the host environment.'
+                )}
+              </p>
+            </div>
+          ) : null}
+          {teamAgentRequiresApiKey(agentKind) ? (
+            <div className="space-y-2">
+              <Input
+                type="password"
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder={translate(
+                  'auto.components.team.space.TeamAgentManagement.apiKey',
+                  'API key for chat replies'
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                {translate(
+                  'auto.components.team.space.TeamAgentManagement.apiKeyHint',
+                  'Stored only on this runtime with operating-system credential protection.'
+                )}
+              </p>
+              <Input
+                value={baseUrl}
+                onChange={(event) => setBaseUrl(event.target.value)}
+                placeholder={translate(
+                  'auto.components.team.space.TeamAgentManagement.baseUrl',
+                  'Base URL (optional)'
+                )}
+              />
+            </div>
+          ) : null}
+          <Textarea
+            value={instructions}
+            onChange={(event) => setInstructions(event.target.value)}
             placeholder={translate(
-              'auto.components.team.space.TeamAgentManagement.launchCommand',
-              'Command that accepts task context as its final argument'
+              'auto.components.team.space.TeamAgentManagement.instructions',
+              'Reusable instructions added before the frozen task context'
             )}
           />
-          <p className="text-xs text-muted-foreground">
+          <Button
+            onClick={createTeamAgent}
+            disabled={
+              !agentName.trim() ||
+              (agentKind === 'generic-cli' && !launchCommand.trim()) ||
+              (teamAgentRequiresApiKey(agentKind) && apiKey.trim().length < 24)
+            }
+          >
+            <Plus />{' '}
             {translate(
-              'auto.components.team.space.TeamAgentManagement.launchCommandHint',
-              'The command is shared with project members. Keep credentials in the host environment.'
+              'auto.components.team.space.TeamAgentManagement.create',
+              'Create Team Agent'
             )}
-          </p>
-        </div>
-      ) : null}
-      {teamAgentRequiresApiKey(agentKind) ? (
-        <div className="space-y-2">
-          <Input
-            type="password"
-            value={apiKey}
-            onChange={(event) => setApiKey(event.target.value)}
-            placeholder={translate(
-              'auto.components.team.space.TeamAgentManagement.apiKey',
-              agentKind === 'claude'
-                ? 'Anthropic API key for chat replies'
-                : 'OpenAI API key for chat replies'
-            )}
-          />
-          <p className="text-xs text-muted-foreground">
-            {translate(
-              'auto.components.team.space.TeamAgentManagement.apiKeyHint',
-              'Stored only on this runtime with operating-system credential protection.'
-            )}
-          </p>
-          <Input
-            value={baseUrl}
-            onChange={(event) => setBaseUrl(event.target.value)}
-            placeholder="Base URL (optional)"
-          />
-        </div>
-      ) : null}
-      <Textarea
-        value={instructions}
-        onChange={(event) => setInstructions(event.target.value)}
-        placeholder={translate(
-          'auto.components.team.space.TeamAgentManagement.instructions',
-          'Reusable instructions added before the frozen task context'
-        )}
-      />
-      <Button
-        onClick={createTeamAgent}
-        disabled={
-          !agentName.trim() ||
-          (agentKind === 'generic-cli' && !launchCommand.trim()) ||
-          (teamAgentRequiresApiKey(agentKind) && apiKey.trim().length < 24)
-        }
-      >
-        <Plus />{' '}
-        {translate('auto.components.team.space.TeamAgentManagement.create', 'Create Team Agent')}
-      </Button>
+          </Button>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {translate(
+            'auto.components.team.space.TeamAgentManagement.ownerOnly',
+            'Only the Team Owner can create or configure Team Agents.'
+          )}
+        </p>
+      )}
       <div className="scrollbar-sleek max-h-56 space-y-2 overflow-y-auto">
         {teamAgents.map((agent) => (
           <div key={agent.id} className="rounded-md border border-border p-3">
@@ -247,7 +266,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                   'No additional instructions'
                 )}
             </p>
-            {teamAgentRequiresApiKey(agent.agentKind) ? (
+            {canManage && teamAgentRequiresApiKey(agent.agentKind) ? (
               <div className="mt-3 space-y-2 border-t border-border pt-3">
                 <p className="text-xs text-muted-foreground">
                   {configuredAgentIds.includes(agent.id)
@@ -269,7 +288,10 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                         [agent.id]: event.target.value
                       }))
                     }
-                    placeholder="Base URL (optional)"
+                    placeholder={translate(
+                      'auto.components.team.space.TeamAgentManagement.baseUrl',
+                      'Base URL (optional)'
+                    )}
                   />
                   <Input
                     type="password"
@@ -316,12 +338,13 @@ export function TeamAgentManagement({ projectId, active }: Props) {
 
 function reportError(error: unknown): void {
   toast.error(
-    error instanceof Error
-      ? error.message
-      : translate(
-          'auto.components.team.space.TeamAgentManagement.loadError',
-          'Unable to load Team Agents'
-        )
+    teamRunErrorMessage(
+      error,
+      translate(
+        'auto.components.team.space.TeamAgentManagement.loadError',
+        'Unable to load Team Agents'
+      )
+    )
   )
 }
 

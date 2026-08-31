@@ -89,6 +89,38 @@ export class TeamRunCloudCommandService {
           { method: 'DELETE' }
         )
       }
+      case 'organizations.updateMemberRole': {
+        const parsed = z
+          .object({
+            organizationId: idSchema,
+            userId: idSchema,
+            role: z.enum(['admin', 'member'])
+          })
+          .parse(args)
+        return this.client.request(
+          `/v1/organizations/${parsed.organizationId}/members/${parsed.userId}`,
+          { method: 'PATCH', body: { role: parsed.role } }
+        )
+      }
+      case 'organizations.listInviteCodes':
+        return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invite-codes`)
+      case 'organizations.createInviteCode':
+        return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invite-codes`, {
+          method: 'POST',
+          body: {}
+        })
+      case 'organizations.revokeInviteCode': {
+        const parsed = z.object({ organizationId: idSchema, inviteCodeId: idSchema }).parse(args)
+        return this.client.request(
+          `/v1/organizations/${parsed.organizationId}/invite-codes/${parsed.inviteCodeId}`,
+          { method: 'DELETE' }
+        )
+      }
+      case 'organizations.redeemInviteCode':
+        return this.client.request('/v1/team-invite-codes/redeem', {
+          method: 'POST',
+          body: { code: z.string().min(1).max(128).parse(args) }
+        })
       case 'organizations.listInvitations':
         return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invitations`)
       case 'organizations.invite': {
