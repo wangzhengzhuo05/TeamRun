@@ -1,4 +1,3 @@
-import { createReadStream } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http'
 import { extname, isAbsolute, posix, relative, resolve } from 'node:path'
@@ -83,15 +82,13 @@ async function handleStaticRequest(
     return
   }
 
-  const stream = createReadStream(absolutePath)
-  stream.on('error', () => {
-    if (!response.headersSent) {
-      writeHttpStatus(response, 500)
-      return
-    }
-    response.destroy()
-  })
-  stream.pipe(response)
+  try {
+    const content = await readFile(absolutePath)
+    response.setHeader('Content-Length', content.byteLength)
+    response.end(content)
+  } catch {
+    writeHttpStatus(response, 500)
+  }
 }
 
 function parseStaticPathname(rawUrl: string | undefined): string | null {

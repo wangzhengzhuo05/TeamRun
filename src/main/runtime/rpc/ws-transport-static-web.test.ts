@@ -39,7 +39,7 @@ describe('WebSocketTransport static web client', () => {
     const assetResponse = await fetch(`http://127.0.0.1:${transport.resolvedPort}/assets/app.js`)
     expect(assetResponse.status).toBe(200)
     expect(assetResponse.headers.get('cache-control')).toBe('no-cache')
-    expect(assetResponse.headers.get('content-length')).toBeNull()
+    expect(assetResponse.headers.get('content-length')).toBe('18')
     await expect(assetResponse.text()).resolves.toBe('console.log("web")')
   })
 
