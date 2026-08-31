@@ -18,6 +18,15 @@ export function registerTeamRunFileHandlers(client: TeamRunApiClient): void {
   ipcMain.handle('teamrun:files:createVersion', (_event, args) =>
     invokeTeamRunFileOperation(client, 'files.createVersion', args)
   )
+  ipcMain.handle('teamrun:files:listProposals', (_event, args) =>
+    invokeTeamRunFileOperation(client, 'files.listProposals', args)
+  )
+  ipcMain.handle('teamrun:files:requestProposal', (_event, args) =>
+    invokeTeamRunFileOperation(client, 'files.requestProposal', args)
+  )
+  ipcMain.handle('teamrun:files:applyProposal', (_event, args) =>
+    invokeTeamRunFileOperation(client, 'files.applyProposal', args)
+  )
   ipcMain.handle('teamrun:files:clearQuarantine', (_event, args) =>
     invokeTeamRunFileOperation(client, 'files.clearQuarantine', args)
   )

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   agentRunStatusSchema,
   createTeamAgentRequestSchema,
+  createTeamFileProposalRequestSchema,
   createTaskRequestSchema,
   gitRemoteUrlSchema,
   publicationArtifactSchema,
@@ -53,6 +54,22 @@ describe('TeamRun contracts', () => {
     expect(requestTeamAgentReplySchema.parse(body)).toEqual(body)
     expect(
       requestTeamAgentReplySchema.safeParse({ ...body, bodyMarkdown: 'forged response' }).success
+    ).toBe(false)
+  })
+
+  it('bounds Team Agent document proposal requests', () => {
+    const teamAgentId = crypto.randomUUID()
+    expect(
+      createTeamFileProposalRequestSchema.parse({
+        teamAgentId,
+        instructionsMarkdown: 'Add the agreed decision.'
+      })
+    ).toEqual({ teamAgentId, instructionsMarkdown: 'Add the agreed decision.' })
+    expect(
+      createTeamFileProposalRequestSchema.safeParse({
+        teamAgentId,
+        instructionsMarkdown: 'x'.repeat(8_001)
+      }).success
     ).toBe(false)
   })
 

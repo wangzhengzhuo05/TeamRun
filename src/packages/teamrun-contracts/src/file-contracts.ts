@@ -3,6 +3,7 @@ import { entityIdSchema, sha256Schema, timestampSchema, versionSchema } from './
 
 export const teamFileKindSchema = z.enum(['document', 'code', 'file'])
 export const teamFileAvailabilitySchema = z.enum(['available', 'quarantined'])
+export const teamFileProposalStatusSchema = z.enum(['running', 'ready', 'applied', 'failed'])
 
 export const teamFilePathSchema = z
   .string()
@@ -68,8 +69,32 @@ export const createTeamFileVersionRequestSchema = teamFileContentInputSchema.ext
   expectedCurrentVersion: versionSchema
 })
 
+export const teamFileProposalSchema = z.object({
+  id: entityIdSchema,
+  organizationId: entityIdSchema,
+  projectId: entityIdSchema,
+  teamFileId: entityIdSchema,
+  baseVersion: versionSchema,
+  teamAgentId: entityIdSchema,
+  requestedByUserId: entityIdSchema,
+  instructionsMarkdown: z.string().trim().min(1).max(8_000),
+  proposedContentBase64: z.string().max(100_000).nullable(),
+  status: teamFileProposalStatusSchema,
+  errorCode: z.string().max(160).nullable(),
+  appliedVersionId: entityIdSchema.nullable(),
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema
+})
+
+export const createTeamFileProposalRequestSchema = z.object({
+  teamAgentId: entityIdSchema,
+  instructionsMarkdown: z.string().trim().min(1).max(8_000)
+})
+
 export type TeamFile = z.infer<typeof teamFileSchema>
 export type TeamFileVersion = z.infer<typeof teamFileVersionSchema>
 export type TeamFileVersionContent = z.infer<typeof teamFileVersionContentSchema>
+export type TeamFileProposal = z.infer<typeof teamFileProposalSchema>
 export type CreateTeamFileRequest = z.infer<typeof createTeamFileRequestSchema>
 export type CreateTeamFileVersionRequest = z.infer<typeof createTeamFileVersionRequestSchema>
+export type CreateTeamFileProposalRequest = z.infer<typeof createTeamFileProposalRequestSchema>

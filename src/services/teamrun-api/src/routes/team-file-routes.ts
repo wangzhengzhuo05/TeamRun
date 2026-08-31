@@ -9,6 +9,7 @@ import { requireIdempotencyKey, runIdempotentMutation } from '../http/idempotent
 import { requireProject } from './project-access.js'
 import { requireTeamFile } from './team-file-access.js'
 import { registerTeamFileGovernanceRoutes } from './team-file-governance-routes.js'
+import { registerTeamFileProposalRoutes } from './team-file-proposal-routes.js'
 
 const versionFields = {
   id: teamFileVersions.id,
@@ -236,4 +237,5 @@ export async function registerTeamFileRoutes(app: FastifyInstance): Promise<void
   })
 
   registerTeamFileGovernanceRoutes(app)
+  registerTeamFileProposalRoutes(app)
 }

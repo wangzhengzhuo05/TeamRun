@@ -26,6 +26,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { translate } from '@/i18n/i18n'
 import { base64ToText, supportsTeamFileText } from './team-file-content'
+import { TeamDocumentAgentDialog } from './TeamDocumentAgentDialog'
 
 type Props = {
   file: TeamFile
@@ -33,10 +34,12 @@ type Props = {
   selectedVersion: TeamFileVersion | null
   content: TeamFileVersionContent | null
   saving: boolean
+  authUserId: string | null
   canClearQuarantine: boolean
   canDelete: boolean
   onSelectVersion: (versionId: string) => void
   onSave: (content: string) => Promise<void>
+  onProposalApplied: () => Promise<void>
   onClearQuarantine: () => Promise<void>
   onDelete: () => Promise<boolean>
 }
@@ -124,7 +127,14 @@ export function TeamFileEditor(props: Props) {
             onChange={(event) => setDraft(event.target.value)}
           />
           {editable ? (
-            <div className="mt-3 flex justify-end">
+            <div className="mt-3 flex justify-end gap-2">
+              {props.file.kind === 'document' && props.content ? (
+                <TeamDocumentAgentDialog
+                  authUserId={props.authUserId}
+                  file={props.file}
+                  onApplied={props.onProposalApplied}
+                />
+              ) : null}
               <Button disabled={props.saving} onClick={() => void props.onSave(draft)}>
                 <Save />
                 {props.saving

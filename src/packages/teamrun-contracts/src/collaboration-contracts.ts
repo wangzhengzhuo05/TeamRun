@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { entityIdSchema, markdownSchema, timestampSchema, versionSchema } from './scalars.js'
 
+export const TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY =
+  'teamrun.team-server.document-edit.v1' as const
+
 const teamServerBaseUrlSchema = z
   .url()
   .max(2048)

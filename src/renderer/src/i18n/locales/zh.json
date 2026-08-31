@@ -14358,6 +14358,28 @@
             "deleteDescription": "该文件将从团队文件库中移除；已有的冻结上下文仍保留其版本引用。",
             "delete": "删除"
           },
+          "TeamDocumentAgentDialog": {
+            "trigger": "请求团队智能体",
+            "title": "提出文档修改",
+            "description": "团队智能体不能直接覆盖文档。请先检查完整替换内容，再确认创建新版本。",
+            "noAgents": "请先创建运行在团队服务器上的团队智能体，再请求修改文档。",
+            "agent": "团队智能体",
+            "instructions": "修改要求",
+            "generate": "生成修改方案",
+            "preview": "提议的完整文档",
+            "history": "团队修改方案",
+            "statusRunning": "生成中",
+            "statusReady": "待确认",
+            "statusApplied": "已应用",
+            "statusFailed": "失败",
+            "unknownAgent": "未知智能体",
+            "unknownMember": "未知成员",
+            "requesterOnly": "只有发起此修改方案的成员可以确认应用。",
+            "apply": "确认并创建版本",
+            "loadError": "无法加载文档修改方案",
+            "requestError": "无法创建文档修改方案",
+            "applyError": "无法应用文档修改方案"
+          },
           "TeamFilesPanel": {
             "title": "团队文件",
             "description": "带版本记录的文档、代码和参考文件",
@@ -14627,10 +14649,14 @@
             "teamFileContentInvalid": "无法读取团队文件内容。",
             "teamFileQuarantined": "需要由所有者解除隔离后才能使用此团队文件版本。",
             "teamFileContextUnsupported": "只有文本团队文件可以加入任务上下文。",
+            "teamDocumentAgentInputTooLarge": "此文档过大，无法由团队智能体修改。",
+            "teamFileProposalStale": "生成方案后文档已发生变化，请重新生成修改方案。",
+            "teamFileProposalNotReady": "此文档修改方案尚不能应用。",
             "teamServerUnavailable": "团队服务器当前不可用，请检查连接后重试。",
             "teamServerRequired": "请先绑定团队服务器。",
             "teamServerOpenCodeMissing": "请先在团队服务器上安装 OpenCode。",
             "teamServerEncryptionUnavailable": "请在团队服务器上配置加密的模型凭据存储。",
+            "teamServerDocumentEditUpdateRequired": "请先更新团队服务器，再请求修改文档。",
             "teamAgentMigrationRequired": "请使用团队服务器模型连接重新创建此团队智能体。"
           },
           "GenericCliCommandConfirmation": {

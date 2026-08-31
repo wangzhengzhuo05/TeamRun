@@ -1,5 +1,8 @@
 import { z } from 'zod'
-import { TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY } from '../../../../shared/protocol-version'
+import {
+  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
+} from '../../../../shared/protocol-version'
 import { TEAMRUN_CLOUD_OPERATIONS } from '../../../../shared/teamrun-cloud-operations'
 import { defineMethod, defineStreamingMethod, type RpcAnyMethod, type RpcContext } from '../core'
 
@@ -61,6 +64,23 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
       return context.runtime.runTeamServerAgentReply(params)
     }
   }),
+  defineMethod({
+    name: 'teamrun.teamAgent.proposeDocumentEdit',
+    params: z.object({
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000)
+      }),
+      path: z.string().trim().min(1).max(512),
+      instructionsMarkdown: z.string().trim().min(1).max(8_000),
+      currentContentMarkdown: z.string().max(64_000)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY)
+      return context.runtime.proposeTeamServerDocumentEdit(params)
+    }
+  }),
   defineStreamingMethod({
     name: 'teamrun.events.subscribe',
     params: z.object({
@@ -97,11 +117,14 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
   })
 ]
 
-function requirePairedRuntime(context: RpcContext): void {
+function requirePairedRuntime(
+  context: RpcContext,
+  capability: string = TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
+): void {
   if (
     context.clientKind !== 'runtime' ||
     !context.pairedDeviceId ||
-    !context.clientCapabilities?.includes(TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY)
+    !context.clientCapabilities?.includes(capability)
   ) {
     throw new Error('team_server_paired_runtime_required')
   }

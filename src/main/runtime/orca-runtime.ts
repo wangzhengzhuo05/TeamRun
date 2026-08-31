@@ -9238,6 +9238,12 @@ export class OrcaRuntimeService {
     return this.getTeamServerAgentService().reply(...args)
   }
 
+  proposeTeamServerDocumentEdit(
+    ...args: Parameters<TeamServerAgentService['proposeDocumentEdit']>
+  ): ReturnType<TeamServerAgentService['proposeDocumentEdit']> {
+    return this.getTeamServerAgentService().proposeDocumentEdit(...args)
+  }
+
   private getTeamServerAgentService(): TeamServerAgentService {
     this.teamServerAgentService ??= new TeamServerAgentService(app.getPath('userData'))
     return this.teamServerAgentService

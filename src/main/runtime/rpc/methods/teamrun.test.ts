@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY as CONTRACT_DOCUMENT_EDIT_CAPABILITY } from '../../../../packages/teamrun-contracts/src/index'
 import {
   RUNTIME_CAPABILITIES,
   TEAMRUN_CLOUD_RUNTIME_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
   TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY,
   TEAMRUN_WORKSPACE_OPERATIONS_RUNTIME_CAPABILITY
 } from '../../../../shared/protocol-version'
@@ -32,13 +34,20 @@ function makeRuntime() {
     }),
     configureTeamServerModelConnection: vi.fn().mockReturnValue({ configured: true }),
     runTeamServerAgentReply: vi.fn().mockResolvedValue({ bodyMarkdown: 'Ready.' }),
+    proposeTeamServerDocumentEdit: vi
+      .fn()
+      .mockResolvedValue({ proposedContentMarkdown: '# Updated' }),
     invokeTeamRunCloudOperation: vi.fn().mockResolvedValue({ state: 'signed-out' })
   } as unknown as OrcaRuntimeService
 }
 
 async function dispatchAsPairedRuntime(
   dispatcher: RpcDispatcher,
-  request: RpcRequest
+  request: RpcRequest,
+  clientCapabilities: string[] = [
+    TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY,
+    TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY
+  ]
 ): Promise<RpcResponse> {
   let response: RpcResponse | undefined
   await dispatcher.dispatchStreaming(
@@ -49,7 +58,7 @@ async function dispatchAsPairedRuntime(
     {
       clientKind: 'runtime',
       pairedDeviceId: 'team-server-control',
-      clientCapabilities: [TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY]
+      clientCapabilities
     }
   )
   if (!response) {
@@ -63,6 +72,10 @@ describe('TeamRun runtime RPC', () => {
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_WORKSPACE_OPERATIONS_RUNTIME_CAPABILITY)
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_CLOUD_RUNTIME_CAPABILITY)
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY)
+    expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY)
+    expect(TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY).toBe(
+      CONTRACT_DOCUMENT_EDIT_CAPABILITY
+    )
   })
 
   it('exposes bounded Team Server model configuration and chat methods', async () => {
@@ -90,6 +103,34 @@ describe('TeamRun runtime RPC', () => {
         messages: [{ author: 'Team member', bodyMarkdown: 'Review this.' }]
       }
     })
+    const proposal = await dispatchAsPairedRuntime(dispatcher, {
+      id: 'document-proposal',
+      authToken: 'token',
+      method: 'teamrun.teamAgent.proposeDocumentEdit',
+      params: {
+        connectionId,
+        agent: { name: 'Recorder', instructionsMarkdown: 'Preserve facts.' },
+        path: 'docs/notes.md',
+        instructionsMarkdown: 'Add the decision.',
+        currentContentMarkdown: '# Notes'
+      }
+    })
+    const legacyDocumentClient = await dispatchAsPairedRuntime(
+      dispatcher,
+      {
+        id: 'legacy-document-proposal',
+        authToken: 'token',
+        method: 'teamrun.teamAgent.proposeDocumentEdit',
+        params: {
+          connectionId,
+          agent: { name: 'Recorder', instructionsMarkdown: 'Preserve facts.' },
+          path: 'docs/notes.md',
+          instructionsMarkdown: 'Add the decision.',
+          currentContentMarkdown: '# Notes'
+        }
+      },
+      [TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY]
+    )
     const unpaired = await dispatcher.dispatch({
       id: 'unpaired-model-config',
       authToken: 'token',
@@ -104,6 +145,14 @@ describe('TeamRun runtime RPC', () => {
 
     expect(configured).toMatchObject({ ok: true, result: { configured: true } })
     expect(response).toMatchObject({ ok: true, result: { bodyMarkdown: 'Ready.' } })
+    expect(proposal).toMatchObject({
+      ok: true,
+      result: { proposedContentMarkdown: '# Updated' }
+    })
+    expect(legacyDocumentClient).toMatchObject({
+      ok: false,
+      error: { code: 'team_server_paired_runtime_required' }
+    })
     expect(unpaired).toMatchObject({
       ok: false,
       error: { code: 'team_server_paired_runtime_required' }

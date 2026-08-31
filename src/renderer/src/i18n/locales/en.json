@@ -15289,6 +15289,28 @@
             "deleteDescription": "The file leaves the Team library. Existing frozen contexts keep their version references.",
             "delete": "Delete"
           },
+          "TeamDocumentAgentDialog": {
+            "trigger": "Ask Team Agent",
+            "title": "Propose a document edit",
+            "description": "The Team Agent cannot overwrite the document. Review and confirm its complete replacement first.",
+            "noAgents": "Create a Team Server Agent before requesting document edits.",
+            "agent": "Team Agent",
+            "instructions": "Requested change",
+            "generate": "Generate proposal",
+            "preview": "Proposed complete document",
+            "history": "Team proposals",
+            "statusRunning": "Running",
+            "statusReady": "Ready",
+            "statusApplied": "Applied",
+            "statusFailed": "Failed",
+            "unknownAgent": "Unknown Agent",
+            "unknownMember": "Unknown member",
+            "requesterOnly": "Only the member who requested this proposal can confirm it.",
+            "apply": "Confirm and create version",
+            "loadError": "Unable to load document proposals",
+            "requestError": "Unable to create document proposal",
+            "applyError": "Unable to apply document proposal"
+          },
           "TeamFilesPanel": {
             "title": "Team Files",
             "description": "Versioned documents, code, and reference files",
@@ -15630,10 +15652,14 @@
             "teamFileContentInvalid": "The Team File content could not be read.",
             "teamFileQuarantined": "An Owner must clear this Team File version before it can be used.",
             "teamFileContextUnsupported": "Only text Team Files can be added to task context.",
+            "teamDocumentAgentInputTooLarge": "This document is too large for a Team Agent edit.",
+            "teamFileProposalStale": "The document changed after this proposal. Generate a new proposal.",
+            "teamFileProposalNotReady": "This document proposal is not ready to apply.",
             "teamServerUnavailable": "Team Server is unavailable. Check its connection and try again.",
             "teamServerRequired": "Bind a Team Server before continuing.",
             "teamServerOpenCodeMissing": "Install OpenCode on the Team Server before binding it.",
             "teamServerEncryptionUnavailable": "Configure encrypted model credential storage on the Team Server.",
+            "teamServerDocumentEditUpdateRequired": "Update the Team Server before requesting document edits.",
             "teamAgentMigrationRequired": "Recreate this Team Agent with a Team Server Model Connection."
           }
         }

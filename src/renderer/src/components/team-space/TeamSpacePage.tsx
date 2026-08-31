@@ -129,6 +129,7 @@ export default function TeamSpacePage() {
       ) : view === 'files' ? (
         <TeamFilesPanel
           projectId={workspace.projectId}
+          authUserId={workspace.auth.userId ?? null}
           eventRevision={workspace.eventRevision}
           canManageTeam={canManageTeam}
           canDevelopTeam={canDevelopTeam}

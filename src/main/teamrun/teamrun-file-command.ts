@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  createTeamFileProposalRequestSchema,
   createTeamFileRequestSchema,
   createTeamFileVersionRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
@@ -41,6 +42,25 @@ export function invokeTeamRunFileOperation(
         queueIfOffline: false
       })
     }
+    case 'files.listProposals':
+      return client.request(`/v1/files/${idSchema.parse(args)}/proposals`, { cache: false })
+    case 'files.requestProposal': {
+      const parsed = z
+        .object({ teamFileId: idSchema, proposal: createTeamFileProposalRequestSchema })
+        .parse(args)
+      return client.request(`/v1/files/${parsed.teamFileId}/proposals`, {
+        method: 'POST',
+        body: parsed.proposal,
+        queueIfOffline: false,
+        timeoutMs: 135_000
+      })
+    }
+    case 'files.applyProposal':
+      return client.request(`/v1/file-proposals/${idSchema.parse(args)}/apply`, {
+        method: 'POST',
+        body: {},
+        queueIfOffline: false
+      })
     case 'files.clearQuarantine':
       return client.request(`/v1/file-versions/${idSchema.parse(args)}/clear-quarantine`, {
         method: 'POST',

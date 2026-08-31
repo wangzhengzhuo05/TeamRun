@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import nacl from 'tweetnacl'
 import WebSocket from 'ws'
+import { TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY } from '@teamrun/contracts'
 import { ApiProblem } from '../http/api-problem.js'
 import type { TeamServerPairingOffer } from './team-server-pairing.js'
 
@@ -90,7 +91,10 @@ function exchange<TResult>(
               JSON.stringify({
                 type: 'e2ee_auth',
                 deviceToken: pairing.deviceToken,
-                clientCapabilities: ['teamrun.team-server.v1']
+                clientCapabilities: [
+                  'teamrun.team-server.v1',
+                  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY
+                ]
               }),
               sharedKey
             )

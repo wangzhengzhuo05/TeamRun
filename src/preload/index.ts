@@ -619,6 +619,9 @@ const api = {
       listVersions: (teamFileId) => ipcRenderer.invoke('teamrun:files:listVersions', teamFileId),
       readVersion: (versionId) => ipcRenderer.invoke('teamrun:files:readVersion', versionId),
       createVersion: (args) => ipcRenderer.invoke('teamrun:files:createVersion', args),
+      listProposals: (teamFileId) => ipcRenderer.invoke('teamrun:files:listProposals', teamFileId),
+      requestProposal: (args) => ipcRenderer.invoke('teamrun:files:requestProposal', args),
+      applyProposal: (proposalId) => ipcRenderer.invoke('teamrun:files:applyProposal', proposalId),
       clearQuarantine: (versionId) =>
         ipcRenderer.invoke('teamrun:files:clearQuarantine', versionId),
       delete: (teamFileId) => ipcRenderer.invoke('teamrun:files:delete', teamFileId)

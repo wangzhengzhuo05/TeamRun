@@ -187,6 +187,9 @@ export class TeamRunCloudCommandService {
       case 'files.listVersions':
       case 'files.readVersion':
       case 'files.createVersion':
+      case 'files.listProposals':
+      case 'files.requestProposal':
+      case 'files.applyProposal':
       case 'files.clearQuarantine':
       case 'files.delete':
         return invokeTeamRunFileOperation(this.client, operation, args)

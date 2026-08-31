@@ -23,6 +23,7 @@ type TeamFilesState = {
   content: TeamFileVersionContent | null
   loading: boolean
   saving: boolean
+  refresh: () => Promise<void>
   selectFile: (fileId: string) => void
   selectVersion: (versionId: string) => void
   upload: (uploads: File[]) => Promise<void>
@@ -283,6 +284,7 @@ export function useTeamFiles(projectId: string | null, eventRevision: number): T
     content,
     loading,
     saving,
+    refresh: refreshFiles,
     selectFile: setSelectedFileId,
     selectVersion: setSelectedVersionId,
     upload,

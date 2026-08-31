@@ -14,6 +14,7 @@ import type {
   CreateTaskRequest,
   CreateTeamAgentRequest,
   CreateTeamFileRequest,
+  CreateTeamFileProposalRequest,
   CreateTeamFileVersionRequest,
   CreatedTeamInviteCode,
   FinalizePublicationRequest,
@@ -33,6 +34,7 @@ import type {
   TeamAgent,
   TeamEvent,
   TeamFile,
+  TeamFileProposal,
   TeamFileVersion,
   TeamFileVersionContent,
   TeamInviteCode,
@@ -138,6 +140,12 @@ export type TeamRunApi = {
       teamFileId: string
       version: CreateTeamFileVersionRequest
     }) => Promise<TeamFileVersion>
+    listProposals: (teamFileId: string) => Promise<TeamFileProposal[]>
+    requestProposal: (args: {
+      teamFileId: string
+      proposal: CreateTeamFileProposalRequest
+    }) => Promise<TeamFileProposal>
+    applyProposal: (proposalId: string) => Promise<TeamFileVersion>
     clearQuarantine: (versionId: string) => Promise<TeamFileVersion>
     delete: (teamFileId: string) => Promise<void>
   }

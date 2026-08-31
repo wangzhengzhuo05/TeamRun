@@ -39,6 +39,8 @@ export {
 export {
   teamFileAvailabilityEnum,
   teamFileKindEnum,
+  teamFileProposalStatusEnum,
+  teamFileProposals,
   teamFiles,
   teamFileVersions
 } from './team-file-schema.js'

@@ -10,12 +10,19 @@ import { useTeamFiles } from './useTeamFiles'
 
 type Props = {
   projectId: string | null
+  authUserId: string | null
   eventRevision: number
   canManageTeam: boolean
   canDevelopTeam: boolean
 }
 
-export function TeamFilesPanel({ projectId, eventRevision, canManageTeam, canDevelopTeam }: Props) {
+export function TeamFilesPanel({
+  projectId,
+  authUserId,
+  eventRevision,
+  canManageTeam,
+  canDevelopTeam
+}: Props) {
   const files = useTeamFiles(projectId, eventRevision)
   const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(event.target.files ?? [])
@@ -114,10 +121,12 @@ export function TeamFilesPanel({ projectId, eventRevision, canManageTeam, canDev
           selectedVersion={files.selectedVersion}
           content={files.content}
           saving={files.saving}
+          authUserId={authUserId}
           canClearQuarantine={canManageTeam}
           canDelete={canDevelopTeam}
           onSelectVersion={files.selectVersion}
           onSave={files.saveTextVersion}
+          onProposalApplied={files.refresh}
           onClearQuarantine={files.clearQuarantine}
           onDelete={files.deleteFile}
         />

@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net'
 import nacl from 'tweetnacl'
 import { afterEach, describe, expect, it } from 'vitest'
 import { WebSocketServer } from 'ws'
+import { TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY } from '@teamrun/contracts'
 import type { TeamServerPairingOffer } from './team-server-pairing.js'
 import { sendTeamServerRuntimeRequest } from './team-server-runtime-client.js'
 
@@ -56,7 +57,10 @@ describe('Team Server runtime client', () => {
               expect(request).toMatchObject({
                 type: 'e2ee_auth',
                 deviceToken: pairing.deviceToken,
-                clientCapabilities: ['teamrun.team-server.v1']
+                clientCapabilities: [
+                  'teamrun.team-server.v1',
+                  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY
+                ]
               })
               socket.send(encrypt(JSON.stringify({ type: 'e2ee_authenticated' }), sharedKey!))
               state = 'request'

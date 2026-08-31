@@ -1493,6 +1493,9 @@ function createTeamRunApi(): TeamRunApi {
       listVersions: (teamFileId) => invoke('files.listVersions', teamFileId),
       readVersion: (versionId) => invoke('files.readVersion', versionId),
       createVersion: (args) => invoke('files.createVersion', args),
+      listProposals: (teamFileId) => invoke('files.listProposals', teamFileId),
+      requestProposal: (args) => invoke('files.requestProposal', args, 140_000),
+      applyProposal: (proposalId) => invoke('files.applyProposal', proposalId),
       clearQuarantine: (versionId) => invoke('files.clearQuarantine', versionId),
       delete: (teamFileId) => invoke('files.delete', teamFileId)
     },
