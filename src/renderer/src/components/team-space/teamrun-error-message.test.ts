@@ -30,4 +30,13 @@ describe('teamRunErrorMessage', () => {
       )
     ).toBe('This invite code has already been used.')
   })
+
+  it('uses actionable Team File copy', () => {
+    expect(
+      teamRunErrorMessage(
+        Object.assign(new Error('Too large'), { code: 'team_file_too_large' }),
+        'Unable to upload file'
+      )
+    ).toBe('Each Team File version is limited to 512 KiB.')
+  })
 })

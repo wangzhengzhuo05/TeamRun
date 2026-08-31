@@ -1,4 +1,4 @@
-import { ListTodo, MessagesSquare } from 'lucide-react'
+import { Files, ListTodo, MessagesSquare } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Organization, Project } from '../../../../shared/teamrun-api'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,7 @@ import { translate } from '@/i18n/i18n'
 import { TeamManagementDialog } from './TeamManagementDialog'
 import { TeamSpaceMorePopover } from './TeamSpaceMorePopover'
 
-export type TeamSpaceView = 'chat' | 'tasks'
+export type TeamSpaceView = 'chat' | 'tasks' | 'files'
 
 type Props = {
   view: TeamSpaceView
@@ -79,6 +79,12 @@ export function TeamSpaceDock(props: Props) {
           label={translate('auto.components.team.space.TeamSpaceDock.chat', 'Chat')}
           icon={<MessagesSquare />}
           onClick={() => props.onViewChange('chat')}
+        />
+        <ViewButton
+          active={props.view === 'files'}
+          label={translate('auto.components.team.space.TeamSpaceDock.files', 'Files')}
+          icon={<Files />}
+          onClick={() => props.onViewChange('files')}
         />
         <ViewButton
           active={props.view === 'tasks'}

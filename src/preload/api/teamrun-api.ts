@@ -12,6 +12,8 @@ import type {
   CreateTaskCommentRequest,
   CreateTaskRequest,
   CreateTeamAgentRequest,
+  CreateTeamFileRequest,
+  CreateTeamFileVersionRequest,
   CreatedTeamInviteCode,
   FinalizePublicationRequest,
   Organization,
@@ -27,6 +29,9 @@ import type {
   TaskComment,
   TeamAgent,
   TeamEvent,
+  TeamFile,
+  TeamFileVersion,
+  TeamFileVersionContent,
   TeamInviteCode,
   UpdateAgentRunStatusRequest,
   UpdateProjectRequest,
@@ -115,6 +120,18 @@ export type TeamRunApi = {
       teamAgentId: string
       bodyMarkdown: string
     }) => Promise<ChannelMessage>
+  }
+  files: {
+    list: (projectId: string) => Promise<TeamFile[]>
+    create: (args: { projectId: string; file: CreateTeamFileRequest }) => Promise<TeamFile>
+    listVersions: (teamFileId: string) => Promise<TeamFileVersion[]>
+    readVersion: (versionId: string) => Promise<TeamFileVersionContent>
+    createVersion: (args: {
+      teamFileId: string
+      version: CreateTeamFileVersionRequest
+    }) => Promise<TeamFileVersion>
+    clearQuarantine: (versionId: string) => Promise<TeamFileVersion>
+    delete: (teamFileId: string) => Promise<void>
   }
   tasks: {
     list: (projectId: string) => Promise<Task[]>

@@ -611,6 +611,16 @@ const api = {
       saveCredential: (args) => ipcRenderer.invoke('teamrun:teamAgents:saveCredential', args),
       reply: (args) => ipcRenderer.invoke('teamrun:teamAgents:reply', args)
     },
+    files: {
+      list: (projectId) => ipcRenderer.invoke('teamrun:files:list', projectId),
+      create: (args) => ipcRenderer.invoke('teamrun:files:create', args),
+      listVersions: (teamFileId) => ipcRenderer.invoke('teamrun:files:listVersions', teamFileId),
+      readVersion: (versionId) => ipcRenderer.invoke('teamrun:files:readVersion', versionId),
+      createVersion: (args) => ipcRenderer.invoke('teamrun:files:createVersion', args),
+      clearQuarantine: (versionId) =>
+        ipcRenderer.invoke('teamrun:files:clearQuarantine', versionId),
+      delete: (teamFileId) => ipcRenderer.invoke('teamrun:files:delete', teamFileId)
+    },
     tasks: {
       list: (projectId) => ipcRenderer.invoke('teamrun:tasks:list', projectId),
       get: (taskId) => ipcRenderer.invoke('teamrun:tasks:get', taskId),

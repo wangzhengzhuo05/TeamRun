@@ -51,6 +51,9 @@ export const contextSnapshotSchema = z.object({
   taskVersion: versionSchema,
   projectContextVersion: z.number().int().nonnegative(),
   commentWatermark: timestampSchema.nullable(),
+  teamFileVersionIds: entityIdSchema.array().max(50).default([]),
+  agentSelectedFileVersionIds: entityIdSchema.array().max(50).default([]),
+  autoEnrichmentRequested: z.boolean().default(false),
   renderedMarkdown: markdownSchema,
   hash: sha256Schema,
   createdByUserId: entityIdSchema,
@@ -80,7 +83,9 @@ export const createContextSnapshotRequestSchema = z.object({
   taskVersion: versionSchema,
   includeComments: z.boolean().default(true),
   includeProjectContext: z.boolean().default(true),
-  includeExternalSource: z.boolean().default(true)
+  includeExternalSource: z.boolean().default(true),
+  selectedTeamFileVersionIds: entityIdSchema.array().max(50).default([]),
+  autoEnrich: z.boolean().default(true)
 })
 
 export type ContextSnapshot = z.infer<typeof contextSnapshotSchema>

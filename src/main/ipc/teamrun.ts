@@ -18,6 +18,7 @@ import { TeamRunWorkspaceReviewService } from '../teamrun/teamrun-workspace-revi
 import { TeamRunEventClient } from '../teamrun/teamrun-event-client'
 import { TeamAgentChatService } from '../teamrun/team-agent-chat-service'
 import { registerTeamRunWorkspaceHandlers } from './teamrun-workspace-ipc'
+import { registerTeamRunFileHandlers } from './teamrun-file-ipc'
 import type { Store } from '../persistence'
 
 const idSchema = z.uuid()
@@ -53,6 +54,7 @@ export function registerTeamRunHandlers(store: Store): void {
   })
 
   registerTeamRunWorkspaceHandlers(teamRunClient, agentChat)
+  registerTeamRunFileHandlers(teamRunClient)
 
   ipcMain.handle('teamrun:tasks:list', (_event, projectId) =>
     teamRunClient.request(`/v1/projects/${pathId(projectId)}/tasks`)

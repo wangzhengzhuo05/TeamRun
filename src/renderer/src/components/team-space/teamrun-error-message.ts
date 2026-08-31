@@ -18,6 +18,11 @@ type ErrorCopy = {
     | 'inviteCodeUnavailable'
     | 'alreadyTeamMember'
     | 'ownerChangeForbidden'
+    | 'teamFileTooLarge'
+    | 'teamFilePathConflict'
+    | 'teamFileContentInvalid'
+    | 'teamFileQuarantined'
+    | 'teamFileContextUnsupported'
 }
 
 const ERROR_COPY: ErrorCopy[] = [
@@ -85,6 +90,26 @@ const ERROR_COPY: ErrorCopy[] = [
   {
     signals: ['owner_change_forbidden'],
     id: 'ownerChangeForbidden'
+  },
+  {
+    signals: ['team_file_too_large'],
+    id: 'teamFileTooLarge'
+  },
+  {
+    signals: ['team_file_path_conflict'],
+    id: 'teamFilePathConflict'
+  },
+  {
+    signals: ['team_file_content_invalid'],
+    id: 'teamFileContentInvalid'
+  },
+  {
+    signals: ['team_file_quarantined'],
+    id: 'teamFileQuarantined'
+  },
+  {
+    signals: ['team_file_context_unsupported'],
+    id: 'teamFileContextUnsupported'
   }
 ]
 
@@ -184,6 +209,31 @@ function localizedErrorMessage(id: ErrorCopy['id']): string {
       return translate(
         'auto.components.team.space.teamrunErrorMessage.ownerChangeForbidden',
         'The Team Owner role cannot be changed or removed.'
+      )
+    case 'teamFileTooLarge':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamFileTooLarge',
+        'Each Team File version is limited to 512 KiB.'
+      )
+    case 'teamFilePathConflict':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamFilePathConflict',
+        'A Team File already uses this path.'
+      )
+    case 'teamFileContentInvalid':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamFileContentInvalid',
+        'The Team File content could not be read.'
+      )
+    case 'teamFileQuarantined':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamFileQuarantined',
+        'An Owner must clear this Team File version before it can be used.'
+      )
+    case 'teamFileContextUnsupported':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamFileContextUnsupported',
+        'Only text Team Files can be added to task context.'
       )
   }
 }

@@ -1,16 +1,12 @@
 import { z } from 'zod'
 import {
   createAgentRunRequestSchema,
-  createContextSnapshotRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
-  createTaskCommentRequestSchema,
-  createTaskRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
   updateAgentRunStatusRequestSchema,
-  updateProjectRequestSchema,
-  updateTaskRequestSchema
+  updateProjectRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
 import type { Store } from '../persistence'
@@ -21,6 +17,8 @@ import { TeamRunWorkspaceReviewService } from './teamrun-workspace-review-servic
 import { TeamAgentChatService } from './team-agent-chat-service'
 import { invokeTeamRunCollaborationOperation } from './teamrun-collaboration-command'
 import { createLinkedTeamRun } from './teamrun-linked-run-command'
+import { invokeTeamRunFileOperation } from './teamrun-file-command'
+import { invokeTeamRunTaskOperation } from './teamrun-task-command'
 
 const idSchema = z.uuid()
 const textIdSchema = z.string().min(1).max(160)
@@ -180,46 +178,23 @@ export class TeamRunCloudCommandService {
       case 'collaboration.saveCredential':
       case 'collaboration.reply':
         return invokeTeamRunCollaborationOperation(this.client, this.#agentChat, operation, args)
+      case 'files.list':
+      case 'files.create':
+      case 'files.listVersions':
+      case 'files.readVersion':
+      case 'files.createVersion':
+      case 'files.clearQuarantine':
+      case 'files.delete':
+        return invokeTeamRunFileOperation(this.client, operation, args)
       case 'tasks.list':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/tasks`)
       case 'tasks.get':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}`)
-      case 'tasks.create': {
-        const parsed = z.object({ projectId: idSchema, task: createTaskRequestSchema }).parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/tasks`, {
-          method: 'POST',
-          body: parsed.task
-        })
-      }
-      case 'tasks.update': {
-        const parsed = z.object({ taskId: idSchema, changes: updateTaskRequestSchema }).parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}`, {
-          method: 'PATCH',
-          body: parsed.changes
-        })
-      }
+      case 'tasks.create':
+      case 'tasks.update':
       case 'tasks.listComments':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}/comments`)
-      case 'tasks.createComment': {
-        const parsed = z
-          .object({ taskId: idSchema, comment: createTaskCommentRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}/comments`, {
-          method: 'POST',
-          body: parsed.comment
-        })
-      }
+      case 'tasks.createComment':
       case 'tasks.listSnapshots':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}/context-snapshots`)
-      case 'tasks.createSnapshot': {
-        const parsed = z
-          .object({ taskId: idSchema, snapshot: createContextSnapshotRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}/context-snapshots`, {
-          method: 'POST',
-          body: parsed.snapshot
-        })
-      }
+      case 'tasks.createSnapshot':
+        return invokeTeamRunTaskOperation(this.client, operation, args)
       case 'runs.list':
         return this.client.request(`/v1/tasks/${idSchema.parse(args)}/agent-runs`)
       case 'runs.create': {

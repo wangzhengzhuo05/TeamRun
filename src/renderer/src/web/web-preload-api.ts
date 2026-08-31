@@ -1477,6 +1477,15 @@ function createTeamRunApi(): TeamRunApi {
       saveCredential: (args) => invoke('collaboration.saveCredential', args),
       reply: (args) => invoke('collaboration.reply', args)
     },
+    files: {
+      list: (projectId) => invoke('files.list', projectId),
+      create: (args) => invoke('files.create', args),
+      listVersions: (teamFileId) => invoke('files.listVersions', teamFileId),
+      readVersion: (versionId) => invoke('files.readVersion', versionId),
+      createVersion: (args) => invoke('files.createVersion', args),
+      clearQuarantine: (versionId) => invoke('files.clearQuarantine', versionId),
+      delete: (teamFileId) => invoke('files.delete', teamFileId)
+    },
     tasks: {
       list: (projectId) => invoke('tasks.list', projectId),
       get: (taskId) => invoke('tasks.get', taskId),

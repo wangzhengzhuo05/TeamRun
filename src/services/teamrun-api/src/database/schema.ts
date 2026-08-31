@@ -29,6 +29,12 @@ export {
   users
 } from './workspace-schema.js'
 export { channelMessages, channels, teamAgents } from './collaboration-schema.js'
+export {
+  teamFileAvailabilityEnum,
+  teamFileKindEnum,
+  teamFiles,
+  teamFileVersions
+} from './team-file-schema.js'
 
 export const taskStatusEnum = pgEnum('task_status', [
   'todo',
@@ -112,6 +118,12 @@ export const contextSnapshots = pgTable(
     taskVersion: integer('task_version').notNull(),
     projectContextVersion: integer('project_context_version').notNull(),
     commentWatermark: timestamp('comment_watermark', { withTimezone: true }),
+    teamFileVersionIds: jsonb('team_file_version_ids').$type<string[]>().notNull().default([]),
+    agentSelectedFileVersionIds: jsonb('agent_selected_file_version_ids')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    autoEnrichmentRequested: boolean('auto_enrichment_requested').notNull().default(false),
     renderedMarkdown: text('rendered_markdown').notNull(),
     hash: text('hash').notNull(),
     createdByUserId: uuid('created_by_user_id')

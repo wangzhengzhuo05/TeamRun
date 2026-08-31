@@ -115,6 +115,7 @@ export function TeamTaskDetail({
       <TabsContent value="context" className="flex min-h-0">
         <TaskContextPanel
           snapshots={workspace.snapshots}
+          teamFiles={workspace.teamFiles}
           canCreate={canDevelop}
           onCreate={workspace.createSnapshot}
         />

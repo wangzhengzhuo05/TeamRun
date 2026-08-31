@@ -3009,6 +3009,16 @@ html.native-shell .app-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .team-space-files {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(10rem, 35%) minmax(0, 1fr);
+  }
+
+  .team-space-files > aside {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
   .team-space-body[data-task-selected='true'] .team-space-task-list,
   .team-space-body[data-task-selected='false'] .team-space-task-detail {
     display: none;

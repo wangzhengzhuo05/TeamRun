@@ -7,6 +7,7 @@ import type {
   ResultPublication,
   Task,
   TaskComment,
+  TeamFile,
   TaskStatus,
   VerificationResult
 } from '../../../../shared/teamrun-api'
@@ -19,6 +20,7 @@ type TeamTaskWorkspace = {
   members: OrganizationMember[]
   comments: TaskComment[]
   snapshots: ContextSnapshot[]
+  teamFiles: TeamFile[]
   runs: AgentRun[]
   publications: ResultPublication[]
   verifications: Record<string, VerificationResult[]>
@@ -26,7 +28,10 @@ type TeamTaskWorkspace = {
   updateStatus: (status: TaskStatus) => Promise<void>
   updateOwner: (ownerUserId: string) => Promise<void>
   addComment: (bodyMarkdown: string) => Promise<void>
-  createSnapshot: () => Promise<ContextSnapshot | null>
+  createSnapshot: (options: {
+    selectedTeamFileVersionIds: string[]
+    autoEnrich: boolean
+  }) => Promise<ContextSnapshot | null>
   refreshRuns: () => Promise<void>
 }
 
@@ -39,6 +44,23 @@ function reportError(error: unknown): void {
   )
 }
 
+async function loadTeamFiles(projectId: string): Promise<TeamFile[]> {
+  try {
+    return await window.api.teamRun.files.list(projectId)
+  } catch (error) {
+    toast.error(
+      teamRunErrorMessage(
+        error,
+        translate(
+          'auto.components.team.space.useTeamTaskWorkspace.loadTeamFiles',
+          'Team Files require an updated Team Server'
+        )
+      )
+    )
+    return []
+  }
+}
+
 export function useTeamTaskWorkspace(
   taskId: string | null,
   onTaskChanged: () => Promise<void>,
@@ -48,6 +70,7 @@ export function useTeamTaskWorkspace(
   const [members, setMembers] = useState<OrganizationMember[]>([])
   const [comments, setComments] = useState<TaskComment[]>([])
   const [snapshots, setSnapshots] = useState<ContextSnapshot[]>([])
+  const [teamFiles, setTeamFiles] = useState<TeamFile[]>([])
   const [runs, setRuns] = useState<AgentRun[]>([])
   const [publications, setPublications] = useState<ResultPublication[]>([])
   const [verifications, setVerifications] = useState<Record<string, VerificationResult[]>>({})
@@ -77,6 +100,7 @@ export function useTeamTaskWorkspace(
     setMembers([])
     setComments([])
     setSnapshots([])
+    setTeamFiles([])
     setRuns([])
     setPublications([])
     setVerifications({})
@@ -93,14 +117,15 @@ export function useTeamTaskWorkspace(
       window.api.teamRun.publications.list(taskId)
     ])
       .then(async ([nextTask, nextComments, nextSnapshots, nextRuns, nextPublications]) => {
-        const [pairs, nextMembers] = await Promise.all([
+        const [pairs, nextMembers, nextTeamFiles] = await Promise.all([
           Promise.all(
             nextRuns.map(
               async (run) =>
                 [run.id, await window.api.teamRun.runs.listVerifications(run.id)] as const
             )
           ),
-          window.api.teamRun.organizations.listMembers(nextTask.organizationId)
+          window.api.teamRun.organizations.listMembers(nextTask.organizationId),
+          loadTeamFiles(nextTask.projectId)
         ])
         if (!active) {
           return
@@ -109,6 +134,7 @@ export function useTeamTaskWorkspace(
         setMembers(nextMembers)
         setComments(nextComments)
         setSnapshots(nextSnapshots)
+        setTeamFiles(nextTeamFiles)
         setRuns(nextRuns)
         setPublications(nextPublications)
         setVerifications(Object.fromEntries(pairs))
@@ -194,39 +220,45 @@ export function useTeamTaskWorkspace(
     [task]
   )
 
-  const createSnapshot = useCallback(async () => {
-    if (!task) {
-      return null
-    }
-    try {
-      const created = await window.api.teamRun.tasks.createSnapshot({
-        taskId: task.id,
-        snapshot: {
-          taskVersion: task.version,
-          includeComments: true,
-          includeProjectContext: true,
-          includeExternalSource: true
-        }
-      })
-      setSnapshots((current) => [created, ...current])
-      return created
-    } catch (error) {
-      reportTeamRunMutation(
-        error,
-        translate(
-          'auto.components.team.space.useTeamTaskWorkspace.createSnapshot',
-          'Unable to freeze context'
+  const createSnapshot = useCallback(
+    async (options: { selectedTeamFileVersionIds: string[]; autoEnrich: boolean }) => {
+      if (!task) {
+        return null
+      }
+      try {
+        const created = await window.api.teamRun.tasks.createSnapshot({
+          taskId: task.id,
+          snapshot: {
+            taskVersion: task.version,
+            includeComments: true,
+            includeProjectContext: true,
+            includeExternalSource: true,
+            selectedTeamFileVersionIds: options.selectedTeamFileVersionIds,
+            autoEnrich: options.autoEnrich
+          }
+        })
+        setSnapshots((current) => [created, ...current])
+        return created
+      } catch (error) {
+        reportTeamRunMutation(
+          error,
+          translate(
+            'auto.components.team.space.useTeamTaskWorkspace.createSnapshot',
+            'Unable to freeze context'
+          )
         )
-      )
-      return null
-    }
-  }, [task])
+        return null
+      }
+    },
+    [task]
+  )
 
   return {
     task,
     members,
     comments,
     snapshots,
+    teamFiles,
     runs,
     publications,
     verifications,
