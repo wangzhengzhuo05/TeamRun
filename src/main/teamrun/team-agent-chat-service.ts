@@ -14,7 +14,7 @@ const MAX_CONTEXT_LENGTH = 12_000
 type AgentReplyExecutor = (
   agent: TeamAgent,
   messages: ChannelMessage[],
-  apiKey: string
+  apiKey: string | null
 ) => Promise<string>
 type CredentialReader = (agentId: string) => string | null
 
@@ -30,7 +30,7 @@ export class TeamAgentChatService {
     } = {}
   ) {
     this.#readCredential = dependencies.readCredential ?? readTeamAgentCredential
-    this.#executeReply = dependencies.executeReply ?? runCodexAgentReply
+    this.#executeReply = dependencies.executeReply ?? runTeamAgentReply
   }
 
   async reply(args: {
@@ -60,15 +60,41 @@ export class TeamAgentChatService {
   }
 
   async #runAgent(agent: TeamAgent, messages: ChannelMessage[]): Promise<string> {
-    if (agent.agentKind !== 'codex') {
-      throw new Error('team_agent_chat_requires_codex')
-    }
-    const apiKey = this.#readCredential(agent.id)
-    if (!apiKey) {
+    const requiresApiKey = agent.agentKind === 'codex' || agent.agentKind === 'claude'
+    const apiKey = requiresApiKey ? this.#readCredential(agent.id) : null
+    if (requiresApiKey && !apiKey) {
       throw new Error('team_agent_api_key_missing')
+    }
+    if (!['codex', 'claude', 'opencode'].includes(agent.agentKind)) {
+      throw new Error('team_agent_chat_unsupported')
     }
     return this.#executeReply(agent, messages, apiKey)
   }
+}
+
+async function runTeamAgentReply(
+  agent: TeamAgent,
+  messages: ChannelMessage[],
+  apiKey: string | null
+): Promise<string> {
+  if (agent.agentKind === 'codex') {
+    return runCodexAgentReply(agent, messages, apiKey!)
+  }
+  if (agent.agentKind === 'claude') {
+    return runClaudeAgentReply(agent, messages, apiKey!)
+  }
+  return runOpenCodeAgentReply(agent, messages)
+}
+
+function chatPrompt(agent: TeamAgent, messages: ChannelMessage[]): string {
+  return [
+    `You are ${agent.name}, a TeamRun team chat agent.`,
+    agent.instructionsMarkdown.trim(),
+    'Reply naturally to the current channel conversation. Do not mention this execution wrapper.',
+    `Recent conversation:\n${formatConversation(messages)}`
+  ]
+    .filter(Boolean)
+    .join('\n\n')
 }
 
 async function runCodexAgentReply(
@@ -78,14 +104,7 @@ async function runCodexAgentReply(
 ): Promise<string> {
   const outputDirectory = await mkdtemp(join(tmpdir(), 'teamrun-agent-reply-'))
   const outputPath = join(outputDirectory, 'reply.md')
-  const prompt = [
-    `You are ${agent.name}, a TeamRun team chat agent.`,
-    agent.instructionsMarkdown.trim(),
-    'Reply naturally to the current channel conversation. Do not mention this execution wrapper.',
-    `Recent conversation:\n${formatConversation(messages)}`
-  ]
-    .filter(Boolean)
-    .join('\n\n')
+  const prompt = chatPrompt(agent, messages)
   try {
     await execFileAsync(
       'codex',
@@ -113,6 +132,52 @@ async function runCodexAgentReply(
   } finally {
     await rm(outputDirectory, { recursive: true, force: true })
   }
+}
+
+async function runClaudeAgentReply(
+  agent: TeamAgent,
+  messages: ChannelMessage[],
+  apiKey: string
+): Promise<string> {
+  const { stdout } = await execFileAsync(
+    'claude',
+    [
+      '-p',
+      '--output-format',
+      'text',
+      '--max-turns',
+      '1',
+      '--permission-mode',
+      'plan',
+      chatPrompt(agent, messages)
+    ],
+    {
+      env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
+      timeout: 120_000,
+      maxBuffer: MAX_REPLY_LENGTH * 2
+    }
+  )
+  return readReply(stdout)
+}
+
+async function runOpenCodeAgentReply(
+  agent: TeamAgent,
+  messages: ChannelMessage[]
+): Promise<string> {
+  const { stdout } = await execFileAsync('opencode', ['run', chatPrompt(agent, messages)], {
+    env: process.env,
+    timeout: 120_000,
+    maxBuffer: MAX_REPLY_LENGTH * 2
+  })
+  return readReply(stdout)
+}
+
+function readReply(value: string): string {
+  const response = value.trim()
+  if (!response) {
+    throw new Error('team_agent_empty_reply')
+  }
+  return response.slice(0, MAX_REPLY_LENGTH)
 }
 
 function formatConversation(messages: ChannelMessage[]): string {

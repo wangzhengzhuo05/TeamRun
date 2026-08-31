@@ -22,7 +22,10 @@ type Props = {
 }
 
 export function TeamAgentManagement({ projectId, active }: Props) {
-  const catalog = useMemo(() => getAgentCatalog(), [])
+  const catalog = useMemo(
+    () => getAgentCatalog().filter((agent) => ['codex', 'claude', 'opencode'].includes(agent.id)),
+    []
+  )
   const [teamAgents, setTeamAgents] = useState<TeamAgent[]>([])
   const [agentName, setAgentName] = useState('')
   const [agentKind, setAgentKind] = useState<string>(catalog[0]?.id ?? 'codex')
@@ -42,7 +45,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
       .then(async (agents) => {
         const statuses = await Promise.all(
           agents
-            .filter((agent) => agent.agentKind === 'codex')
+            .filter((agent) => agent.agentKind === 'codex' || agent.agentKind === 'claude')
             .map(async (agent) => ({
               agentId: agent.id,
               ...(await window.api.teamRun.collaboration.credentialStatus(agent.id))
@@ -70,7 +73,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
           instructionsMarkdown: instructions.trim()
         }
       })
-      if (agentKind === 'codex') {
+      if (agentKind === 'codex' || agentKind === 'claude') {
         await window.api.teamRun.collaboration.saveCredential({
           agentId: created.id,
           apiKey: apiKey.trim()
@@ -164,7 +167,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
           </p>
         </div>
       ) : null}
-      {agentKind === 'codex' ? (
+      {agentKind === 'codex' || agentKind === 'claude' ? (
         <div className="space-y-2">
           <Input
             type="password"
@@ -172,7 +175,9 @@ export function TeamAgentManagement({ projectId, active }: Props) {
             onChange={(event) => setApiKey(event.target.value)}
             placeholder={translate(
               'auto.components.team.space.TeamAgentManagement.apiKey',
-              'OpenAI API key for chat replies'
+              agentKind === 'claude'
+                ? 'Anthropic API key for chat replies'
+                : 'OpenAI API key for chat replies'
             )}
           />
           <p className="text-xs text-muted-foreground">
@@ -196,7 +201,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
         disabled={
           !agentName.trim() ||
           (agentKind === 'generic-cli' && !launchCommand.trim()) ||
-          (agentKind === 'codex' && apiKey.trim().length < 24)
+          ((agentKind === 'codex' || agentKind === 'claude') && apiKey.trim().length < 24)
         }
       >
         <Plus />{' '}
@@ -216,7 +221,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                   'No additional instructions'
                 )}
             </p>
-            {agent.agentKind === 'codex' ? (
+            {agent.agentKind === 'codex' || agent.agentKind === 'claude' ? (
               <div className="mt-3 space-y-2 border-t border-border pt-3">
                 <p className="text-xs text-muted-foreground">
                   {configuredAgentIds.includes(agent.id)
@@ -265,6 +270,14 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                   </Button>
                 </div>
               </div>
+            ) : null}
+            {agent.agentKind === 'opencode' ? (
+              <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                {translate(
+                  'auto.components.team.space.TeamAgentManagement.openCodeAuth',
+                  'OpenCode uses the provider account configured locally with opencode auth login.'
+                )}
+              </p>
             ) : null}
           </div>
         ))}

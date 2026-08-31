@@ -107,7 +107,9 @@ export function TeamSpaceChatPanel(props: Props) {
   const [draft, setDraft] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
   const selectedChannel = props.channels.find((channel) => channel.id === props.channelId) ?? null
-  const chatAgents = props.teamAgents.filter((agent) => agent.agentKind === 'codex')
+  const chatAgents = props.teamAgents.filter((agent) =>
+    ['codex', 'claude', 'opencode'].includes(agent.agentKind)
+  )
   const replyingAgents = props.teamAgents.filter((agent) =>
     props.replyingAgentIds.includes(agent.id)
   )
@@ -314,7 +316,7 @@ export function TeamSpaceChatPanel(props: Props) {
                   <Bot />
                   {translate(
                     'auto.components.team.space.TeamSpaceChatPanel.mentionAgent',
-                    'Mention Codex Agent'
+                    'Mention chat Agent'
                   )}
                 </Button>
               </DropdownMenuTrigger>

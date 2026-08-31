@@ -32,10 +32,10 @@ function reportError(error: unknown): void {
   )
 }
 
-function mentionedCodexAgents(message: string, agents: TeamAgent[]): TeamAgent[] {
+function mentionedChatAgents(message: string, agents: TeamAgent[]): TeamAgent[] {
   const lower = message.toLocaleLowerCase()
   return agents.filter((agent) => {
-    if (agent.agentKind !== 'codex') {
+    if (!['codex', 'claude', 'opencode'].includes(agent.agentKind)) {
       return false
     }
     const mention = `@${agent.name.toLocaleLowerCase()}`
@@ -139,7 +139,7 @@ export function useTeamSpaceChat(
         })
         setMessages((current) => [...current, created])
         if (projectId) {
-          const agents = mentionedCodexAgents(bodyMarkdown, teamAgents)
+          const agents = mentionedChatAgents(bodyMarkdown, teamAgents)
           for (const agent of agents) {
             setReplyingAgentIds((current) => [...new Set([...current, agent.id])])
             void window.api.teamRun.collaboration
