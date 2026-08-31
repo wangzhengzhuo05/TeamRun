@@ -55,7 +55,9 @@ describe('WebSocketTransport static web client', () => {
       `http://127.0.0.1:${transport.resolvedPort}/orca/web-index.html`
     )
     expect(indexResponse.status).toBe(200)
-    await expect(indexResponse.text()).resolves.toBe('<script src="./assets/app.js"></script>')
+    await expect(indexResponse.text()).resolves.toMatch(
+      /<script src="\.\/assets\/app\.js\?v=[a-z0-9]+"><\/script>/
+    )
 
     const assetResponse = await fetch(
       `http://127.0.0.1:${transport.resolvedPort}/orca/assets/app.js`

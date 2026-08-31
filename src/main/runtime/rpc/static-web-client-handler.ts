@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http'
 import { extname, isAbsolute, posix, relative, resolve } from 'node:path'
 
@@ -71,6 +71,14 @@ async function handleStaticRequest(
   )
   response.setHeader('Content-Length', fileStat.size)
   response.setHeader('Cache-Control', 'no-cache')
+  if (pathname === '/web-index.html' && request.method === 'GET') {
+    const content = await readFile(absolutePath, 'utf8')
+    const version = Math.trunc(fileStat.mtimeMs).toString(36)
+    const versioned = content.replace(/((?:src|href)="\.\/assets\/[^"?]+)(")/g, `$1?v=${version}$2`)
+    response.setHeader('Content-Length', Buffer.byteLength(versioned))
+    response.end(versioned)
+    return
+  }
   if (request.method === 'HEAD') {
     response.end()
     return
