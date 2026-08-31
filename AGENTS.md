@@ -67,3 +67,7 @@ Source-control and review changes must consider GitLab and other supported git p
 ## GitHub CLI Usage
 
 Be mindful of the user's `gh` CLI API rate limit — batch requests where possible and avoid unnecessary calls. All code, commands, and scripts must be compatible with macOS, Linux, and Windows.
+
+## CI Build Workflow
+
+Use GitHub Actions for every application build, package, release, preview, and build-dependent validation. Do not run build or packaging commands locally; use focused static checks and tests that do not build instead. Treat the CI artifact and its recorded source commit as the build output of record.
