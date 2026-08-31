@@ -6,6 +6,7 @@ import type {
   OrganizationMember,
   TeamAgent
 } from '../../../../shared/teamrun-api'
+import { supportsTeamAgentChat } from '../../../../shared/team-agent-runtime-protocol'
 import { translate } from '@/i18n/i18n'
 import { reportTeamRunMutation } from './teamrun-mutation-feedback'
 
@@ -35,7 +36,7 @@ function reportError(error: unknown): void {
 function mentionedChatAgents(message: string, agents: TeamAgent[]): TeamAgent[] {
   const lower = message.toLocaleLowerCase()
   return agents.filter((agent) => {
-    if (!['codex', 'claude', 'opencode'].includes(agent.agentKind)) {
+    if (!supportsTeamAgentChat(agent.agentKind)) {
       return false
     }
     const mention = `@${agent.name.toLocaleLowerCase()}`

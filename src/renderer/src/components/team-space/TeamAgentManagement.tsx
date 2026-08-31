@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Bot, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import type { TeamAgent } from '../../../../shared/teamrun-api'
+import {
+  supportsTeamAgentChat,
+  teamAgentRequiresApiKey
+} from '../../../../shared/team-agent-runtime-protocol'
 import { getAgentCatalog } from '@/lib/agent-catalog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +27,7 @@ type Props = {
 
 export function TeamAgentManagement({ projectId, active }: Props) {
   const catalog = useMemo(
-    () => getAgentCatalog().filter((agent) => ['codex', 'claude', 'opencode'].includes(agent.id)),
+    () => getAgentCatalog().filter((agent) => supportsTeamAgentChat(agent.id)),
     []
   )
   const [teamAgents, setTeamAgents] = useState<TeamAgent[]>([])
@@ -45,7 +49,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
       .then(async (agents) => {
         const statuses = await Promise.all(
           agents
-            .filter((agent) => agent.agentKind === 'codex' || agent.agentKind === 'claude')
+            .filter((agent) => teamAgentRequiresApiKey(agent.agentKind))
             .map(async (agent) => ({
               agentId: agent.id,
               ...(await window.api.teamRun.collaboration.credentialStatus(agent.id))
@@ -73,7 +77,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
           instructionsMarkdown: instructions.trim()
         }
       })
-      if (agentKind === 'codex' || agentKind === 'claude') {
+      if (teamAgentRequiresApiKey(agentKind)) {
         await window.api.teamRun.collaboration.saveCredential({
           agentId: created.id,
           apiKey: apiKey.trim()
@@ -167,7 +171,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
           </p>
         </div>
       ) : null}
-      {agentKind === 'codex' || agentKind === 'claude' ? (
+      {teamAgentRequiresApiKey(agentKind) ? (
         <div className="space-y-2">
           <Input
             type="password"
@@ -201,7 +205,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
         disabled={
           !agentName.trim() ||
           (agentKind === 'generic-cli' && !launchCommand.trim()) ||
-          ((agentKind === 'codex' || agentKind === 'claude') && apiKey.trim().length < 24)
+          (teamAgentRequiresApiKey(agentKind) && apiKey.trim().length < 24)
         }
       >
         <Plus />{' '}
@@ -221,7 +225,7 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                   'No additional instructions'
                 )}
             </p>
-            {agent.agentKind === 'codex' || agent.agentKind === 'claude' ? (
+            {teamAgentRequiresApiKey(agent.agentKind) ? (
               <div className="mt-3 space-y-2 border-t border-border pt-3">
                 <p className="text-xs text-muted-foreground">
                   {configuredAgentIds.includes(agent.id)

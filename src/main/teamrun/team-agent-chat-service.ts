@@ -4,6 +4,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import type { ChannelMessage, TeamAgent } from '../../shared/teamrun-api'
+import {
+  supportsTeamAgentChat,
+  teamAgentRequiresApiKey
+} from '../../shared/team-agent-runtime-protocol'
 import type { TeamRunApiClient } from './teamrun-api-client'
 import { readTeamAgentCredential } from './team-agent-credential-store'
 
@@ -60,12 +64,12 @@ export class TeamAgentChatService {
   }
 
   async #runAgent(agent: TeamAgent, messages: ChannelMessage[]): Promise<string> {
-    const requiresApiKey = agent.agentKind === 'codex' || agent.agentKind === 'claude'
+    const requiresApiKey = teamAgentRequiresApiKey(agent.agentKind)
     const apiKey = requiresApiKey ? this.#readCredential(agent.id) : null
     if (requiresApiKey && !apiKey) {
       throw new Error('team_agent_api_key_missing')
     }
-    if (!['codex', 'claude', 'opencode'].includes(agent.agentKind)) {
+    if (!supportsTeamAgentChat(agent.agentKind)) {
       throw new Error('team_agent_chat_unsupported')
     }
     return this.#executeReply(agent, messages, apiKey)

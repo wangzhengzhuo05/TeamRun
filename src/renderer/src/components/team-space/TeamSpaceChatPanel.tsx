@@ -6,6 +6,7 @@ import type {
   OrganizationMember,
   TeamAgent
 } from '../../../../shared/teamrun-api'
+import { supportsTeamAgentChat } from '../../../../shared/team-agent-runtime-protocol'
 import CommentMarkdown from '@/components/sidebar/CommentMarkdown'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -107,9 +108,7 @@ export function TeamSpaceChatPanel(props: Props) {
   const [draft, setDraft] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
   const selectedChannel = props.channels.find((channel) => channel.id === props.channelId) ?? null
-  const chatAgents = props.teamAgents.filter((agent) =>
-    ['codex', 'claude', 'opencode'].includes(agent.agentKind)
-  )
+  const chatAgents = props.teamAgents.filter((agent) => supportsTeamAgentChat(agent.agentKind))
   const replyingAgents = props.teamAgents.filter((agent) =>
     props.replyingAgentIds.includes(agent.id)
   )
