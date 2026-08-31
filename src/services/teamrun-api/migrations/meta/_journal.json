@@ -85,6 +85,13 @@
       "when": 1788189776820,
       "tag": "0011_pretty_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788193676076,
+      "tag": "0012_shiny_chimera",
+      "breakpoints": true
     }
   ]
 }

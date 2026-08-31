@@ -17,6 +17,7 @@ type Props = {
   projectId: string | null
   canManageTeam: boolean
   canDevelopTeam: boolean
+  hasRepository: boolean
   onViewChange: (view: TeamSpaceView) => void
   onSelectOrganization: (id: string) => void
   onSelectProject: (id: string) => void
@@ -104,6 +105,7 @@ export function TeamSpaceDock(props: Props) {
           organizationId={props.organizationId}
           projectId={props.projectId}
           canDevelopTeam={props.canDevelopTeam}
+          hasRepository={props.hasRepository}
           onSelectOrganization={props.onSelectOrganization}
           onSelectProject={props.onSelectProject}
           onCreateOrganization={props.onCreateOrganization}

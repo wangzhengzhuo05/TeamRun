@@ -24,6 +24,10 @@ type ErrorCopy = {
     | 'teamServerOpenCodeMissing'
     | 'teamServerEncryptionUnavailable'
     | 'teamServerDocumentEditUpdateRequired'
+    | 'teamServerDevelopmentUpdateRequired'
+    | 'teamServerDevelopmentRequiresYolo'
+    | 'teamProjectRepositoryRequired'
+    | 'teamProjectRepositoryLimit'
     | 'teamAgentMigrationRequired'
 }
 
@@ -112,6 +116,22 @@ const ERROR_COPY: ErrorCopy[] = [
   {
     signals: ['team_server_document_edit_update_required'],
     id: 'teamServerDocumentEditUpdateRequired'
+  },
+  {
+    signals: ['team_server_development_run_update_required'],
+    id: 'teamServerDevelopmentUpdateRequired'
+  },
+  {
+    signals: ['team_server_development_run_requires_yolo'],
+    id: 'teamServerDevelopmentRequiresYolo'
+  },
+  {
+    signals: ['team_project_repository_required'],
+    id: 'teamProjectRepositoryRequired'
+  },
+  {
+    signals: ['team_project_repository_limit'],
+    id: 'teamProjectRepositoryLimit'
   },
   {
     signals: ['team_agent_server_migration_required'],
@@ -244,6 +264,26 @@ function localizedErrorMessage(id: ErrorCopy['id']): string {
       return translate(
         'auto.components.team.space.teamrunErrorMessage.teamServerDocumentEditUpdateRequired',
         'Update the Team Server before requesting document edits.'
+      )
+    case 'teamServerDevelopmentUpdateRequired':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerDevelopmentUpdateRequired',
+        'Update the Team Server before starting development runs.'
+      )
+    case 'teamServerDevelopmentRequiresYolo':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerDevelopmentRequiresYolo',
+        'Enable YOLO mode for this Team Agent before starting development work.'
+      )
+    case 'teamProjectRepositoryRequired':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamProjectRepositoryRequired',
+        'Bind a repository to this Team Project before starting development work.'
+      )
+    case 'teamProjectRepositoryLimit':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamProjectRepositoryLimit',
+        'This release supports one repository per Team Project.'
       )
     case 'teamAgentMigrationRequired':
       return translate(

@@ -7,6 +7,7 @@ import {
   createTaskRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
+  startTeamServerDevelopmentRunRequestSchema,
   updateAgentRunStatusRequestSchema,
   updateTaskRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
@@ -123,7 +124,8 @@ export function registerTeamRunHandlers(store: Store): void {
     const run = await teamRunClient.request<AgentRun>(`/v1/tasks/${parsed.taskId}/agent-runs`, {
       method: 'POST',
       body: parsed.run,
-      queueIfOffline: false
+      queueIfOffline: false,
+      timeoutMs: 150_000
     })
     teamRunClient.putWorkspaceLink({
       clientRunId: parsed.run.clientRunId,
@@ -135,6 +137,19 @@ export function registerTeamRunHandlers(store: Store): void {
     })
     return run
   })
+  ipcMain.handle('teamrun:runs:startTeamServer', (_event, args) => {
+    const parsed = z
+      .object({ taskId: idSchema, run: startTeamServerDevelopmentRunRequestSchema })
+      .parse(args)
+    return teamRunClient.request(`/v1/tasks/${parsed.taskId}/team-server-runs`, {
+      method: 'POST',
+      body: parsed.run,
+      queueIfOffline: false
+    })
+  })
+  ipcMain.handle('teamrun:runs:getTeamServerState', (_event, runId) =>
+    teamRunClient.request(`/v1/agent-runs/${pathId(runId)}/team-server-state`, { cache: false })
+  )
   ipcMain.handle('teamrun:runs:resolveWorkspace', (_event, clientRunId) =>
     teamRunClient.getWorkspaceLink(z.string().min(1).max(160).parse(clientRunId))
   )

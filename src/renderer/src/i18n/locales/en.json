@@ -15354,6 +15354,31 @@
             "openInTeamRun": "Open in TeamRun",
             "setupPolicyRequired": "Choose a setup policy for this repository before launching TeamRun agents."
           },
+          "TeamServerAgentLauncher": {
+            "loadError": "Unable to load Team Agents",
+            "launchError": "Unable to start Team Server development run",
+            "started": "Team Server development run started.",
+            "title": "Run a Team Agent on the Team Server",
+            "experimental": "Experimental",
+            "description": "The shared Agent works from frozen context in an isolated server worktree. Activity and changes are Team-visible; this phase does not push or open a review request.",
+            "starting": "Starting…",
+            "start": "Start run",
+            "agentPlaceholder": "YOLO-enabled Team Agent",
+            "snapshotRequired": "Freeze a context snapshot first.",
+            "agentRequired": "Create a Team Agent with YOLO mode enabled before starting development work."
+          },
+          "TeamServerRunActivity": {
+            "loadError": "Unable to load Team Server activity",
+            "loading": "Loading Team Server activity…",
+            "teamServer": "Team Server",
+            "activity": "Shared activity log",
+            "changes": "Workspace changes",
+            "noActivity": "No activity reported yet.",
+            "truncated": "The displayed output is truncated."
+          },
+          "TeamAgentRunCard": {
+            "teamServer": "Team Server"
+          },
           "TeamAgentRunPanel": {
             "72ba875f87": "No agent runs for this task.",
             "1ea0087769": "Published revision",
@@ -15660,6 +15685,10 @@
             "teamServerOpenCodeMissing": "Install OpenCode on the Team Server before binding it.",
             "teamServerEncryptionUnavailable": "Configure encrypted model credential storage on the Team Server.",
             "teamServerDocumentEditUpdateRequired": "Update the Team Server before requesting document edits.",
+            "teamServerDevelopmentUpdateRequired": "Update the Team Server before starting development runs.",
+            "teamServerDevelopmentRequiresYolo": "Enable YOLO mode for this Team Agent before starting development work.",
+            "teamProjectRepositoryRequired": "Bind a repository to this Team Project before starting development work.",
+            "teamProjectRepositoryLimit": "This release supports one repository per Team Project.",
             "teamAgentMigrationRequired": "Recreate this Team Agent with a Team Server Model Connection."
           }
         }

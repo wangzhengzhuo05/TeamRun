@@ -39,7 +39,9 @@ import type {
   TeamFileVersionContent,
   TeamInviteCode,
   TeamServerBinding,
+  TeamServerDevelopmentRunState,
   UpdateAgentRunStatusRequest,
+  StartTeamServerDevelopmentRunRequest,
   UpdateProjectRequest,
   UpdateTaskRequest,
   VerificationResult
@@ -174,6 +176,11 @@ export type TeamRunApi = {
       workspaceId: string
       workspacePath: string
     }) => Promise<AgentRun>
+    startTeamServer: (args: {
+      taskId: string
+      run: StartTeamServerDevelopmentRunRequest
+    }) => Promise<AgentRun>
+    getTeamServerState: (runId: string) => Promise<TeamServerDevelopmentRunState>
     resolveWorkspace: (clientRunId: string) => Promise<TeamRunWorkspaceRecord | null>
     reviewWorkspace: (args: {
       runId: string

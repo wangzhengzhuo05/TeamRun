@@ -25,6 +25,7 @@ type Props = {
   organizationId: string | null
   projectId: string | null
   canDevelopTeam: boolean
+  hasRepository: boolean
   onSelectOrganization: (id: string) => void
   onSelectProject: (id: string) => void
   onCreateOrganization: (slug: string, name: string) => Promise<void>
@@ -120,11 +121,13 @@ export function TeamSpaceMorePopover(props: Props) {
             disabled={!props.organizationId || !props.canDevelopTeam}
             onCreate={props.onCreateProject}
           />
-          <CreateRepositoryDialog
-            compact
-            disabled={!props.projectId || !props.canDevelopTeam}
-            onCreate={props.onCreateRepository}
-          />
+          {!props.hasRepository ? (
+            <CreateRepositoryDialog
+              compact
+              disabled={!props.projectId || !props.canDevelopTeam}
+              onCreate={props.onCreateRepository}
+            />
+          ) : null}
         </div>
         <div className="mt-2 border-t border-border pt-2">
           <Button

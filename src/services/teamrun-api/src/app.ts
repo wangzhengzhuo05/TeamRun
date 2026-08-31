@@ -20,6 +20,7 @@ import { registerTeamAgentReplyRoute } from './routes/team-agent-reply-route.js'
 import { registerTaskContextRoutes } from './routes/task-context-routes.js'
 import { registerTeamFileRoutes } from './routes/team-file-routes.js'
 import { registerTeamServerRoutes } from './routes/team-server-routes.js'
+import { registerTeamServerDevelopmentRunRoutes } from './routes/team-server-development-run-routes.js'
 import type { TeamRunServiceConfig } from './service-config.js'
 import { TEAM_EVENT_CHANNEL, TeamEventNotifier } from './events/team-event-notifier.js'
 
@@ -110,6 +111,7 @@ export async function createTeamRunApp(config: TeamRunServiceConfig): Promise<Fa
   await registerTaskContextRoutes(app)
   await registerTeamFileRoutes(app)
   await registerAgentRunRoutes(app)
+  registerTeamServerDevelopmentRunRoutes(app)
   await registerPublicationRoutes(app)
   await registerEventRoutes(app)
   return app

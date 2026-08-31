@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
-import { teamServerOpenCodeEnvironment } from './team-server-opencode-environment'
+import { prepareTeamServerOpenCodeEnvironment } from './team-server-opencode-environment'
 import {
   TeamServerModelConnectionStore,
   type TeamServerModelConnectionSecret
@@ -120,12 +120,13 @@ async function runOpenCodeReply(
 ): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'teamrun-team-agent-'))
   try {
+    const environment = await prepareTeamServerOpenCodeEnvironment(directory, connection)
     const { stdout } = await execFileAsync(
       'opencode',
       ['run', '--model', `teamrun/${connection.model}`, '--title', title, prompt],
       {
         cwd: directory,
-        env: teamServerOpenCodeEnvironment(directory, connection),
+        env: environment,
         timeout: 120_000,
         maxBuffer: maxLength * 4
       }

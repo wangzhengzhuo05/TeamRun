@@ -3,6 +3,8 @@ import { entityIdSchema, markdownSchema, timestampSchema, versionSchema } from '
 
 export const TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY =
   'teamrun.team-server.document-edit.v1' as const
+export const TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY =
+  'teamrun.team-server.development-run.v1' as const
 
 const teamServerBaseUrlSchema = z
   .url()

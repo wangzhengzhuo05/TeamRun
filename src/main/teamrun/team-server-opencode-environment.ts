@@ -1,10 +1,13 @@
+import { chmod, mkdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { TeamServerModelConnectionSecret } from './team-server-model-connection-store'
 
 export function teamServerOpenCodeEnvironment(
   directory: string,
-  connection: TeamServerModelConnectionSecret
+  connection: TeamServerModelConnectionSecret,
+  profile: 'documentation' | 'development-yolo' = 'documentation'
 ): NodeJS.ProcessEnv {
+  const apiKeyPath = join(directory, '.teamrun-model-api-key')
   const inherited = copyEnvironment([
     'PATH',
     'LANG',
@@ -26,22 +29,62 @@ export function teamServerOpenCodeEnvironment(
     XDG_CACHE_HOME: join(directory, 'cache'),
     OPENCODE_CONFIG_DIR: join(directory, 'opencode'),
     OPENCODE_DISABLE_CLAUDE_CODE: '1',
-    TEAMRUN_MODEL_API_KEY: connection.apiKey,
     OPENCODE_CONFIG_CONTENT: JSON.stringify({
       $schema: 'https://opencode.ai/config.json',
-      permission: 'deny',
+      permission: profile === 'documentation' ? 'deny' : developmentPermissions(),
       provider: {
         teamrun: {
           npm: '@ai-sdk/openai-compatible',
           name: 'TeamRun Model Connection',
           options: {
             baseURL: connection.baseUrl,
-            apiKey: '{env:TEAMRUN_MODEL_API_KEY}'
+            apiKey: `{file:${apiKeyPath}}`
           },
           models: { [connection.model]: { name: connection.model } }
         }
       }
     })
+  }
+}
+
+export async function prepareTeamServerOpenCodeEnvironment(
+  directory: string,
+  connection: TeamServerModelConnectionSecret,
+  profile: 'documentation' | 'development-yolo' = 'documentation'
+): Promise<NodeJS.ProcessEnv> {
+  await mkdir(directory, { recursive: true, mode: 0o700 })
+  const apiKeyPath = join(directory, '.teamrun-model-api-key')
+  await writeFile(apiKeyPath, connection.apiKey, { encoding: 'utf8', mode: 0o600 })
+  await chmod(apiKeyPath, 0o600)
+  return teamServerOpenCodeEnvironment(directory, connection, profile)
+}
+
+export async function removeTeamServerOpenCodeKey(directory: string): Promise<void> {
+  await rm(join(directory, '.teamrun-model-api-key'), { force: true })
+}
+
+function developmentPermissions() {
+  return {
+    '*': 'allow',
+    read: {
+      '*': 'allow',
+      '.env': 'deny',
+      '.env.*': 'deny',
+      '*.env': 'deny',
+      '*.env.*': 'deny',
+      '**/.env': 'deny',
+      '**/.env.*': 'deny',
+      '*.env.example': 'allow'
+    },
+    bash: {
+      '*': 'allow',
+      'git push': 'deny',
+      'git push *': 'deny',
+      '*git push*': 'deny',
+      '*git* push*': 'deny'
+    },
+    external_directory: 'deny',
+    question: 'deny'
   }
 }
 

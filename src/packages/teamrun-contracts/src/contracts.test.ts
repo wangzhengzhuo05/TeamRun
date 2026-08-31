@@ -9,6 +9,8 @@ import {
   publicationArtifactSchema,
   preparePublicationRequestSchema,
   requestTeamAgentReplySchema,
+  startTeamServerDevelopmentRunRequestSchema,
+  teamServerDevelopmentRunStateSchema,
   teamRunWorkspaceLinkSchema
 } from './index.js'
 
@@ -71,6 +73,30 @@ describe('TeamRun contracts', () => {
         instructionsMarkdown: 'x'.repeat(8_001)
       }).success
     ).toBe(false)
+  })
+
+  it('validates Team Server development run requests and shared state', () => {
+    const request = {
+      contextSnapshotId: crypto.randomUUID(),
+      teamAgentId: crypto.randomUUID()
+    }
+    expect(startTeamServerDevelopmentRunRequestSchema.parse(request)).toEqual(request)
+    expect(
+      teamServerDevelopmentRunStateSchema.parse({
+        runId: crypto.randomUUID(),
+        status: 'working',
+        sequence: 2,
+        branchName: 'teamrun/run-id',
+        baseObjectId: 'a'.repeat(40),
+        headObjectId: null,
+        activityLog: '',
+        logTruncated: false,
+        diffPatch: '',
+        diffTruncated: false,
+        failureCode: null,
+        updatedAt: new Date().toISOString()
+      }).status
+    ).toBe('working')
   })
 
   it('keeps imported tasks canonical after the initial snapshot', () => {

@@ -11,6 +11,7 @@ import type { TeamEvent } from '../../../shared/teamrun-api'
 import type { TeamRunSyncStatus } from '../../../shared/teamrun-cloud'
 import type { TeamRunCloudOperation } from '../../../shared/teamrun-cloud-operations'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
+import { TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY } from '../../../shared/protocol-version'
 import { parseHostAccessLink } from '../../../shared/remote-pairing-address'
 import { verifyRemotePairingRuntimeStatus } from '../../../shared/remote-pairing-verification'
 import type { AiVaultDeleteSessionArgs } from '../../../shared/ai-vault-session-deletion'
@@ -1513,6 +1514,16 @@ function createTeamRunApi(): TeamRunApi {
       list: (taskId) => invoke('runs.list', taskId),
       create: (args) => invoke('runs.create', args),
       createLinked: (args) => invoke('runs.createLinked', args),
+      startTeamServer: async (args) => {
+        const status = await getRemoteRuntimeStatus()
+        if (
+          !status.capabilities?.includes(TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+        ) {
+          throw new Error('team_server_development_run_update_required')
+        }
+        return invoke('runs.startTeamServer', args, 160_000)
+      },
+      getTeamServerState: (runId) => invoke('runs.getTeamServerState', runId),
       resolveWorkspace: (clientRunId) => invoke('runs.resolveWorkspace', clientRunId),
       reviewWorkspace: (args) => invoke('runs.reviewWorkspace', args),
       updateStatus: (args) => invoke('runs.updateStatus', args),

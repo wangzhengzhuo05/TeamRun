@@ -56,6 +56,8 @@ export const TEAMRUN_CLOUD_OPERATIONS = [
   'runs.list',
   'runs.create',
   'runs.createLinked',
+  'runs.startTeamServer',
+  'runs.getTeamServerState',
   'runs.resolveWorkspace',
   'runs.reviewWorkspace',
   'runs.updateStatus',

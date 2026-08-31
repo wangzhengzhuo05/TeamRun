@@ -640,6 +640,8 @@ const api = {
       list: (taskId) => ipcRenderer.invoke('teamrun:runs:list', taskId),
       create: (args) => ipcRenderer.invoke('teamrun:runs:create', args),
       createLinked: (args) => ipcRenderer.invoke('teamrun:runs:createLinked', args),
+      startTeamServer: (args) => ipcRenderer.invoke('teamrun:runs:startTeamServer', args),
+      getTeamServerState: (runId) => ipcRenderer.invoke('teamrun:runs:getTeamServerState', runId),
       resolveWorkspace: (clientRunId) =>
         ipcRenderer.invoke('teamrun:runs:resolveWorkspace', clientRunId),
       reviewWorkspace: (args) => ipcRenderer.invoke('teamrun:runs:reviewWorkspace', args),

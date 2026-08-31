@@ -131,6 +131,13 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
       'owner',
       'admin'
     ])
+    if (run.executionTarget === 'team_server') {
+      throw new ApiProblem(
+        409,
+        'team_server_run_status_managed',
+        'Team Server run status is managed by its execution host'
+      )
+    }
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(403, 'run_status_forbidden', 'Only the run owner can report status')
     }
@@ -209,6 +216,13 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
       'owner',
       'admin'
     ])
+    if (run.executionTarget === 'team_server') {
+      throw new ApiProblem(
+        409,
+        'team_server_run_verification_managed',
+        'Team Server runs cannot accept Personal Workspace verification reports'
+      )
+    }
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(
         403,

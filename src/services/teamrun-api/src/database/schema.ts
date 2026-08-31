@@ -62,6 +62,10 @@ export const agentRunStatusEnum = pgEnum('agent_run_status', [
   'failed',
   'canceled'
 ])
+export const agentRunExecutionTargetEnum = pgEnum('agent_run_execution_target', [
+  'personal',
+  'team_server'
+])
 export const publicationStateEnum = pgEnum('publication_state', [
   'preparing',
   'finalized',
@@ -161,6 +165,7 @@ export const agentRuns = pgTable(
       .references(() => users.id),
     agentKind: text('agent_kind').notNull(),
     teamAgentSnapshot: jsonb('team_agent_snapshot').$type<TeamAgentSnapshot>(),
+    executionTarget: agentRunExecutionTargetEnum('execution_target').notNull().default('personal'),
     status: agentRunStatusEnum('status').notNull().default('queued'),
     stale: boolean('stale').notNull().default(false),
     baseRevision: jsonb('base_revision').$type<WorkspaceRevision>().notNull(),

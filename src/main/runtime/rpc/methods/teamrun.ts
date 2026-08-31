@@ -1,5 +1,7 @@
 import { z } from 'zod'
+import { gitRemoteUrlSchema } from '../../../../packages/teamrun-contracts/src/index'
 import {
+  TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY,
   TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
   TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
 } from '../../../../shared/protocol-version'
@@ -10,6 +12,7 @@ const Worktree = z.string().min(1).max(32_768)
 const FullGitObjectId = z
   .string()
   .regex(/^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$/, 'Expected a full git object id')
+const TeamServerDevelopmentRunId = z.uuid()
 
 export const TEAMRUN_METHODS: RpcAnyMethod[] = [
   defineMethod({
@@ -79,6 +82,38 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
     handler: (params, context) => {
       requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY)
       return context.runtime.proposeTeamServerDocumentEdit(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.startDevelopmentRun',
+    params: z.object({
+      runId: TeamServerDevelopmentRunId,
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000),
+        yoloMode: z.literal(true)
+      }),
+      repository: z.object({
+        remoteUrl: gitRemoteUrlSchema,
+        defaultBranch: z.string().trim().min(1).max(240)
+      }),
+      task: z.object({
+        title: z.string().trim().min(1).max(500),
+        frozenContextMarkdown: z.string().max(128_000)
+      })
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+      return context.runtime.startTeamServerDevelopmentRun(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.getDevelopmentRun',
+    params: z.object({ runId: TeamServerDevelopmentRunId }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+      return context.runtime.getTeamServerDevelopmentRun(params.runId)
     }
   }),
   defineStreamingMethod({

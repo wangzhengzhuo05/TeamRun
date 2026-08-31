@@ -184,6 +184,7 @@ export default function TeamSpacePage() {
         projectId={workspace.projectId}
         canManageTeam={canManageTeam}
         canDevelopTeam={canDevelopTeam}
+        hasRepository={workspace.repositories.length > 0}
         onViewChange={setView}
         onSelectOrganization={workspace.selectOrganization}
         onSelectProject={workspace.selectProject}

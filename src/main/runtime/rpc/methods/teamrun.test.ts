@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY as CONTRACT_DOCUMENT_EDIT_CAPABILITY } from '../../../../packages/teamrun-contracts/src/index'
+import {
+  TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY as CONTRACT_DEVELOPMENT_RUN_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY as CONTRACT_DOCUMENT_EDIT_CAPABILITY
+} from '../../../../packages/teamrun-contracts/src/index'
 import {
   RUNTIME_CAPABILITIES,
   TEAMRUN_CLOUD_RUNTIME_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY,
   TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
   TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY,
   TEAMRUN_WORKSPACE_OPERATIONS_RUNTIME_CAPABILITY
@@ -37,6 +41,12 @@ function makeRuntime() {
     proposeTeamServerDocumentEdit: vi
       .fn()
       .mockResolvedValue({ proposedContentMarkdown: '# Updated' }),
+    startTeamServerDevelopmentRun: vi.fn().mockResolvedValue({
+      runId: crypto.randomUUID(),
+      status: 'working',
+      baseObjectId: 'a'.repeat(40)
+    }),
+    getTeamServerDevelopmentRun: vi.fn().mockResolvedValue({ status: 'review' }),
     invokeTeamRunCloudOperation: vi.fn().mockResolvedValue({ state: 'signed-out' })
   } as unknown as OrcaRuntimeService
 }
@@ -46,7 +56,8 @@ async function dispatchAsPairedRuntime(
   request: RpcRequest,
   clientCapabilities: string[] = [
     TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY,
-    TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY
+    TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
+    TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY
   ]
 ): Promise<RpcResponse> {
   let response: RpcResponse | undefined
@@ -73,9 +84,44 @@ describe('TeamRun runtime RPC', () => {
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_CLOUD_RUNTIME_CAPABILITY)
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY)
     expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY)
+    expect(RUNTIME_CAPABILITIES).toContain(TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
     expect(TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY).toBe(
       CONTRACT_DOCUMENT_EDIT_CAPABILITY
     )
+    expect(TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY).toBe(
+      CONTRACT_DEVELOPMENT_RUN_CAPABILITY
+    )
+  })
+
+  it('capability-gates Team Server development runs', async () => {
+    const runtime = makeRuntime()
+    const dispatcher = new RpcDispatcher({ runtime, methods: TEAMRUN_METHODS })
+    const runId = crypto.randomUUID()
+    const request: RpcRequest = {
+      id: 'development-run',
+      authToken: 'token',
+      method: 'teamrun.teamAgent.startDevelopmentRun',
+      params: {
+        runId,
+        connectionId: crypto.randomUUID(),
+        agent: { name: 'Developer', instructionsMarkdown: 'Implement it.', yoloMode: true },
+        repository: {
+          remoteUrl: 'https://example.test/team/project.git',
+          defaultBranch: 'main'
+        },
+        task: { title: 'Add it', frozenContextMarkdown: '# Frozen context' }
+      }
+    }
+    const accepted = await dispatchAsPairedRuntime(dispatcher, request)
+    const legacy = await dispatchAsPairedRuntime(dispatcher, request, [
+      TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
+    ])
+
+    expect(accepted).toMatchObject({ ok: true, result: { status: 'working' } })
+    expect(legacy).toMatchObject({
+      ok: false,
+      error: { code: 'team_server_paired_runtime_required' }
+    })
   })
 
   it('exposes bounded Team Server model configuration and chat methods', async () => {

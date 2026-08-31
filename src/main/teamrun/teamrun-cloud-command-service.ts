@@ -5,6 +5,7 @@ import {
   createRepositoryRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
+  startTeamServerDevelopmentRunRequestSchema,
   updateAgentRunStatusRequestSchema,
   updateProjectRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
@@ -213,6 +214,21 @@ export class TeamRunCloudCommandService {
       }
       case 'runs.createLinked':
         return createLinkedTeamRun(this.client, args)
+      case 'runs.startTeamServer': {
+        const parsed = z
+          .object({ taskId: idSchema, run: startTeamServerDevelopmentRunRequestSchema })
+          .parse(args)
+        return this.client.request(`/v1/tasks/${parsed.taskId}/team-server-runs`, {
+          method: 'POST',
+          body: parsed.run,
+          queueIfOffline: false,
+          timeoutMs: 150_000
+        })
+      }
+      case 'runs.getTeamServerState':
+        return this.client.request(`/v1/agent-runs/${idSchema.parse(args)}/team-server-state`, {
+          cache: false
+        })
       case 'runs.resolveWorkspace':
         return this.client.getWorkspaceLink(textIdSchema.parse(args))
       case 'runs.reviewWorkspace':

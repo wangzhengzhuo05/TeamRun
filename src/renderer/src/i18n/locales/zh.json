@@ -14423,6 +14423,31 @@
             "openInTeamRun": "在 TeamRun 中打开",
             "setupPolicyRequired": "启动 TeamRun 智能体前，请为此仓库选择设置策略。"
           },
+          "TeamServerAgentLauncher": {
+            "loadError": "无法加载团队智能体",
+            "launchError": "无法启动团队服务器开发运行",
+            "started": "团队服务器开发运行已启动。",
+            "title": "在团队服务器上运行团队智能体",
+            "experimental": "实验性",
+            "description": "共享智能体会基于冻结上下文，在服务器的隔离工作树中工作；活动与改动对团队全员可见，当前阶段不会推送代码或创建评审请求。",
+            "starting": "正在启动…",
+            "start": "开始运行",
+            "agentPlaceholder": "已开启 YOLO 的团队智能体",
+            "snapshotRequired": "请先冻结上下文快照。",
+            "agentRequired": "开始开发工作前，请创建并开启 YOLO 模式的团队智能体。"
+          },
+          "TeamServerRunActivity": {
+            "loadError": "无法加载团队服务器活动",
+            "loading": "正在加载团队服务器活动…",
+            "teamServer": "团队服务器",
+            "activity": "共享活动日志",
+            "changes": "工作区改动",
+            "noActivity": "尚无活动记录。",
+            "truncated": "显示的输出已截断。"
+          },
+          "TeamAgentRunCard": {
+            "teamServer": "团队服务器"
+          },
           "TeamAgentManagement": {
             "createAgentError": "无法创建团队智能体",
             "name": "团队智能体名称",
@@ -14657,6 +14682,10 @@
             "teamServerOpenCodeMissing": "请先在团队服务器上安装 OpenCode。",
             "teamServerEncryptionUnavailable": "请在团队服务器上配置加密的模型凭据存储。",
             "teamServerDocumentEditUpdateRequired": "请先更新团队服务器，再请求修改文档。",
+            "teamServerDevelopmentUpdateRequired": "请先更新团队服务器，再启动开发运行。",
+            "teamServerDevelopmentRequiresYolo": "开始开发工作前，请为此团队智能体开启 YOLO 模式。",
+            "teamProjectRepositoryRequired": "开始开发工作前，请先为此团队项目绑定仓库。",
+            "teamProjectRepositoryLimit": "当前版本的每个团队项目只支持一个仓库。",
             "teamAgentMigrationRequired": "请使用团队服务器模型连接重新创建此团队智能体。"
           },
           "GenericCliCommandConfirmation": {
