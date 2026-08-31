@@ -92,6 +92,14 @@ export type TeamRunApi = {
       projectId: string
       teamAgent: CreateTeamAgentRequest
     }) => Promise<TeamAgent>
+    credentialStatus: (agentId: string) => Promise<{ configured: boolean }>
+    saveCredential: (args: { agentId: string; apiKey: string }) => Promise<{ configured: true }>
+    reply: (args: {
+      projectId: string
+      channelId: string
+      teamAgentId: string
+      bodyMarkdown: string
+    }) => Promise<ChannelMessage>
   }
   tasks: {
     list: (projectId: string) => Promise<Task[]>

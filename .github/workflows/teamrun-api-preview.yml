@@ -1,0 +1,75 @@
+name: TeamRun API preview
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: teamrun-api-preview
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PREVIEW_RELEASE_TAG: teamrun-api-preview
+      PREVIEW_IMAGE: teamrun-api:preview
+      PREVIEW_ARCHIVE: teamrun-api-preview.tar.gz
+      PREVIEW_MANIFEST: teamrun-api-preview.manifest.json
+      PREVIEW_CHECKSUMS: teamrun-api-preview.SHA256SUMS
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build API image
+        run: docker build --tag "$PREVIEW_IMAGE" --file config/teamrun/api.Dockerfile .
+
+      - name: Package API image
+        run: |
+          mkdir -p dist
+          docker save "$PREVIEW_IMAGE" | gzip -9 > "dist/$PREVIEW_ARCHIVE"
+          archive_sha256=$(sha256sum "dist/$PREVIEW_ARCHIVE" | cut -d ' ' -f 1)
+          archive_size=$(stat -c '%s' "dist/$PREVIEW_ARCHIVE")
+          jq -n \
+            --arg commit "$GITHUB_SHA" \
+            --arg createdAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg image "$PREVIEW_IMAGE" \
+            --arg assetName "$PREVIEW_ARCHIVE" \
+            --arg sha256 "$archive_sha256" \
+            --argjson size "$archive_size" \
+            '{schemaVersion: 1, channel: "preview", commit: $commit, image: $image, artifact: {name: $assetName, sha256: $sha256, size: $size}, createdAt: $createdAt}' \
+            > "dist/$PREVIEW_MANIFEST"
+          (
+            cd dist
+            sha256sum "$PREVIEW_ARCHIVE" "$PREVIEW_MANIFEST" > "$PREVIEW_CHECKSUMS"
+          )
+
+      - name: Publish mutable preview release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf 'Commit: `%s`\n\nBuilt by [workflow run](%s/actions/runs/%s).\n' \
+            "$GITHUB_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" \
+            > dist/PREVIEW_RELEASE_NOTES.md
+          if gh release view "$PREVIEW_RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$PREVIEW_RELEASE_TAG" \
+              --title "TeamRun API preview" \
+              --prerelease \
+              --notes-file dist/PREVIEW_RELEASE_NOTES.md
+          else
+            gh release create "$PREVIEW_RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "TeamRun API preview" \
+              --prerelease \
+              --notes-file dist/PREVIEW_RELEASE_NOTES.md
+          fi
+          gh release upload "$PREVIEW_RELEASE_TAG" \
+            "dist/$PREVIEW_ARCHIVE" \
+            "dist/$PREVIEW_MANIFEST" \
+            "dist/$PREVIEW_CHECKSUMS" \
+            --clobber

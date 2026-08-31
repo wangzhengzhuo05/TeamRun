@@ -115,6 +115,7 @@ export default function TeamSpacePage() {
           teamAgents={chat.teamAgents}
           loading={chat.loading}
           sending={chat.sending}
+          replyingAgentIds={chat.replyingAgentIds}
           onSelectChannel={chat.selectChannel}
           onCreateGeneralChannel={chat.createGeneralChannel}
           onSendMessage={chat.sendMessage}

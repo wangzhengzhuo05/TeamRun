@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
   agentRunStatusSchema,
+  createAgentChannelMessageRequestSchema,
   createTeamAgentRequestSchema,
   createTaskRequestSchema,
   gitRemoteUrlSchema,
@@ -42,6 +43,20 @@ describe('TeamRun contracts', () => {
         instructionsMarkdown: ''
       }).launchCommand
     ).toBe('company-agent --interactive')
+  })
+
+  it('requires an Agent identity for Agent-authored channel messages', () => {
+    const body = {
+      bodyMarkdown: 'I have reviewed the latest change.',
+      authorTeamAgentId: crypto.randomUUID()
+    }
+    expect(createAgentChannelMessageRequestSchema.parse(body)).toEqual(body)
+    expect(
+      createAgentChannelMessageRequestSchema.safeParse({
+        bodyMarkdown: body.bodyMarkdown,
+        authorTeamAgentId: null
+      }).success
+    ).toBe(false)
   })
 
   it('keeps imported tasks canonical after the initial snapshot', () => {

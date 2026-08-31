@@ -36,6 +36,7 @@ type Props = {
   teamAgents: TeamAgent[]
   loading: boolean
   sending: boolean
+  replyingAgentIds: string[]
   onSelectChannel: (channelId: string) => void
   onCreateGeneralChannel: () => Promise<void>
   onSendMessage: (bodyMarkdown: string) => Promise<boolean>
@@ -53,7 +54,7 @@ function getAuthor(
   teamAgents: TeamAgent[],
   authEmail: string | null
 ): Author {
-  const agent = teamAgents.find((entry) => entry.id === message.authorUserId)
+  const agent = teamAgents.find((entry) => entry.id === message.authorTeamAgentId)
   if (agent) {
     return { name: agent.name, isAgent: true, isCurrentUser: false }
   }
@@ -106,6 +107,10 @@ export function TeamSpaceChatPanel(props: Props) {
   const [draft, setDraft] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
   const selectedChannel = props.channels.find((channel) => channel.id === props.channelId) ?? null
+  const chatAgents = props.teamAgents.filter((agent) => agent.agentKind === 'codex')
+  const replyingAgents = props.teamAgents.filter((agent) =>
+    props.replyingAgentIds.includes(agent.id)
+  )
   const participantCount = props.members.length + props.teamAgents.length
   const messageAuthors = useMemo(
     () =>
@@ -257,6 +262,19 @@ export function TeamSpaceChatPanel(props: Props) {
           {props.messages.map((message, index) => (
             <ChatMessage key={message.id} message={message} author={messageAuthors[index]} />
           ))}
+          {replyingAgents.map((agent) => (
+            <div
+              key={agent.id}
+              className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
+            >
+              <Loader2 className="size-4 animate-spin" />
+              {translate(
+                'auto.components.team.space.TeamSpaceChatPanel.agentReplying',
+                '{{value0}} is replying…',
+                { value0: agent.name }
+              )}
+            </div>
+          ))}
           <div ref={endRef} />
         </div>
       </div>
@@ -291,17 +309,17 @@ export function TeamSpaceChatPanel(props: Props) {
                 <Button
                   variant="ghost"
                   size="xs"
-                  disabled={props.teamAgents.length === 0 || !selectedChannel}
+                  disabled={chatAgents.length === 0 || !selectedChannel}
                 >
                   <Bot />
                   {translate(
                     'auto.components.team.space.TeamSpaceChatPanel.mentionAgent',
-                    'Mention Agent'
+                    'Mention Codex Agent'
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top">
-                {props.teamAgents.map((agent) => (
+                {chatAgents.map((agent) => (
                   <DropdownMenuItem key={agent.id} onSelect={() => mentionAgent(agent)}>
                     <Bot /> {agent.name}
                   </DropdownMenuItem>

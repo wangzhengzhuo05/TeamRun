@@ -45,6 +45,7 @@ services:
         mc mb --ignore-existing teamrun/teamrun-publications
 
   api:
+    image: teamrun-api:preview
     build:
       context: ../..
       dockerfile: config/teamrun/api.Dockerfile

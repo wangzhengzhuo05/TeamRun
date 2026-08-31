@@ -1415,7 +1415,9 @@ function createTeamRunApi(): TeamRunApi {
       ...(args === undefined ? {} : { args })
     })
   const notifySync = (status: TeamRunSyncStatus): TeamRunSyncStatus => {
-    for (const listener of syncListeners) listener(status)
+    for (const listener of syncListeners) {
+      listener(status)
+    }
     return status
   }
 
@@ -1464,7 +1466,10 @@ function createTeamRunApi(): TeamRunApi {
       listMessages: (channelId) => invoke('collaboration.listMessages', channelId),
       createMessage: (args) => invoke('collaboration.createMessage', args),
       listTeamAgents: (projectId) => invoke('collaboration.listTeamAgents', projectId),
-      createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args)
+      createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args),
+      credentialStatus: (agentId) => invoke('collaboration.credentialStatus', agentId),
+      saveCredential: (args) => invoke('collaboration.saveCredential', args),
+      reply: (args) => invoke('collaboration.reply', args)
     },
     tasks: {
       list: (projectId) => invoke('tasks.list', projectId),
@@ -1507,28 +1512,40 @@ function createTeamRunApi(): TeamRunApi {
           {
             onResponse: (response) => {
               if (!response.ok) {
-                for (const listener of errorListeners) listener(response.error.message)
+                for (const listener of errorListeners) {
+                  listener(response.error.message)
+                }
                 return
               }
               const frame = response.result as
                 | { type: 'status'; status: TeamRunSyncStatus }
                 | { type: 'event'; event: TeamEvent }
                 | { type: 'error'; message: string }
-              if (frame.type === 'status') notifySync(frame.status)
-              else if (frame.type === 'event') {
-                for (const listener of eventListeners) listener(frame.event)
+              if (frame.type === 'status') {
+                notifySync(frame.status)
+              } else if (frame.type === 'event') {
+                for (const listener of eventListeners) {
+                  listener(frame.event)
+                }
               } else if (frame.type === 'error') {
-                for (const listener of errorListeners) listener(frame.message)
+                for (const listener of errorListeners) {
+                  listener(frame.message)
+                }
               }
             },
             onError: (error) => {
               const message = error instanceof Error ? error.message : String(error)
-              for (const listener of errorListeners) listener(message)
+              for (const listener of errorListeners) {
+                listener(message)
+              }
             }
           }
         )
-        if (generation !== eventGeneration) subscription.unsubscribe()
-        else eventSubscription = subscription
+        if (generation !== eventGeneration) {
+          subscription.unsubscribe()
+        } else {
+          eventSubscription = subscription
+        }
       },
       stop: async () => {
         eventGeneration++

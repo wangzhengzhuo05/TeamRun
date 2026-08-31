@@ -36,6 +36,20 @@
       "when": 1787533971421,
       "tag": "0004_dashing_vargas",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788152718496,
+      "tag": "0005_agent_message_authors",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788153092201,
+      "tag": "0006_aberrant_songbird",
+      "breakpoints": true
     }
   ]
 }

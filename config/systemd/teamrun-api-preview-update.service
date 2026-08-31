@@ -1,0 +1,22 @@
+[Unit]
+Description=Pull and deploy the latest TeamRun API preview
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/teamrun/api-preview-update.env
+ExecStart=/usr/local/libexec/teamrun-api-preview-update
+TimeoutStartSec=20min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/opt/teamrun-api-preview /var/run/docker.sock

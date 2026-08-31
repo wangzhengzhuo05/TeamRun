@@ -1,0 +1,1 @@
+ALTER TABLE "channel_messages" ADD CONSTRAINT "channel_messages_author_team_agent_id_team_agents_id_fk" FOREIGN KEY ("author_team_agent_id") REFERENCES "public"."team_agents"("id") ON DELETE set null ON UPDATE no action;

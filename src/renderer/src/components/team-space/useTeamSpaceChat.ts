@@ -17,6 +17,7 @@ type TeamSpaceChat = {
   teamAgents: TeamAgent[]
   loading: boolean
   sending: boolean
+  replyingAgentIds: string[]
   selectChannel: (channelId: string) => void
   sendMessage: (bodyMarkdown: string) => Promise<boolean>
   createGeneralChannel: () => Promise<void>
@@ -31,6 +32,26 @@ function reportError(error: unknown): void {
   )
 }
 
+function mentionedCodexAgents(message: string, agents: TeamAgent[]): TeamAgent[] {
+  const lower = message.toLocaleLowerCase()
+  return agents.filter((agent) => {
+    if (agent.agentKind !== 'codex') {
+      return false
+    }
+    const mention = `@${agent.name.toLocaleLowerCase()}`
+    let offset = lower.indexOf(mention)
+    while (offset >= 0) {
+      const before = lower[offset - 1]
+      const after = lower[offset + mention.length]
+      if ((!before || /\s/.test(before)) && (!after || /[\s.,!?;:)]/.test(after))) {
+        return true
+      }
+      offset = lower.indexOf(mention, offset + mention.length)
+    }
+    return false
+  })
+}
+
 export function useTeamSpaceChat(
   organizationId: string | null,
   projectId: string | null,
@@ -43,6 +64,7 @@ export function useTeamSpaceChat(
   const [teamAgents, setTeamAgents] = useState<TeamAgent[]>([])
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
+  const [replyingAgentIds, setReplyingAgentIds] = useState<string[]>([])
 
   const refresh = useCallback(async () => {
     if (!projectId || !organizationId) {
@@ -116,6 +138,35 @@ export function useTeamSpaceChat(
           message: { bodyMarkdown }
         })
         setMessages((current) => [...current, created])
+        if (projectId) {
+          const agents = mentionedCodexAgents(bodyMarkdown, teamAgents)
+          for (const agent of agents) {
+            setReplyingAgentIds((current) => [...new Set([...current, agent.id])])
+            void window.api.teamRun.collaboration
+              .reply({
+                projectId,
+                channelId,
+                teamAgentId: agent.id,
+                bodyMarkdown
+              })
+              .then((reply) =>
+                setMessages((current) =>
+                  current.some((message) => message.id === reply.id) ? current : [...current, reply]
+                )
+              )
+              .catch(() =>
+                toast.error(
+                  translate(
+                    'auto.components.team.space.useTeamSpaceChat.agentReplyError',
+                    'Agent could not reply. Check that its local API key is configured.'
+                  )
+                )
+              )
+              .finally(() =>
+                setReplyingAgentIds((current) => current.filter((agentId) => agentId !== agent.id))
+              )
+          }
+        }
         return true
       } catch (error) {
         reportTeamRunMutation(
@@ -130,7 +181,7 @@ export function useTeamSpaceChat(
         setSending(false)
       }
     },
-    [channelId, sending]
+    [channelId, projectId, sending, teamAgents]
   )
 
   const createGeneralChannel = useCallback(async () => {
@@ -169,6 +220,7 @@ export function useTeamSpaceChat(
     teamAgents,
     loading,
     sending,
+    replyingAgentIds,
     selectChannel: setChannelId,
     sendMessage,
     createGeneralChannel,

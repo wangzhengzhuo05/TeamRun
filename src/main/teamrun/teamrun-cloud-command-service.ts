@@ -1,14 +1,11 @@
 import { z } from 'zod'
 import {
   createAgentRunRequestSchema,
-  createChannelMessageRequestSchema,
-  createChannelRequestSchema,
   createContextSnapshotRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
   createTaskCommentRequestSchema,
   createTaskRequestSchema,
-  createTeamAgentRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
   updateAgentRunStatusRequestSchema,
@@ -22,6 +19,8 @@ import { TeamRunApiClient } from './teamrun-api-client'
 import { TeamRunPublicationService } from './teamrun-publication-service'
 import { TeamRunVerificationService } from './teamrun-verification-service'
 import { TeamRunWorkspaceReviewService } from './teamrun-workspace-review-service'
+import { TeamAgentChatService } from './team-agent-chat-service'
+import { invokeTeamRunCollaborationOperation } from './teamrun-collaboration-command'
 
 const idSchema = z.uuid()
 const textIdSchema = z.string().min(1).max(160)
@@ -38,12 +37,14 @@ export class TeamRunCloudCommandService {
   readonly #verification: TeamRunVerificationService
   readonly #publication: TeamRunPublicationService
   readonly #workspaceReview: TeamRunWorkspaceReviewService
+  readonly #agentChat: TeamAgentChatService
 
   constructor(store: Store, userDataPath: string, client = new TeamRunApiClient()) {
     this.client = client
     this.#verification = new TeamRunVerificationService(store, client, userDataPath)
     this.#publication = new TeamRunPublicationService(store, client, userDataPath)
     this.#workspaceReview = new TeamRunWorkspaceReviewService(store, client, userDataPath)
+    this.#agentChat = new TeamAgentChatService(client)
   }
 
   async invoke(operation: TeamRunCloudOperation, args?: unknown): Promise<unknown> {
@@ -138,38 +139,15 @@ export class TeamRunCloudCommandService {
         })
       }
       case 'collaboration.listChannels':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/channels`)
-      case 'collaboration.createChannel': {
-        const parsed = z
-          .object({ projectId: idSchema, channel: createChannelRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/channels`, {
-          method: 'POST',
-          body: parsed.channel
-        })
-      }
+      case 'collaboration.createChannel':
       case 'collaboration.listMessages':
-        return this.client.request(`/v1/channels/${idSchema.parse(args)}/messages`)
-      case 'collaboration.createMessage': {
-        const parsed = z
-          .object({ channelId: idSchema, message: createChannelMessageRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/channels/${parsed.channelId}/messages`, {
-          method: 'POST',
-          body: parsed.message
-        })
-      }
+      case 'collaboration.createMessage':
       case 'collaboration.listTeamAgents':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/team-agents`)
-      case 'collaboration.createTeamAgent': {
-        const parsed = z
-          .object({ projectId: idSchema, teamAgent: createTeamAgentRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/team-agents`, {
-          method: 'POST',
-          body: parsed.teamAgent
-        })
-      }
+      case 'collaboration.createTeamAgent':
+      case 'collaboration.credentialStatus':
+      case 'collaboration.saveCredential':
+      case 'collaboration.reply':
+        return invokeTeamRunCollaborationOperation(this.client, this.#agentChat, operation, args)
       case 'tasks.list':
         return this.client.request(`/v1/projects/${idSchema.parse(args)}/tasks`)
       case 'tasks.get':

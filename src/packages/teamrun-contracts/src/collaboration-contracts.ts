@@ -17,6 +17,7 @@ export const channelMessageSchema = z.object({
   organizationId: entityIdSchema,
   channelId: entityIdSchema,
   authorUserId: entityIdSchema,
+  authorTeamAgentId: entityIdSchema.nullable().default(null),
   bodyMarkdown: markdownSchema.min(1),
   createdAt: timestampSchema,
   updatedAt: timestampSchema
@@ -50,6 +51,10 @@ export const createChannelRequestSchema = channelSchema.pick({
   description: true
 })
 export const createChannelMessageRequestSchema = channelMessageSchema.pick({ bodyMarkdown: true })
+export const createAgentChannelMessageRequestSchema = z.object({
+  bodyMarkdown: markdownSchema.min(1),
+  authorTeamAgentId: entityIdSchema
+})
 export const createTeamAgentRequestSchema = teamAgentSchema
   .pick({
     name: true,
@@ -73,4 +78,7 @@ export type TeamAgent = z.infer<typeof teamAgentSchema>
 export type TeamAgentSnapshot = z.infer<typeof teamAgentSnapshotSchema>
 export type CreateChannelRequest = z.infer<typeof createChannelRequestSchema>
 export type CreateChannelMessageRequest = z.infer<typeof createChannelMessageRequestSchema>
+export type CreateAgentChannelMessageRequest = z.infer<
+  typeof createAgentChannelMessageRequestSchema
+>
 export type CreateTeamAgentRequest = z.infer<typeof createTeamAgentRequestSchema>
