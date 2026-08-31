@@ -298,14 +298,6 @@ export function TeamAgentManagement({ projectId, active }: Props) {
                 </div>
               </div>
             ) : null}
-            {agent.agentKind === 'opencode' ? (
-              <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
-                {translate(
-                  'auto.components.team.space.TeamAgentManagement.openCodeAuth',
-                  'OpenCode uses the provider account configured locally with opencode auth login.'
-                )}
-              </p>
-            ) : null}
           </div>
         ))}
       </div>

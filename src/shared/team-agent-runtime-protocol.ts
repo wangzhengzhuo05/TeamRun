@@ -10,7 +10,7 @@ export type TeamAgentRuntimeDescriptor = {
 const TEAM_AGENT_RUNTIMES: Readonly<Record<string, TeamAgentRuntimeDescriptor>> = {
   codex: { chatReply: true, credentialMode: 'api-key' },
   claude: { chatReply: true, credentialMode: 'api-key' },
-  opencode: { chatReply: true, credentialMode: 'local-session' }
+  opencode: { chatReply: true, credentialMode: 'api-key' }
 }
 
 export function teamAgentRuntime(agentKind: string): TeamAgentRuntimeDescriptor | null {
