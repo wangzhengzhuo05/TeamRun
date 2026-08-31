@@ -70,10 +70,7 @@ async function handleStaticRequest(
     STATIC_WEB_CONTENT_TYPES.get(extname(absolutePath)) ?? 'application/octet-stream'
   )
   response.setHeader('Content-Length', fileStat.size)
-  response.setHeader(
-    'Cache-Control',
-    pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache'
-  )
+  response.setHeader('Cache-Control', 'no-cache')
   if (request.method === 'HEAD') {
     response.end()
     return
