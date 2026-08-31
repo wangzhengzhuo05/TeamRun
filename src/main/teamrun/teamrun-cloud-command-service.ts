@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  createAgentRunRequestSchema,
   createContextSnapshotRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
