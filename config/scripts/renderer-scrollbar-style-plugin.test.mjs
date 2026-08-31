@@ -1,15 +1,14 @@
-import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { plainClassName } from '../oxlint-plugins/renderer-scrollbar-style.mjs'
-import { runOxlintPluginOnSource } from './oxlint-plugin-test-runner.mjs'
-
-const pluginPath = path.resolve('config/oxlint-plugins/renderer-scrollbar-style.mjs')
+import rendererScrollbarPlugin, {
+  plainClassName
+} from '../oxlint-plugins/renderer-scrollbar-style.mjs'
+import { lintSourceWithPlugins } from './run-js-plugin-lint.mjs'
 
 function lintSource(source) {
-  return runOxlintPluginOnSource({
-    pluginName: 'renderer-scrollbar-style',
-    pluginPath,
+  return lintSourceWithPlugins({
+    filename: 'sample.tsx',
     source,
+    plugins: [{ name: 'renderer-scrollbar-style', plugin: rendererScrollbarPlugin }],
     rules: {
       'renderer-scrollbar-style/require-styled-vertical-scrollbar': 'warn'
     }

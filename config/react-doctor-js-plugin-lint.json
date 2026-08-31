@@ -1,16 +1,5 @@
 {
-  "$schema": "../node_modules/oxlint/configuration_schema.json",
-  "plugins": [],
-  "categories": {
-    "correctness": "off",
-    "suspicious": "off",
-    "pedantic": "off",
-    "perf": "off",
-    "style": "off",
-    "restriction": "off",
-    "nursery": "off"
-  },
-  "jsPlugins": [{ "name": "react-doctor", "specifier": "oxlint-plugin-react-doctor" }],
+  "plugins": [{ "name": "react-doctor", "specifier": "oxlint-plugin-react-doctor" }],
   "rules": {
     "react-doctor/effect-needs-cleanup": "warn",
     "react-doctor/no-array-index-as-key": "warn",

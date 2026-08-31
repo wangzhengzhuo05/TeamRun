@@ -6,20 +6,28 @@ import { pathToFileURL } from 'node:url'
 import { resolvePullRequestDiffBase } from './git-pull-request-diff-base.mjs'
 
 const SOURCE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/
-export const OXLINT_SCANS = [
+export const QUALITY_SCANS = [
   {
     // Why: no --config, so Oxlint keeps discovering nested configs. Pinning the root
     // config would apply root rules to mobile/, whose .oxlintrc.json turns them off.
     label: 'code quality',
+    runner: 'oxlint',
     args: ['--report-unused-disable-directives-severity', 'warn']
   },
   {
+    label: 'repository JavaScript plugins',
+    runner: 'js-plugin',
+    args: ['--config', 'config/repository-js-plugin-lint.json']
+  },
+  {
     label: 'type-aware code quality',
+    runner: 'oxlint',
     args: ['--type-aware', '--config', 'config/oxlint-code-quality-type-aware.json']
   },
   {
     label: 'React Doctor',
-    args: ['--config', 'config/oxlint-react-doctor.json']
+    runner: 'js-plugin',
+    args: ['--config', 'config/react-doctor-js-plugin-lint.json']
   }
 ]
 
@@ -165,9 +173,16 @@ function printDiagnostic(diagnostic, root) {
   console.error(`${file}:${line} ${code}: ${diagnostic.message}`)
 }
 
-function runOxlintScan(root, scan, files) {
-  const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
-  const result = spawnSync(pnpm, ['exec', 'oxlint', ...scan.args, '--format', 'json', ...files], {
+function runQualityScan(root, scan, files) {
+  const command =
+    scan.runner === 'oxlint'
+      ? process.platform === 'win32'
+        ? 'pnpm.cmd'
+        : 'pnpm'
+      : process.execPath
+  const prefix =
+    scan.runner === 'oxlint' ? ['exec', 'oxlint'] : ['config/scripts/run-js-plugin-lint.mjs']
+  const result = spawnSync(command, [...prefix, ...scan.args, '--format', 'json', ...files], {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024
@@ -194,8 +209,8 @@ export function main(
   }
 
   let failures = 0
-  for (const scan of OXLINT_SCANS) {
-    const diagnostics = runOxlintScan(root, scan, files).filter((diagnostic) =>
+  for (const scan of QUALITY_SCANS) {
+    const diagnostics = runQualityScan(root, scan, files).filter((diagnostic) =>
       diagnosticTouchesAddedLines(diagnostic, rangesByFile, root)
     )
     for (const diagnostic of diagnostics) {

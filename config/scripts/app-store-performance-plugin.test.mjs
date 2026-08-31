@@ -1,14 +1,12 @@
-import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { runOxlintPluginOnSource } from './oxlint-plugin-test-runner.mjs'
-
-const pluginPath = path.resolve('config/oxlint-plugins/app-store-performance.mjs')
+import appStorePerformancePlugin from '../oxlint-plugins/app-store-performance.mjs'
+import { lintSourceWithPlugins } from './run-js-plugin-lint.mjs'
 
 function lintSource(source) {
-  return runOxlintPluginOnSource({
-    pluginName: 'app-store-performance',
-    pluginPath,
+  return lintSourceWithPlugins({
+    filename: 'sample.tsx',
     source,
+    plugins: [{ name: 'app-store-performance', plugin: appStorePerformancePlugin }],
     rules: {
       'app-store-performance/require-selector': 'warn',
       'app-store-performance/no-identity-selector': 'warn',

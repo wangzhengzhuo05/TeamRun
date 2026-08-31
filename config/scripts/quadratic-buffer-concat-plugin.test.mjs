@@ -1,15 +1,12 @@
-import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { runOxlintPluginOnSource } from './oxlint-plugin-test-runner.mjs'
-
-const pluginPath = path.resolve('config/oxlint-plugins/quadratic-buffer-concat.mjs')
+import quadraticBufferConcatPlugin from '../oxlint-plugins/quadratic-buffer-concat.mjs'
+import { lintSourceWithPlugins } from './run-js-plugin-lint.mjs'
 
 function lintSource(source) {
-  return runOxlintPluginOnSource({
-    pluginName: 'quadratic-buffer-concat',
-    pluginPath,
+  return lintSourceWithPlugins({
+    filename: 'sample.ts',
     source,
-    extension: 'ts',
+    plugins: [{ name: 'quadratic-buffer-concat', plugin: quadraticBufferConcatPlugin }],
     rules: {
       'quadratic-buffer-concat/no-loop-carried-concat': 'warn'
     }

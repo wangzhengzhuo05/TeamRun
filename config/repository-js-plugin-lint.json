@@ -1,0 +1,47 @@
+{
+  "plugins": [
+    {
+      "name": "mobile-pairing",
+      "specifier": "./oxlint-plugins/mobile-pairing-qrcode-import.mjs",
+      "sourceHints": ["qrcode"]
+    },
+    {
+      "name": "app-store-performance",
+      "specifier": "./oxlint-plugins/app-store-performance.mjs",
+      "sourceHints": ["useAppStore"]
+    },
+    {
+      "name": "quadratic-buffer-concat",
+      "specifier": "./oxlint-plugins/quadratic-buffer-concat.mjs",
+      "sourceHints": ["Buffer.concat"]
+    },
+    {
+      "name": "renderer-scrollbar-style",
+      "specifier": "./oxlint-plugins/renderer-scrollbar-style.mjs",
+      "sourceHints": ["overflow"]
+    }
+  ],
+  "rules": {
+    "app-store-performance/require-selector": "error",
+    "app-store-performance/no-identity-selector": "error",
+    "app-store-performance/no-fresh-selector-result": "error",
+    "quadratic-buffer-concat/no-loop-carried-concat": "error",
+    "mobile-pairing/no-eager-qrcode-import": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/renderer/src/**/*.{ts,tsx}"],
+      "rules": {
+        "renderer-scrollbar-style/require-styled-vertical-scrollbar": "error"
+      }
+    },
+    {
+      "files": ["**/*.test.*", "**/*.spec.*", "**/*-benchmark.*"],
+      "rules": {
+        "quadratic-buffer-concat/no-loop-carried-concat": "off",
+        "renderer-scrollbar-style/require-styled-vertical-scrollbar": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["**/node_modules", "**/dist", "**/out", "tests/e2e/.cross-version-checkouts"]
+}
