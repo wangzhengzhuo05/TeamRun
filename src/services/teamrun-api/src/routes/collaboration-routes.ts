@@ -7,13 +7,13 @@ import {
   createTeamAgentRequestSchema
 } from '@teamrun/contracts'
 import { requireOrganizationRole } from '../auth/organization-access.js'
-import { channelMessages, channels, teamAgents } from '../database/schema.js'
+import { channelMessages, channels, modelConnections, teamAgents } from '../database/schema.js'
 import { appendTeamEvent } from '../events/team-event-writer.js'
 import { ApiProblem } from '../http/api-problem.js'
 import { requireIdempotencyKey, runIdempotentMutation } from '../http/idempotent-mutation.js'
 import { requireProject } from './project-access.js'
 
-async function requireChannel(app: FastifyInstance, channelId: string, userId: string) {
+export async function requireChannel(app: FastifyInstance, channelId: string, userId: string) {
   const [channel] = await app.teamRunDatabase
     .select()
     .from(channels)
@@ -118,54 +118,15 @@ export async function registerCollaborationRoutes(app: FastifyInstance): Promise
     return reply.code(result.status).send(result.body)
   })
 
-  app.post('/v1/channels/:channelId/agent-messages', async (request, reply) => {
+  app.post('/v1/channels/:channelId/agent-messages', async (request) => {
     const { channelId } = request.params as { channelId: string }
-    const body = createAgentChannelMessageRequestSchema.parse(request.body)
-    const channel = await requireChannel(app, channelId, request.teamRunUser.id)
-    const [teamAgent] = await app.teamRunDatabase
-      .select({ id: teamAgents.id })
-      .from(teamAgents)
-      .where(
-        and(eq(teamAgents.id, body.authorTeamAgentId), eq(teamAgents.projectId, channel.projectId))
-      )
-      .limit(1)
-    if (!teamAgent) {
-      throw new ApiProblem(
-        400,
-        'team_agent_channel_mismatch',
-        'Team Agent is not in this channel project'
-      )
-    }
-    const key = requireIdempotencyKey(request.headers['idempotency-key'] as string | undefined)
-    const result = await runIdempotentMutation(app.teamRunDatabase, {
-      userId: request.teamRunUser.id,
-      route: `POST /v1/channels/${channelId}/agent-messages`,
-      key,
-      requestBody: body,
-      execute: async (transaction) => {
-        const [message] = await transaction
-          .insert(channelMessages)
-          .values({
-            organizationId: channel.organizationId,
-            channelId,
-            authorUserId: request.teamRunUser.id,
-            ...body
-          })
-          .returning()
-        if (!message) {
-          throw new ApiProblem(500, 'agent_message_create_failed', 'Agent message was not created')
-        }
-        await appendTeamEvent(transaction, {
-          organizationId: channel.organizationId,
-          type: 'channel.message_created',
-          entityId: message.id,
-          actorUserId: request.teamRunUser.id,
-          data: { channelId, teamAgentId: teamAgent.id }
-        })
-        return { status: 201, body: message }
-      }
-    })
-    return reply.code(result.status).send(result.body)
+    createAgentChannelMessageRequestSchema.parse(request.body)
+    await requireChannel(app, channelId, request.teamRunUser.id)
+    throw new ApiProblem(
+      409,
+      'team_agent_central_reply_required',
+      'Update TeamRun to use Team Server Agent replies'
+    )
   })
 
   app.get('/v1/projects/:projectId/team-agents', async (request) => {
@@ -188,6 +149,30 @@ export async function registerCollaborationRoutes(app: FastifyInstance): Promise
       request.teamRunUser.id,
       ['owner']
     )
+    if (!body.modelConnectionId) {
+      throw new ApiProblem(
+        400,
+        'team_agent_model_connection_required',
+        'Team Agent requires a Model Connection'
+      )
+    }
+    const [connection] = await app.teamRunDatabase
+      .select({ id: modelConnections.id, keyConfigured: modelConnections.keyConfigured })
+      .from(modelConnections)
+      .where(
+        and(
+          eq(modelConnections.id, body.modelConnectionId),
+          eq(modelConnections.projectId, projectId)
+        )
+      )
+      .limit(1)
+    if (!connection?.keyConfigured) {
+      throw new ApiProblem(
+        400,
+        'team_agent_model_connection_invalid',
+        'Model Connection is not configured for this Project'
+      )
+    }
     const key = requireIdempotencyKey(request.headers['idempotency-key'] as string | undefined)
     const result = await runIdempotentMutation(app.teamRunDatabase, {
       userId: request.teamRunUser.id,
@@ -201,7 +186,12 @@ export async function registerCollaborationRoutes(app: FastifyInstance): Promise
             organizationId: project.organizationId,
             projectId,
             createdByUserId: request.teamRunUser.id,
-            ...body
+            name: body.name,
+            agentKind: 'opencode',
+            launchCommand: null,
+            modelConnectionId: body.modelConnectionId,
+            yoloMode: body.yoloMode ?? false,
+            instructionsMarkdown: body.instructionsMarkdown
           })
           .returning()
         if (!teamAgent) {

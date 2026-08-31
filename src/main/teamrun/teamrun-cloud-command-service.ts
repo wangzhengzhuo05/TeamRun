@@ -174,6 +174,10 @@ export class TeamRunCloudCommandService {
       case 'collaboration.createMessage':
       case 'collaboration.listTeamAgents':
       case 'collaboration.createTeamAgent':
+      case 'collaboration.getTeamServer':
+      case 'collaboration.enrollTeamServer':
+      case 'collaboration.listModelConnections':
+      case 'collaboration.createModelConnection':
       case 'collaboration.credentialStatus':
       case 'collaboration.saveCredential':
       case 'collaboration.reply':

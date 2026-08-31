@@ -7,15 +7,16 @@ import type { TeamAgent } from '../../../../shared/teamrun-api'
 import { TeamAgentManagement } from './TeamAgentManagement'
 
 const collaboration = vi.hoisted(() => ({
-  credentialStatus: vi.fn(),
+  getTeamServer: vi.fn(),
+  listModelConnections: vi.fn(),
   listTeamAgents: vi.fn()
 }))
 
-const claudeAgent: TeamAgent = {
+const legacyAgent: TeamAgent = {
   id: 'agent-claude',
   organizationId: 'organization-1',
   projectId: 'project-1',
-  name: 'Claude',
+  name: 'Documentation assistant',
   agentKind: 'claude',
   launchCommand: null,
   instructionsMarkdown: '',
@@ -27,11 +28,9 @@ const claudeAgent: TeamAgent = {
 
 describe('TeamAgentManagement', () => {
   beforeEach(() => {
-    collaboration.listTeamAgents.mockResolvedValue([claudeAgent])
-    collaboration.credentialStatus.mockResolvedValue({
-      configured: true,
-      baseUrl: 'https://claude.example.test'
-    })
+    collaboration.getTeamServer.mockResolvedValue(null)
+    collaboration.listModelConnections.mockResolvedValue([])
+    collaboration.listTeamAgents.mockResolvedValue([legacyAgent])
     Object.defineProperty(window, 'api', {
       configurable: true,
       value: { teamRun: { collaboration } } as never
@@ -43,13 +42,13 @@ describe('TeamAgentManagement', () => {
     vi.clearAllMocks()
   })
 
-  it('uses the Claude Code label for an existing default Claude agent', async () => {
+  it('shows central Team Server setup and marks legacy Agents for migration', async () => {
     render(<TeamAgentManagement projectId="project-1" active canManage />)
 
-    await waitFor(() => expect(screen.getByText('Claude Code')).toBeInTheDocument())
-    expect(screen.queryByText('Claude')).not.toBeInTheDocument()
-    expect(screen.queryByText('claude')).not.toBeInTheDocument()
-    expect(screen.getAllByPlaceholderText('Base URL (optional)')).toHaveLength(2)
-    expect(screen.getByDisplayValue('https://claude.example.test')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Documentation assistant')).toBeInTheDocument())
+    expect(screen.getByText('Team Server')).toBeInTheDocument()
+    expect(screen.getByText('Migration required')).toBeInTheDocument()
+    expect(screen.getByLabelText('One-time pairing code')).toBeInTheDocument()
+    expect(screen.queryByText('Local API key configured')).not.toBeInTheDocument()
   })
 })

@@ -43,6 +43,7 @@ export class TeamRunApiClient {
       idempotencyKey?: string
       queueIfOffline?: boolean
       cache?: boolean
+      timeoutMs?: number
     } = {}
   ): Promise<T> {
     const apiUrl = this.auth.apiUrl
@@ -78,7 +79,7 @@ export class TeamRunApiClient {
           ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {})
         },
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
-        signal: AbortSignal.timeout(30_000)
+        signal: AbortSignal.timeout(options.timeoutMs ?? 30_000)
       })
     } catch (error) {
       this.#connection = 'offline'

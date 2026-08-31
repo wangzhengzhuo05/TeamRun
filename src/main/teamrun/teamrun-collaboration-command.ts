@@ -2,13 +2,11 @@ import { z } from 'zod'
 import {
   createChannelMessageRequestSchema,
   createChannelRequestSchema,
+  createModelConnectionRequestSchema,
+  enrollTeamServerRequestSchema,
   createTeamAgentRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
-import {
-  readTeamAgentCredentialConfig,
-  saveTeamAgentCredential
-} from './team-agent-credential-store'
 import type { TeamAgentChatService } from './team-agent-chat-service'
 import type { TeamRunApiClient } from './teamrun-api-client'
 
@@ -56,20 +54,41 @@ export async function invokeTeamRunCollaborationOperation(
         body: parsed.teamAgent
       })
     }
+    case 'collaboration.getTeamServer':
+      return client.request(`/v1/projects/${idSchema.parse(args)}/team-server`)
+    case 'collaboration.enrollTeamServer': {
+      const parsed = z
+        .object({ projectId: idSchema, teamServer: enrollTeamServerRequestSchema })
+        .parse(args)
+      return client.request(`/v1/projects/${parsed.projectId}/team-server`, {
+        method: 'POST',
+        body: parsed.teamServer,
+        queueIfOffline: false
+      })
+    }
+    case 'collaboration.listModelConnections':
+      return client.request(`/v1/projects/${idSchema.parse(args)}/model-connections`)
+    case 'collaboration.createModelConnection': {
+      const parsed = z
+        .object({ projectId: idSchema, connection: createModelConnectionRequestSchema })
+        .parse(args)
+      return client.request(`/v1/projects/${parsed.projectId}/model-connections`, {
+        method: 'POST',
+        body: parsed.connection,
+        queueIfOffline: false
+      })
+    }
     case 'collaboration.credentialStatus': {
-      const credential = readTeamAgentCredentialConfig(idSchema.parse(args))
-      return { configured: credential !== null, baseUrl: credential?.baseUrl ?? null }
+      idSchema.parse(args)
+      throw new Error('team_agent_local_credentials_removed')
     }
     case 'collaboration.saveCredential': {
-      const parsed = z
-        .object({
-          agentId: idSchema,
-          apiKey: z.string().max(1024),
-          baseUrl: z.string().max(2048).nullable().optional()
-        })
-        .parse(args)
-      saveTeamAgentCredential(parsed.agentId, parsed.apiKey, parsed.baseUrl)
-      return { configured: true }
+      z.object({
+        agentId: idSchema,
+        apiKey: z.string().max(1024),
+        baseUrl: z.string().max(2048).nullable().optional()
+      }).parse(args)
+      throw new Error('team_agent_local_credentials_removed')
     }
     case 'collaboration.reply': {
       const parsed = z

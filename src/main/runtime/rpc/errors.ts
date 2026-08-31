@@ -52,6 +52,7 @@ const RUNTIME_PASSTHROUGH_CODES: ReadonlySet<string> = new Set([
   'repo_not_found',
   'timeout',
   'invalid_limit',
+  'team_server_paired_runtime_required',
   'remote_update_manual_required',
   'remote_update_not_available',
   'remote_update_not_downloaded',

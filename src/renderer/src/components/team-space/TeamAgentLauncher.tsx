@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Play } from 'lucide-react'
 import { toast } from 'sonner'
-import type { AgentRun, ContextSnapshot, TeamAgent } from '../../../../shared/teamrun-api'
+import type { AgentRun, ContextSnapshot } from '../../../../shared/teamrun-api'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import { useAppStore } from '@/store'
 import { getAgentCatalog } from '@/lib/agent-catalog'
@@ -17,11 +17,9 @@ import {
 } from '@/components/ui/select'
 import { translate } from '@/i18n/i18n'
 import { isTeamRunMutationQueued } from './teamrun-mutation-feedback'
-import { GenericCliCommandConfirmation } from './GenericCliCommandConfirmation'
 
 type Props = {
   taskId: string
-  projectId: string
   taskTitle: string
   latestSnapshot: ContextSnapshot | null
   onRefresh: () => Promise<void>
@@ -50,36 +48,13 @@ export function TeamAgentLauncher(props: Props) {
     [folderWorkspaces, gitRepos]
   )
   const catalog = useMemo(() => getAgentCatalog(), [])
-  const knownAgentIds = useMemo(() => new Set(catalog.map((entry) => entry.id)), [catalog])
   const [workspaceValue, setWorkspaceValue] = useState(workspaceOptions[0]?.value ?? '')
   const initialAgent = defaultAgent && defaultAgent !== 'blank' ? defaultAgent : 'codex'
   const [agentSelection, setAgentSelection] = useState(`agent:${initialAgent}`)
-  const [teamAgents, setTeamAgents] = useState<TeamAgent[]>([])
   const [count, setCount] = useState('2')
-  const [genericCommandConfirmed, setGenericCommandConfirmed] = useState(false)
   const [launching, setLaunching] = useState(false)
-  const selectedTeamAgent = teamAgents.find((entry) => `team:${entry.id}` === agentSelection)
-  const agent = (selectedTeamAgent?.agentKind ?? agentSelection.slice('agent:'.length)) as TuiAgent
+  const agent = agentSelection.slice('agent:'.length) as TuiAgent
   const selectedWorkspace = workspaceOptions.find((option) => option.value === workspaceValue)
-  const genericLaunchCommand =
-    selectedTeamAgent?.agentKind === 'generic-cli'
-      ? (selectedTeamAgent.launchCommand?.trim() ?? '')
-      : ''
-
-  useEffect(() => {
-    void window.api.teamRun.collaboration
-      .listTeamAgents(props.projectId)
-      .then((entries) =>
-        setTeamAgents(
-          entries.filter(
-            (entry) =>
-              knownAgentIds.has(entry.agentKind as TuiAgent) ||
-              (entry.agentKind === 'generic-cli' && Boolean(entry.launchCommand?.trim()))
-          )
-        )
-      )
-      .catch(() => setTeamAgents([]))
-  }, [knownAgentIds, props.projectId])
 
   useEffect(() => {
     if (!workspaceOptions.some((option) => option.value === workspaceValue)) {
@@ -102,25 +77,19 @@ export function TeamAgentLauncher(props: Props) {
     try {
       const links: Promise<void>[] = []
       const launchCount = selectedWorkspace.kind === 'folder' ? 1 : Number(count)
-      const context = selectedTeamAgent
-        ? `# Team Agent: ${selectedTeamAgent.name}\n\n${selectedTeamAgent.instructionsMarkdown}\n\n# Frozen task context\n\n${snapshot.renderedMarkdown}`
-        : snapshot.renderedMarkdown
-      const agentCommandOverride =
-        selectedTeamAgent?.agentKind === 'generic-cli' ? selectedTeamAgent.launchCommand : undefined
       const linkWorkspace = (args: {
         clientRunId: string
         workspaceId: string
         workspacePath: string
         baseRevision: AgentRun['baseRevision']
-      }) => linkAgentRun({ ...args, snapshot, agent, selectedTeamAgent, taskId: props.taskId })
+      }) => linkAgentRun({ ...args, snapshot, agent, taskId: props.taskId })
       const launches = Array.from({ length: launchCount }, () => {
         const clientRunId = crypto.randomUUID()
         if (selectedWorkspace.kind === 'folder') {
           return launchTeamRunFolderAgent({
             folderWorkspaceId: selectedWorkspace.id,
             agent,
-            agentCommandOverride,
-            context,
+            context: snapshot.renderedMarkdown,
             onWorkspaceReady: (workspace) => {
               const linking = linkWorkspace({
                 clientRunId,
@@ -139,13 +108,12 @@ export function TeamAgentLauncher(props: Props) {
             type: 'issue',
             number: null,
             url: `teamrun://tasks/${props.taskId}`,
-            pasteContent: context
+            pasteContent: snapshot.renderedMarkdown
           },
           repoId: selectedWorkspace.id,
           launchSource: 'task_page',
           telemetrySource: 'unknown',
           agentOverride: agent,
-          agentCommandOverride,
           promptDelivery: agent === 'generic-cli' ? 'auto-submit' : 'submit-after-ready',
           openModalFallback: () =>
             toast.error(
@@ -202,23 +170,18 @@ export function TeamAgentLauncher(props: Props) {
           <h3 className="text-sm font-semibold">
             {translate(
               'auto.components.team.space.TeamAgentLauncher.openTaskTitle',
-              'Open task in TeamRun'
+              'Open task in a Personal Workspace'
             )}
           </h3>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {translate(
               'auto.components.team.space.TeamAgentLauncher.03975ebdf8',
-              'Git agents use independent worktrees. A folder workspace launches one Agent tab without copying or changing the source folder.'
+              'Personal Git work uses an independent worktree. A folder workspace opens one Agent tab without copying or changing the source folder.'
             )}
           </p>
         </div>
         <Button
-          disabled={
-            !props.latestSnapshot ||
-            !selectedWorkspace ||
-            launching ||
-            (Boolean(genericLaunchCommand) && !genericCommandConfirmed)
-          }
+          disabled={!props.latestSnapshot || !selectedWorkspace || launching}
           onClick={launch}
         >
           <Play />{' '}
@@ -251,13 +214,7 @@ export function TeamAgentLauncher(props: Props) {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={agentSelection}
-          onValueChange={(value) => {
-            setAgentSelection(value)
-            setGenericCommandConfirmed(false)
-          }}
-        >
+        <Select value={agentSelection} onValueChange={setAgentSelection}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -265,15 +222,6 @@ export function TeamAgentLauncher(props: Props) {
             {catalog.map((entry) => (
               <SelectItem key={entry.id} value={`agent:${entry.id}`}>
                 {entry.label}
-              </SelectItem>
-            ))}
-            {teamAgents.map((entry) => (
-              <SelectItem key={entry.id} value={`team:${entry.id}`}>
-                {entry.name}{' '}
-                {translate(
-                  'auto.components.team.space.TeamAgentLauncher.71aa5194e9',
-                  '· Team Agent'
-                )}
               </SelectItem>
             ))}
           </SelectContent>
@@ -297,13 +245,6 @@ export function TeamAgentLauncher(props: Props) {
           </SelectContent>
         </Select>
       </div>
-      {genericLaunchCommand ? (
-        <GenericCliCommandConfirmation
-          command={genericLaunchCommand}
-          confirmed={genericCommandConfirmed}
-          onConfirmedChange={setGenericCommandConfirmed}
-        />
-      ) : null}
       {!props.latestSnapshot ? (
         <p className="mt-3 text-xs text-muted-foreground">
           {translate(
@@ -328,7 +269,6 @@ async function linkAgentRun(args: {
   taskId: string
   snapshot: ContextSnapshot
   agent: TuiAgent
-  selectedTeamAgent: TeamAgent | undefined
   clientRunId: string
   workspaceId: string
   workspacePath: string
@@ -339,7 +279,6 @@ async function linkAgentRun(args: {
     run: {
       contextSnapshotId: args.snapshot.id,
       agentKind: args.agent,
-      ...(args.selectedTeamAgent ? { teamAgentId: args.selectedTeamAgent.id } : {}),
       baseRevision: args.baseRevision,
       clientRunId: args.clientRunId
     },

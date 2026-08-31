@@ -1,6 +1,7 @@
 import { z } from 'zod'
+import { TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY } from '../../../../shared/protocol-version'
 import { TEAMRUN_CLOUD_OPERATIONS } from '../../../../shared/teamrun-cloud-operations'
-import { defineMethod, defineStreamingMethod, type RpcAnyMethod } from '../core'
+import { defineMethod, defineStreamingMethod, type RpcAnyMethod, type RpcContext } from '../core'
 
 const Worktree = z.string().min(1).max(32_768)
 const FullGitObjectId = z
@@ -16,6 +17,49 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
     }),
     handler: (params, { runtime }) =>
       runtime.invokeTeamRunCloudOperation(params.operation, params.args)
+  }),
+  defineMethod({
+    name: 'teamrun.teamServer.status',
+    params: null,
+    handler: (_params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.getTeamServerStatus()
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.modelConnection.configure',
+    params: z.object({
+      connectionId: z.uuid(),
+      baseUrl: z.url().max(2048),
+      apiKey: z.string().trim().min(1).max(4096),
+      model: z.string().trim().min(1).max(200)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.configureTeamServerModelConnection(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.reply',
+    params: z.object({
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000)
+      }),
+      messages: z
+        .array(
+          z.object({
+            author: z.string().trim().min(1).max(160),
+            bodyMarkdown: z.string().max(32_000)
+          })
+        )
+        .max(20)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.runTeamServerAgentReply(params)
+    }
   }),
   defineStreamingMethod({
     name: 'teamrun.events.subscribe',
@@ -52,3 +96,13 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
       runtime.prepareTeamRunPublication(params.worktree, params.baseObjectId, params.includeDiff)
   })
 ]
+
+function requirePairedRuntime(context: RpcContext): void {
+  if (
+    context.clientKind !== 'runtime' ||
+    !context.pairedDeviceId ||
+    !context.clientCapabilities?.includes(TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY)
+  ) {
+    throw new Error('team_server_paired_runtime_required')
+  }
+}

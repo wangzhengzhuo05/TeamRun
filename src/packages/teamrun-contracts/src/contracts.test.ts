@@ -2,12 +2,12 @@ import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
   agentRunStatusSchema,
-  createAgentChannelMessageRequestSchema,
   createTeamAgentRequestSchema,
   createTaskRequestSchema,
   gitRemoteUrlSchema,
   publicationArtifactSchema,
   preparePublicationRequestSchema,
+  requestTeamAgentReplySchema,
   teamRunWorkspaceLinkSchema
 } from './index.js'
 
@@ -27,35 +27,32 @@ describe('TeamRun contracts', () => {
     }
   })
 
-  it('requires a launch command for Generic CLI Team Agents', () => {
+  it('requires OpenCode and a Model Connection for new Team Agents', () => {
+    const modelConnectionId = crypto.randomUUID()
     expect(
       createTeamAgentRequestSchema.safeParse({
         name: 'Internal reviewer',
         agentKind: 'generic-cli',
+        launchCommand: 'company-agent --interactive',
+        modelConnectionId,
         instructionsMarkdown: ''
       }).success
     ).toBe(false)
     expect(
       createTeamAgentRequestSchema.parse({
         name: 'Internal reviewer',
-        agentKind: 'generic-cli',
-        launchCommand: 'company-agent --interactive',
+        agentKind: 'opencode',
+        modelConnectionId,
         instructionsMarkdown: ''
-      }).launchCommand
-    ).toBe('company-agent --interactive')
+      }).modelConnectionId
+    ).toBe(modelConnectionId)
   })
 
-  it('requires an Agent identity for Agent-authored channel messages', () => {
-    const body = {
-      bodyMarkdown: 'I have reviewed the latest change.',
-      authorTeamAgentId: crypto.randomUUID()
-    }
-    expect(createAgentChannelMessageRequestSchema.parse(body)).toEqual(body)
+  it('accepts only an Agent identity when requesting a server-authored reply', () => {
+    const body = { teamAgentId: crypto.randomUUID() }
+    expect(requestTeamAgentReplySchema.parse(body)).toEqual(body)
     expect(
-      createAgentChannelMessageRequestSchema.safeParse({
-        bodyMarkdown: body.bodyMarkdown,
-        authorTeamAgentId: null
-      }).success
+      requestTeamAgentReplySchema.safeParse({ ...body, bodyMarkdown: 'forged response' }).success
     ).toBe(false)
   })
 

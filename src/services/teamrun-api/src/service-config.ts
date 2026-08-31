@@ -15,6 +15,13 @@ const serviceConfigSchema = z
     TEAMRUN_SHARED_KEY_DISPLAY_NAME: z.string().min(1).max(160).default('TeamRun Team'),
     TEAMRUN_DEV_AUTH: z.enum(['0', '1']).default('0'),
     TEAMRUN_CORS_ORIGINS: z.string().default('http://127.0.0.1'),
+    TEAMRUN_RUNTIME_ENCRYPTION_KEY: z
+      .string()
+      .refine(
+        (value) => Buffer.from(value, 'base64').length === 32,
+        'Expected a 32-byte base64 key'
+      )
+      .optional(),
     TEAMRUN_S3_ENDPOINT: z.url().default('http://127.0.0.1:9000'),
     TEAMRUN_S3_PUBLIC_ENDPOINT: z.url().optional(),
     TEAMRUN_S3_REGION: z.string().default('us-east-1'),

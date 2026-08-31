@@ -7,6 +7,7 @@ import type {
   CreateChannelMessageRequest,
   CreateChannelRequest,
   CreateContextSnapshotRequest,
+  CreateModelConnectionRequest,
   CreateProjectRequest,
   CreateRepositoryRequest,
   CreateTaskCommentRequest,
@@ -16,6 +17,8 @@ import type {
   CreateTeamFileVersionRequest,
   CreatedTeamInviteCode,
   FinalizePublicationRequest,
+  EnrollTeamServerRequest,
+  ModelConnection,
   Organization,
   OrganizationInvitation,
   OrganizationMember,
@@ -33,6 +36,7 @@ import type {
   TeamFileVersion,
   TeamFileVersionContent,
   TeamInviteCode,
+  TeamServerBinding,
   UpdateAgentRunStatusRequest,
   UpdateProjectRequest,
   UpdateTaskRequest,
@@ -108,12 +112,16 @@ export type TeamRunApi = {
       projectId: string
       teamAgent: CreateTeamAgentRequest
     }) => Promise<TeamAgent>
-    credentialStatus: (agentId: string) => Promise<{ configured: boolean; baseUrl?: string | null }>
-    saveCredential: (args: {
-      agentId: string
-      apiKey: string
-      baseUrl?: string | null
-    }) => Promise<{ configured: true }>
+    getTeamServer: (projectId: string) => Promise<TeamServerBinding | null>
+    enrollTeamServer: (args: {
+      projectId: string
+      teamServer: EnrollTeamServerRequest
+    }) => Promise<TeamServerBinding>
+    listModelConnections: (projectId: string) => Promise<ModelConnection[]>
+    createModelConnection: (args: {
+      projectId: string
+      connection: CreateModelConnectionRequest
+    }) => Promise<ModelConnection>
     reply: (args: {
       projectId: string
       channelId: string

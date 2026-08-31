@@ -583,6 +583,7 @@ import type { EmulatorBridge } from '../emulator/emulator-bridge'
 import { getRuntimeFileTargetExecutionHostId, RuntimeFileCommands } from './orca-runtime-files'
 import { RuntimeGitCommands } from './orca-runtime-git'
 import { RuntimeTeamRunCommands } from './orca-runtime-teamrun'
+import { TeamServerAgentService } from '../teamrun/team-server-agent-service'
 import { TeamRunCloudCommandService } from '../teamrun/teamrun-cloud-command-service'
 import {
   streamTeamRunCloudEvents,
@@ -9218,6 +9219,29 @@ export class OrcaRuntimeService {
     this.teamRunCommands.runVerification.bind(this.teamRunCommands)
   prepareTeamRunPublication: RuntimeTeamRunCommands['preparePublication'] =
     this.teamRunCommands.preparePublication.bind(this.teamRunCommands)
+
+  private teamServerAgentService: TeamServerAgentService | null = null
+
+  getTeamServerStatus(): ReturnType<TeamServerAgentService['status']> {
+    return this.getTeamServerAgentService().status(this.runtimeId)
+  }
+
+  configureTeamServerModelConnection(
+    ...args: Parameters<TeamServerAgentService['configureModelConnection']>
+  ): ReturnType<TeamServerAgentService['configureModelConnection']> {
+    return this.getTeamServerAgentService().configureModelConnection(...args)
+  }
+
+  runTeamServerAgentReply(
+    ...args: Parameters<TeamServerAgentService['reply']>
+  ): ReturnType<TeamServerAgentService['reply']> {
+    return this.getTeamServerAgentService().reply(...args)
+  }
+
+  private getTeamServerAgentService(): TeamServerAgentService {
+    this.teamServerAgentService ??= new TeamServerAgentService(app.getPath('userData'))
+    return this.teamServerAgentService
+  }
 
   private teamRunCloudCommandService: TeamRunCloudCommandService | null = null
 

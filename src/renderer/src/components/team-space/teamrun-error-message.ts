@@ -23,6 +23,11 @@ type ErrorCopy = {
     | 'teamFileContentInvalid'
     | 'teamFileQuarantined'
     | 'teamFileContextUnsupported'
+    | 'teamServerUnavailable'
+    | 'teamServerRequired'
+    | 'teamServerOpenCodeMissing'
+    | 'teamServerEncryptionUnavailable'
+    | 'teamAgentMigrationRequired'
 }
 
 const ERROR_COPY: ErrorCopy[] = [
@@ -110,6 +115,26 @@ const ERROR_COPY: ErrorCopy[] = [
   {
     signals: ['team_file_context_unsupported'],
     id: 'teamFileContextUnsupported'
+  },
+  {
+    signals: ['team_server_unavailable', 'team_server_timeout'],
+    id: 'teamServerUnavailable'
+  },
+  {
+    signals: ['team_server_required'],
+    id: 'teamServerRequired'
+  },
+  {
+    signals: ['team_server_opencode_missing'],
+    id: 'teamServerOpenCodeMissing'
+  },
+  {
+    signals: ['team_server_model_encryption_unavailable', 'team_server_encryption_unavailable'],
+    id: 'teamServerEncryptionUnavailable'
+  },
+  {
+    signals: ['team_agent_server_migration_required'],
+    id: 'teamAgentMigrationRequired'
   }
 ]
 
@@ -234,6 +259,31 @@ function localizedErrorMessage(id: ErrorCopy['id']): string {
       return translate(
         'auto.components.team.space.teamrunErrorMessage.teamFileContextUnsupported',
         'Only text Team Files can be added to task context.'
+      )
+    case 'teamServerUnavailable':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerUnavailable',
+        'Team Server is unavailable. Check its connection and try again.'
+      )
+    case 'teamServerRequired':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerRequired',
+        'Bind a Team Server before continuing.'
+      )
+    case 'teamServerOpenCodeMissing':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerOpenCodeMissing',
+        'Install OpenCode on the Team Server before binding it.'
+      )
+    case 'teamServerEncryptionUnavailable':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamServerEncryptionUnavailable',
+        'Configure encrypted model credential storage on the Team Server.'
+      )
+    case 'teamAgentMigrationRequired':
+      return translate(
+        'auto.components.team.space.teamrunErrorMessage.teamAgentMigrationRequired',
+        'Recreate this Team Agent with a Team Server Model Connection.'
       )
   }
 }

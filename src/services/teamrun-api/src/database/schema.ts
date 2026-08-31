@@ -28,7 +28,14 @@ export {
   repositories,
   users
 } from './workspace-schema.js'
-export { channelMessages, channels, teamAgents } from './collaboration-schema.js'
+export {
+  channelMessages,
+  channels,
+  modelConnections,
+  teamAgentReplyInvocations,
+  teamAgents,
+  teamServerBindings
+} from './collaboration-schema.js'
 export {
   teamFileAvailabilityEnum,
   teamFileKindEnum,

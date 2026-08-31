@@ -3,16 +3,14 @@ import { z } from 'zod'
 import {
   createChannelMessageRequestSchema,
   createChannelRequestSchema,
+  createModelConnectionRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
   createTeamAgentRequestSchema,
+  enrollTeamServerRequestSchema,
   updateProjectRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
 import type { TeamAgentChatService } from '../teamrun/team-agent-chat-service'
-import {
-  readTeamAgentCredentialConfig,
-  saveTeamAgentCredential
-} from '../teamrun/team-agent-credential-store'
 import type { TeamRunApiClient } from '../teamrun/teamrun-api-client'
 
 const idSchema = z.uuid()
@@ -178,20 +176,31 @@ export function registerTeamRunWorkspaceHandlers(
       body: parsed.teamAgent
     })
   })
-  ipcMain.handle('teamrun:teamAgents:credentialStatus', (_event, agentId) => {
-    const credential = readTeamAgentCredentialConfig(pathId(agentId))
-    return { configured: credential !== null, baseUrl: credential?.baseUrl ?? null }
-  })
-  ipcMain.handle('teamrun:teamAgents:saveCredential', (_event, args) => {
+  ipcMain.handle('teamrun:teamServer:get', (_event, projectId) =>
+    client.request(`/v1/projects/${pathId(projectId)}/team-server`)
+  )
+  ipcMain.handle('teamrun:teamServer:enroll', (_event, args) => {
     const parsed = z
-      .object({
-        agentId: idSchema,
-        apiKey: z.string().max(1024),
-        baseUrl: z.string().max(2048).nullable().optional()
-      })
+      .object({ projectId: idSchema, teamServer: enrollTeamServerRequestSchema })
       .parse(args)
-    saveTeamAgentCredential(parsed.agentId, parsed.apiKey, parsed.baseUrl)
-    return { configured: true }
+    return client.request(`/v1/projects/${parsed.projectId}/team-server`, {
+      method: 'POST',
+      body: parsed.teamServer,
+      queueIfOffline: false
+    })
+  })
+  ipcMain.handle('teamrun:modelConnections:list', (_event, projectId) =>
+    client.request(`/v1/projects/${pathId(projectId)}/model-connections`)
+  )
+  ipcMain.handle('teamrun:modelConnections:create', (_event, args) => {
+    const parsed = z
+      .object({ projectId: idSchema, connection: createModelConnectionRequestSchema })
+      .parse(args)
+    return client.request(`/v1/projects/${parsed.projectId}/model-connections`, {
+      method: 'POST',
+      body: parsed.connection,
+      queueIfOffline: false
+    })
   })
   ipcMain.handle('teamrun:teamAgents:reply', (_event, args) => {
     const parsed = z

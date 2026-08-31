@@ -164,7 +164,6 @@ export function TeamAgentRunPanel(props: Props) {
         {props.canDevelop ? (
           <TeamAgentLauncher
             taskId={props.taskId}
-            projectId={props.projectId}
             taskTitle={props.taskTitle}
             latestSnapshot={props.snapshots[0] ?? null}
             onRefresh={props.onRefresh}
@@ -173,7 +172,7 @@ export function TeamAgentRunPanel(props: Props) {
           <p className="text-sm text-muted-foreground">
             {translate(
               'auto.components.team.space.TeamAgentRunPanel.ownerAdminOnly',
-              'Only the Team Owner or an Admin can launch Team Agent runs.'
+              'Only the Team Owner or an Admin can start work for this Team Task.'
             )}
           </p>
         )}

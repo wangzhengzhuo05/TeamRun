@@ -606,9 +606,11 @@ const api = {
       createMessage: (args) => ipcRenderer.invoke('teamrun:channels:createMessage', args),
       listTeamAgents: (projectId) => ipcRenderer.invoke('teamrun:teamAgents:list', projectId),
       createTeamAgent: (args) => ipcRenderer.invoke('teamrun:teamAgents:create', args),
-      credentialStatus: (agentId) =>
-        ipcRenderer.invoke('teamrun:teamAgents:credentialStatus', agentId),
-      saveCredential: (args) => ipcRenderer.invoke('teamrun:teamAgents:saveCredential', args),
+      getTeamServer: (projectId) => ipcRenderer.invoke('teamrun:teamServer:get', projectId),
+      enrollTeamServer: (args) => ipcRenderer.invoke('teamrun:teamServer:enroll', args),
+      listModelConnections: (projectId) =>
+        ipcRenderer.invoke('teamrun:modelConnections:list', projectId),
+      createModelConnection: (args) => ipcRenderer.invoke('teamrun:modelConnections:create', args),
       reply: (args) => ipcRenderer.invoke('teamrun:teamAgents:reply', args)
     },
     files: {

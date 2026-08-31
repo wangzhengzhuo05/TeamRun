@@ -22,4 +22,13 @@ describe('readTeamRunServiceConfig', () => {
       readTeamRunServiceConfig({ NODE_ENV: 'production', TEAMRUN_DEV_AUTH: '1' })
     ).toThrow('TEAMRUN_DEV_AUTH cannot run in production')
   })
+
+  it('rejects malformed Team Server encryption keys', () => {
+    expect(() =>
+      readTeamRunServiceConfig({
+        TEAMRUN_DEV_AUTH: '1',
+        TEAMRUN_RUNTIME_ENCRYPTION_KEY: 'not-a-32-byte-key'
+      })
+    ).toThrow('Expected a 32-byte base64 key')
+  })
 })

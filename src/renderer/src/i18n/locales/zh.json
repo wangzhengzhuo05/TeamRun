@@ -14393,34 +14393,53 @@
             "883c087e34": "仓库工作区",
             "3658f275a3": "启动",
             "49f1951c0b": "正在启动…",
-            "03975ebdf8": "Git 智能体使用独立工作树。文件夹工作区会启动一个智能体标签页，不会复制或更改源文件夹。",
+            "03975ebdf8": "个人 Git 工作使用独立工作树。文件夹工作区会打开一个智能体标签页，不会复制或更改源文件夹。",
             "f51c9bb62e": "启动独立智能体",
             "50e9904340": "已启动 {{value0}} 个 TeamRun 智能体工作区{{value1}}。",
             "partialFailure": "有 {{value0}} 个智能体工作区{{value1}}无法启动。",
-            "openTaskTitle": "在 TeamRun 中打开任务",
+            "openTaskTitle": "在个人工作区中打开任务",
             "openInTeamRun": "在 TeamRun 中打开",
             "setupPolicyRequired": "启动 TeamRun 智能体前，请为此仓库选择设置策略。"
           },
           "TeamAgentManagement": {
             "createAgentError": "无法创建团队智能体",
-            "saveCredentialError": "无法保存 API Key",
             "name": "团队智能体名称",
-            "genericCli": "通用 CLI",
-            "launchCommand": "将任务上下文作为最后一个参数的命令",
-            "launchCommandHint": "此命令会与项目成员共享。请将凭据保留在主机环境中。",
-            "apiKey": "用于聊天回复的 API Key",
-            "apiKeyHint": "仅存储在此运行时，并使用操作系统凭据保护。",
-            "baseUrl": "Base URL（可选）",
-            "instructions": "冻结任务上下文前附加的可复用指令",
+            "instructions": "可复用指令",
             "create": "创建团队智能体",
             "noInstructions": "无附加指令",
-            "keyConfigured": "已配置本地 API Key",
-            "keyMissing": "聊天回复需要本地 API Key",
-            "updateKey": "设置或替换本地 API Key",
-            "saving": "正在保存…",
-            "saveKey": "保存 Key",
-            "loadError": "无法加载团队智能体",
-            "ownerOnly": "只有团队所有者可以创建或配置团队智能体。"
+            "loadError": "无法加载团队智能体设置",
+            "ownerOnly": "只有团队所有者可以创建或配置团队智能体。",
+            "teamServer": "团队服务器",
+            "teamServerDescription": "由同一个 Linux 运行时为所有成员执行一致的团队智能体。",
+            "replaceServer": "替换服务器",
+            "serverOwnerRequired": "团队所有者绑定团队服务器后，团队智能体才能运行。",
+            "serverName": "服务器名称",
+            "pairingCode": "一次性配对码",
+            "pairingHint": "请在 Linux 团队服务器上生成运行时访问码。替换后会立即重置当前服务器。",
+            "verifyingServer": "正在验证团队服务器…",
+            "bindServer": "绑定团队服务器",
+            "enrollServerError": "无法绑定团队服务器",
+            "modelConnections": "模型连接",
+            "modelConnectionDescription": "Base URL 与模型是团队共享元数据；API Key 仅加密保存在团队服务器。",
+            "serverKeyConfigured": "API Key 已配置在团队服务器",
+            "serverKeyMissing": "尚未配置 API Key",
+            "bindServerFirst": "请先绑定团队服务器，再添加模型连接。",
+            "connectionName": "连接名称",
+            "model": "模型",
+            "baseUrl": "Base URL",
+            "apiKey": "API Key",
+            "configuringConnection": "正在配置团队服务器…",
+            "createConnection": "创建模型连接",
+            "createConnectionError": "无法创建模型连接",
+            "teamAgents": "团队智能体",
+            "teamAgentDescription": "可复用身份会在绑定的团队服务器上，针对冻结的团队上下文运行。",
+            "migrationRequired": "需要迁移",
+            "yoloEnabled": "开发运行已开启 YOLO 模式",
+            "modelConnection": "模型连接",
+            "yoloMode": "YOLO 模式",
+            "yoloDescription": "未来的开发运行可不经询问添加文件；所有团队活动仍对全员可见。",
+            "creatingAgent": "正在创建团队智能体…",
+            "connectionFirst": "请先创建模型连接，再创建团队智能体。"
           },
           "TeamAgentManagementDialog": {
             "agents": "智能体",
@@ -14436,7 +14455,7 @@
             "3412fc359a": "上下文已过期",
             "872ca19575": "此设备上没有该智能体工作区。",
             "markReadyError": "无法将此次运行标记为可供评审",
-            "ownerAdminOnly": "只有团队所有者或管理员可以启动团队智能体运行。"
+            "ownerAdminOnly": "只有团队所有者或管理员可以开始处理此团队任务。"
           },
           "TeamMembersDialog": {
             "78911cff23": "撤销 {{value0}}",
@@ -14607,7 +14626,12 @@
             "teamFilePathConflict": "已有团队文件使用此路径。",
             "teamFileContentInvalid": "无法读取团队文件内容。",
             "teamFileQuarantined": "需要由所有者解除隔离后才能使用此团队文件版本。",
-            "teamFileContextUnsupported": "只有文本团队文件可以加入任务上下文。"
+            "teamFileContextUnsupported": "只有文本团队文件可以加入任务上下文。",
+            "teamServerUnavailable": "团队服务器当前不可用，请检查连接后重试。",
+            "teamServerRequired": "请先绑定团队服务器。",
+            "teamServerOpenCodeMissing": "请先在团队服务器上安装 OpenCode。",
+            "teamServerEncryptionUnavailable": "请在团队服务器上配置加密的模型凭据存储。",
+            "teamAgentMigrationRequired": "请使用团队服务器模型连接重新创建此团队智能体。"
           },
           "GenericCliCommandConfirmation": {
             "commandLabel": "来自此项目的命令",
@@ -14654,7 +14678,7 @@
             "sendError": "无法发送消息",
             "generalDescription": "团队会话",
             "createChannelError": "无法开始聊天",
-            "agentReplyError": "智能体无法回复，请检查其本地 API Key 是否已配置。"
+            "agentReplyError": "智能体无法回复。请检查团队服务器与模型连接。"
           }
         }
       }
@@ -15024,6 +15048,25 @@
         "addressInUse": "另一个进程可能占用了端口。请重启 TeamRun 以重试。",
         "unknown": "请重启 TeamRun 以重试。"
       }
+    }
+  },
+  "teamRun": {
+    "agentStatus": {
+      "queued": "已排队",
+      "starting": "正在启动",
+      "working": "工作中",
+      "needsInput": "需要输入",
+      "review": "等待评审",
+      "completed": "已发布",
+      "failed": "失败",
+      "canceled": "已取消"
+    },
+    "taskStatus": {
+      "todo": "待处理",
+      "inProgress": "进行中",
+      "inReview": "评审中",
+      "done": "已完成",
+      "canceled": "已取消"
     }
   }
 }

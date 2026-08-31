@@ -157,11 +157,14 @@ export function useTeamSpaceChat(
                   current.some((message) => message.id === reply.id) ? current : [...current, reply]
                 )
               )
-              .catch(() =>
+              .catch((error) =>
                 toast.error(
-                  translate(
-                    'auto.components.team.space.useTeamSpaceChat.agentReplyError',
-                    'Agent could not reply. Check that its local API key is configured.'
+                  teamRunErrorMessage(
+                    error,
+                    translate(
+                      'auto.components.team.space.useTeamSpaceChat.agentReplyError',
+                      'Agent could not reply. Check the Team Server and Model Connection.'
+                    )
                   )
                 )
               )

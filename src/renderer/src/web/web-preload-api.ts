@@ -1409,11 +1409,19 @@ function createTeamRunApi(): TeamRunApi {
   let eventSubscription: { unsubscribe: () => void } | null = null
   let eventGeneration = 0
 
-  const invoke = <T>(operation: TeamRunCloudOperation, args?: unknown): Promise<T> =>
-    callRuntimeResult<T>('teamrun.cloudInvoke', {
-      operation,
-      ...(args === undefined ? {} : { args })
-    })
+  const invoke = <T>(
+    operation: TeamRunCloudOperation,
+    args?: unknown,
+    timeoutMs?: number
+  ): Promise<T> =>
+    callRuntimeResult<T>(
+      'teamrun.cloudInvoke',
+      {
+        operation,
+        ...(args === undefined ? {} : { args })
+      },
+      timeoutMs
+    )
   const notifySync = (status: TeamRunSyncStatus): TeamRunSyncStatus => {
     for (const listener of syncListeners) {
       listener(status)
@@ -1473,9 +1481,11 @@ function createTeamRunApi(): TeamRunApi {
       createMessage: (args) => invoke('collaboration.createMessage', args),
       listTeamAgents: (projectId) => invoke('collaboration.listTeamAgents', projectId),
       createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args),
-      credentialStatus: (agentId) => invoke('collaboration.credentialStatus', agentId),
-      saveCredential: (args) => invoke('collaboration.saveCredential', args),
-      reply: (args) => invoke('collaboration.reply', args)
+      getTeamServer: (projectId) => invoke('collaboration.getTeamServer', projectId),
+      enrollTeamServer: (args) => invoke('collaboration.enrollTeamServer', args),
+      listModelConnections: (projectId) => invoke('collaboration.listModelConnections', projectId),
+      createModelConnection: (args) => invoke('collaboration.createModelConnection', args),
+      reply: (args) => invoke('collaboration.reply', args, 140_000)
     },
     files: {
       list: (projectId) => invoke('files.list', projectId),

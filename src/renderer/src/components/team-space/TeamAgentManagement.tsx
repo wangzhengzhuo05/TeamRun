@@ -1,25 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Bot, Plus } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { TeamAgent } from '../../../../shared/teamrun-api'
-import {
-  supportsTeamAgentChat,
-  teamAgentRequiresApiKey
-} from '../../../../shared/team-agent-runtime-protocol'
-import { getAgentCatalog } from '@/lib/agent-catalog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import type { ModelConnection, TeamAgent, TeamServerBinding } from '../../../../shared/teamrun-api'
+import { Separator } from '@/components/ui/separator'
 import { translate } from '@/i18n/i18n'
-import { reportTeamRunMutation } from './teamrun-mutation-feedback'
 import { teamRunErrorMessage } from './teamrun-error-message'
+import { TeamAgentDefinitionSection } from './TeamAgentDefinitionSection'
+import { TeamServerModelConnectionSection } from './TeamServerModelConnectionSection'
+import { TeamServerSetupSection } from './TeamServerSetupSection'
 
 type Props = {
   projectId: string | null
@@ -28,333 +15,67 @@ type Props = {
 }
 
 export function TeamAgentManagement({ projectId, active, canManage }: Props) {
-  const catalog = useMemo(
-    () => getAgentCatalog().filter((agent) => supportsTeamAgentChat(agent.id)),
-    []
-  )
+  const [teamServer, setTeamServer] = useState<TeamServerBinding | null>(null)
+  const [connections, setConnections] = useState<ModelConnection[]>([])
   const [teamAgents, setTeamAgents] = useState<TeamAgent[]>([])
-  const [agentName, setAgentName] = useState('')
-  const [agentKind, setAgentKind] = useState<string>(catalog[0]?.id ?? 'codex')
-  const [launchCommand, setLaunchCommand] = useState('')
-  const [apiKey, setApiKey] = useState('')
-  const [baseUrl, setBaseUrl] = useState('')
-  const [instructions, setInstructions] = useState('')
-  const [credentialInputs, setCredentialInputs] = useState<Record<string, string>>({})
-  const [baseUrlInputs, setBaseUrlInputs] = useState<Record<string, string>>({})
-  const [savingCredentialId, setSavingCredentialId] = useState<string | null>(null)
-  const [configuredAgentIds, setConfiguredAgentIds] = useState<string[]>([])
+
+  const load = useCallback(async () => {
+    if (!projectId) {
+      return
+    }
+    const [nextServer, nextConnections, nextAgents] = await Promise.all([
+      window.api.teamRun.collaboration.getTeamServer(projectId),
+      window.api.teamRun.collaboration.listModelConnections(projectId),
+      window.api.teamRun.collaboration.listTeamAgents(projectId)
+    ])
+    setTeamServer(nextServer)
+    setConnections(nextConnections)
+    setTeamAgents(nextAgents)
+  }, [projectId])
 
   useEffect(() => {
     if (!active || !projectId) {
       return
     }
-    void window.api.teamRun.collaboration
-      .listTeamAgents(projectId)
-      .then(async (agents) => {
-        const statuses = canManage
-          ? await Promise.all(
-              agents
-                .filter((agent) => teamAgentRequiresApiKey(agent.agentKind))
-                .map(async (agent) => ({
-                  agentId: agent.id,
-                  ...(await window.api.teamRun.collaboration.credentialStatus(agent.id))
-                }))
-            )
-          : []
-        setTeamAgents(agents)
-        setConfiguredAgentIds(
-          statuses.filter((status) => status.configured).map((status) => status.agentId)
-        )
-        setBaseUrlInputs(
-          Object.fromEntries(
-            statuses.flatMap((status) => (status.baseUrl ? [[status.agentId, status.baseUrl]] : []))
-          )
-        )
-      })
-      .catch(reportError)
-  }, [active, canManage, projectId])
-
-  const createTeamAgent = async () => {
-    if (!projectId || !agentName.trim()) {
-      return
-    }
-    try {
-      const created = await window.api.teamRun.collaboration.createTeamAgent({
-        projectId,
-        teamAgent: {
-          name: agentName.trim(),
-          agentKind,
-          launchCommand: agentKind === 'generic-cli' ? launchCommand.trim() : null,
-          instructionsMarkdown: instructions.trim()
-        }
-      })
-      if (teamAgentRequiresApiKey(agentKind)) {
-        await window.api.teamRun.collaboration.saveCredential({
-          agentId: created.id,
-          apiKey: apiKey.trim(),
-          baseUrl: baseUrl.trim() || null
-        })
-        setConfiguredAgentIds((current) => [...current, created.id])
-      }
-      setTeamAgents((current) => [...current, created])
-      setAgentName('')
-      setLaunchCommand('')
-      setApiKey('')
-      setBaseUrl('')
-      setInstructions('')
-    } catch (error) {
-      reportTeamRunMutation(
-        error,
-        translate(
-          'auto.components.team.space.TeamAgentManagement.createAgentError',
-          'Unable to create Team Agent'
-        )
-      )
-    }
-  }
-
-  const saveCredential = async (agentId: string) => {
-    const value = credentialInputs[agentId]?.trim() ?? ''
-    if (value.length < 24) {
-      return
-    }
-    setSavingCredentialId(agentId)
-    try {
-      await window.api.teamRun.collaboration.saveCredential({
-        agentId,
-        apiKey: value,
-        baseUrl: baseUrlInputs[agentId]?.trim() || null
-      })
-      setCredentialInputs((current) => ({ ...current, [agentId]: '' }))
-      setConfiguredAgentIds((current) => [...new Set([...current, agentId])])
-    } catch (error) {
-      reportTeamRunMutation(
-        error,
-        translate(
-          'auto.components.team.space.TeamAgentManagement.saveCredentialError',
-          'Unable to save API key'
-        )
-      )
-    } finally {
-      setSavingCredentialId(null)
-    }
-  }
+    void load().catch(reportLoadError)
+  }, [active, load, projectId])
 
   return (
-    <div className="space-y-3">
-      {canManage ? (
-        <>
-          <div className="grid grid-cols-[minmax(0,1fr)_12rem] gap-2">
-            <Input
-              value={agentName}
-              onChange={(event) => setAgentName(event.target.value)}
-              placeholder={translate(
-                'auto.components.team.space.TeamAgentManagement.name',
-                'Team Agent name'
-              )}
-            />
-            <Select value={agentKind} onValueChange={setAgentKind}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {catalog.map((entry) => (
-                  <SelectItem key={entry.id} value={entry.id}>
-                    {entry.label}
-                  </SelectItem>
-                ))}
-                <SelectItem value="generic-cli">
-                  {translate(
-                    'auto.components.team.space.TeamAgentManagement.genericCli',
-                    'Generic CLI'
-                  )}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {agentKind === 'generic-cli' ? (
-            <div className="space-y-2">
-              <Input
-                value={launchCommand}
-                onChange={(event) => setLaunchCommand(event.target.value)}
-                placeholder={translate(
-                  'auto.components.team.space.TeamAgentManagement.launchCommand',
-                  'Command that accepts task context as its final argument'
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                {translate(
-                  'auto.components.team.space.TeamAgentManagement.launchCommandHint',
-                  'The command is shared with project members. Keep credentials in the host environment.'
-                )}
-              </p>
-            </div>
-          ) : null}
-          {teamAgentRequiresApiKey(agentKind) ? (
-            <div className="space-y-2">
-              <Input
-                type="password"
-                value={apiKey}
-                onChange={(event) => setApiKey(event.target.value)}
-                placeholder={translate(
-                  'auto.components.team.space.TeamAgentManagement.apiKey',
-                  'API key for chat replies'
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                {translate(
-                  'auto.components.team.space.TeamAgentManagement.apiKeyHint',
-                  'Stored only on this runtime with operating-system credential protection.'
-                )}
-              </p>
-              <Input
-                value={baseUrl}
-                onChange={(event) => setBaseUrl(event.target.value)}
-                placeholder={translate(
-                  'auto.components.team.space.TeamAgentManagement.baseUrl',
-                  'Base URL (optional)'
-                )}
-              />
-            </div>
-          ) : null}
-          <Textarea
-            value={instructions}
-            onChange={(event) => setInstructions(event.target.value)}
-            placeholder={translate(
-              'auto.components.team.space.TeamAgentManagement.instructions',
-              'Reusable instructions added before the frozen task context'
-            )}
-          />
-          <Button
-            onClick={createTeamAgent}
-            disabled={
-              !agentName.trim() ||
-              (agentKind === 'generic-cli' && !launchCommand.trim()) ||
-              (teamAgentRequiresApiKey(agentKind) && apiKey.trim().length < 24)
-            }
-          >
-            <Plus />{' '}
-            {translate(
-              'auto.components.team.space.TeamAgentManagement.create',
-              'Create Team Agent'
-            )}
-          </Button>
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          {translate(
-            'auto.components.team.space.TeamAgentManagement.ownerOnly',
-            'Only the Team Owner can create or configure Team Agents.'
-          )}
-        </p>
-      )}
-      <div className="scrollbar-sleek max-h-56 space-y-2 overflow-y-auto">
-        {teamAgents.map((agent) => (
-          <div key={agent.id} className="rounded-md border border-border p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">
-                {teamAgentDisplayName(agent, teamAgentKindLabel(agent.agentKind, catalog))}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {teamAgentKindLabel(agent.agentKind, catalog)}
-              </span>
-            </div>
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-              {agent.instructionsMarkdown ||
-                translate(
-                  'auto.components.team.space.TeamAgentManagement.noInstructions',
-                  'No additional instructions'
-                )}
-            </p>
-            {canManage && teamAgentRequiresApiKey(agent.agentKind) ? (
-              <div className="mt-3 space-y-2 border-t border-border pt-3">
-                <p className="text-xs text-muted-foreground">
-                  {configuredAgentIds.includes(agent.id)
-                    ? translate(
-                        'auto.components.team.space.TeamAgentManagement.keyConfigured',
-                        'Local API key configured'
-                      )
-                    : translate(
-                        'auto.components.team.space.TeamAgentManagement.keyMissing',
-                        'Local API key required for chat replies'
-                      )}
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    value={baseUrlInputs[agent.id] ?? ''}
-                    onChange={(event) =>
-                      setBaseUrlInputs((current) => ({
-                        ...current,
-                        [agent.id]: event.target.value
-                      }))
-                    }
-                    placeholder={translate(
-                      'auto.components.team.space.TeamAgentManagement.baseUrl',
-                      'Base URL (optional)'
-                    )}
-                  />
-                  <Input
-                    type="password"
-                    value={credentialInputs[agent.id] ?? ''}
-                    onChange={(event) =>
-                      setCredentialInputs((current) => ({
-                        ...current,
-                        [agent.id]: event.target.value
-                      }))
-                    }
-                    placeholder={translate(
-                      'auto.components.team.space.TeamAgentManagement.updateKey',
-                      'Set or replace local API key'
-                    )}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => void saveCredential(agent.id)}
-                    disabled={
-                      savingCredentialId === agent.id ||
-                      (credentialInputs[agent.id]?.trim().length ?? 0) < 24
-                    }
-                  >
-                    <Bot />
-                    {savingCredentialId === agent.id
-                      ? translate(
-                          'auto.components.team.space.TeamAgentManagement.saving',
-                          'Saving…'
-                        )
-                      : translate(
-                          'auto.components.team.space.TeamAgentManagement.saveKey',
-                          'Save key'
-                        )}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
+    <div className="scrollbar-sleek max-h-[60vh] space-y-5 overflow-y-auto pr-1">
+      <TeamServerSetupSection
+        projectId={projectId}
+        teamServer={teamServer}
+        canManage={canManage}
+        onEnrolled={setTeamServer}
+      />
+      <Separator />
+      <TeamServerModelConnectionSection
+        projectId={projectId}
+        teamServer={teamServer}
+        connections={connections}
+        canManage={canManage}
+        onCreated={(connection) => setConnections((current) => [...current, connection])}
+      />
+      <Separator />
+      <TeamAgentDefinitionSection
+        projectId={projectId}
+        connections={connections}
+        teamAgents={teamAgents}
+        canManage={canManage}
+        onCreated={(agent) => setTeamAgents((current) => [...current, agent])}
+      />
     </div>
   )
 }
 
-function reportError(error: unknown): void {
+function reportLoadError(error: unknown): void {
   toast.error(
     teamRunErrorMessage(
       error,
       translate(
         'auto.components.team.space.TeamAgentManagement.loadError',
-        'Unable to load Team Agents'
+        'Unable to load Team Agent settings'
       )
     )
   )
-}
-
-function teamAgentKindLabel(
-  agentKind: string,
-  catalog: ReturnType<typeof getAgentCatalog>
-): string {
-  return catalog.find((entry) => entry.id === agentKind)?.label ?? agentKind
-}
-
-function teamAgentDisplayName(agent: TeamAgent, agentKindLabel: string): string {
-  return agent.agentKind === 'claude' && agent.name === 'Claude' ? agentKindLabel : agent.name
 }
