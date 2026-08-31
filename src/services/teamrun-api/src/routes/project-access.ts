@@ -10,7 +10,9 @@ export async function requireProject(app: FastifyInstance, projectId: string, us
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1)
-  if (!project) throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+  if (!project) {
+    throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+  }
   await requireOrganizationRole(app.teamRunDatabase, project.organizationId, userId)
   return project
 }

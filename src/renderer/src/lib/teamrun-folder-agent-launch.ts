@@ -20,7 +20,9 @@ export async function launchTeamRunFolderAgent(args: {
   const workspace = store.folderWorkspaces.find(
     (candidate) => candidate.id === args.folderWorkspaceId
   )
-  if (!workspace) return false
+  if (!workspace) {
+    return false
+  }
   if (!isTuiAgentEnabled(args.agent, store.settings?.disabledTuiAgents)) {
     toast.error(
       translate(
@@ -77,7 +79,9 @@ export async function launchTeamRunFolderAgent(args: {
       worktreePath: workspace.folderPath
     })
   })
-  if (!launched) return false
+  if (!launched) {
+    return false
+  }
   store.setSidebarOpen(true)
   await args.onWorkspaceReady({ id: workspaceId, path: workspace.folderPath })
   return true

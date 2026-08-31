@@ -35,7 +35,9 @@ export function RunVerificationDialog({ run, onCompleted }: Props) {
   const [running, setRunning] = useState(false)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
     void window.api.teamRun.runs
       .listVerificationCommands(run.clientRunId)
       .then((next) => {
@@ -57,7 +59,9 @@ export function RunVerificationDialog({ run, onCompleted }: Props) {
 
   const selected = commands.find((command) => command.id === commandId) ?? null
   const execute = async () => {
-    if (!selected) return
+    if (!selected) {
+      return
+    }
     setRunning(true)
     try {
       const result = await window.api.teamRun.runs.runVerification({

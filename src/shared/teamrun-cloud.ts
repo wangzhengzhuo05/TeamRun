@@ -40,13 +40,13 @@ export type TeamRunWorkspaceRecord = {
   workspaceId: string
   workspacePath: string
   taskId?: string
-  baseRevision?: import('./teamrun-api').WorkspaceRevision
+  baseRevision?: WorkspaceRevision
   createdAt: number
 }
 
 export type TeamRunWorkspaceReview = {
-  baseRevision: import('./teamrun-api').WorkspaceRevision
-  headRevision: import('./teamrun-api').WorkspaceRevision
+  baseRevision: WorkspaceRevision
+  headRevision: WorkspaceRevision
   commitGitObjectIds: string[]
   hasUncommittedChanges: boolean
   unifiedDiff: string
@@ -58,3 +58,4 @@ export type TeamRunApiError = {
   requestId?: string
   status: number
 }
+import type { WorkspaceRevision } from './teamrun-api'

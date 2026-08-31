@@ -26,10 +26,14 @@ export function TaskContextPanel({ snapshots, canCreate, onCreate }: Props) {
   const selected = snapshots.find((snapshot) => snapshot.id === selectedId) ?? null
   const create = async () => {
     const snapshot = await onCreate()
-    if (snapshot) setSelectedId(snapshot.id)
+    if (snapshot) {
+      setSelectedId(snapshot.id)
+    }
   }
   const copy = async () => {
-    if (!selected) return
+    if (!selected) {
+      return
+    }
     await navigator.clipboard.writeText(selected.renderedMarkdown)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1500)

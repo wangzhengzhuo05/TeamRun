@@ -22,7 +22,9 @@ export function TeamSpaceSignIn({ auth, loading, onSignIn }: Props) {
     auth?.sharedKeyAuth === true || auth?.state === 'unconfigured' || auth?.state === 'error'
 
   useEffect(() => {
-    if (auth?.apiUrl) setApiUrl(auth.apiUrl)
+    if (auth?.apiUrl) {
+      setApiUrl(auth.apiUrl)
+    }
   }, [auth?.apiUrl])
 
   return (

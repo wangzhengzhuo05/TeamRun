@@ -28,7 +28,9 @@ export type TeamRunPendingMutation = {
 }
 
 function parseWorkspaceRevision(value: string | null): WorkspaceRevision | undefined {
-  if (!value) return undefined
+  if (!value) {
+    return undefined
+  }
   try {
     const parsed = workspaceRevisionSchema.safeParse(JSON.parse(value))
     return parsed.success ? parsed.data : undefined
@@ -46,7 +48,9 @@ export class TeamRunLocalCache {
     const row = this.#db()
       .prepare('SELECT body FROM response_cache WHERE scope = ? AND path = ?')
       .get(scope, path) as { body?: unknown } | undefined
-    if (typeof row?.body !== 'string') return null
+    if (typeof row?.body !== 'string') {
+      return null
+    }
     try {
       return JSON.parse(row.body)
     } catch {
@@ -107,14 +111,14 @@ export class TeamRunLocalCache {
         `SELECT id, method, path, body, idempotency_key, created_at
          FROM mutation_outbox WHERE scope = ? ORDER BY created_at, id`
       )
-      .all(scope) as Array<{
+      .all(scope) as {
       id: string
       method: 'POST' | 'PATCH'
       path: string
       body: string
       idempotency_key: string
       created_at: number
-    }>
+    }[]
     return rows.flatMap((row) => {
       try {
         return [
@@ -216,7 +220,7 @@ export class TeamRunLocalCache {
         `SELECT body FROM local_verification_results
          WHERE scope = ? AND run_id = ? ORDER BY created_at, id`
       )
-      .all(scope, runId) as Array<{ body: string }>
+      .all(scope, runId) as { body: string }[]
     return rows.flatMap((row) => {
       try {
         const parsed = verificationResultSchema.safeParse(JSON.parse(row.body))
@@ -233,7 +237,9 @@ export class TeamRunLocalCache {
   }
 
   #db(): SyncDatabase {
-    if (this.#database) return this.#database
+    if (this.#database) {
+      return this.#database
+    }
     const path = this.databasePath ?? join(app.getPath('userData'), 'teamrun', 'cache.sqlite')
     mkdirSync(dirname(path), { recursive: true })
     const database = new SyncDatabase(path)

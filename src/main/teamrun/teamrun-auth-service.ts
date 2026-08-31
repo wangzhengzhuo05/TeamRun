@@ -9,6 +9,7 @@ import {
   saveTeamRunSession,
   type TeamRunSession
 } from './teamrun-session-store'
+import { teamRunTokenEmail, teamRunTokenSubject } from './teamrun-token-claims'
 
 const authConfigSchema = z.object({
   issuer: z.url().nullable(),
@@ -55,34 +56,10 @@ function configuredApiUrl(): string | null {
     return normalizeTeamRunApiUrl(value)
   }
   const session = readTeamRunSession()
-  if (session?.mode === 'shared-key') return session.apiUrl
+  if (session?.mode === 'shared-key') {
+    return session.apiUrl
+  }
   return app.isPackaged ? null : 'http://127.0.0.1:4310'
-}
-
-function tokenEmail(accessToken: string): string | null {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(accessToken.split('.')[1] ?? '', 'base64url').toString()
-    ) as {
-      email?: unknown
-    }
-    return typeof payload.email === 'string' ? payload.email : null
-  } catch {
-    return null
-  }
-}
-
-function tokenSubject(accessToken: string): string | null {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(accessToken.split('.')[1] ?? '', 'base64url').toString()
-    ) as {
-      sub?: unknown
-    }
-    return typeof payload.sub === 'string' ? payload.sub : null
-  } catch {
-    return null
-  }
 }
 
 async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
@@ -121,13 +98,15 @@ export class TeamRunAuthService {
   cacheScope(): string | null {
     const session = readTeamRunSession()
     const apiUrl = this.apiUrl
-    if (!session || !apiUrl) return null
+    if (!session || !apiUrl) {
+      return null
+    }
     const identity =
       session.mode === 'dev'
         ? `dev:${session.email}`
         : session.mode === 'shared-key'
           ? `shared-key:${session.email ?? 'team'}`
-          : `oidc:${tokenSubject(session.accessToken) ?? session.email ?? 'unknown'}`
+          : `oidc:${teamRunTokenSubject(session.accessToken) ?? session.email ?? 'unknown'}`
     return createHash('sha256').update(`${apiUrl}:${identity}`).digest('hex')
   }
 
@@ -225,7 +204,7 @@ export class TeamRunAuthService {
       accessToken: token.access_token,
       refreshToken: token.refresh_token ?? null,
       expiresAt: Date.now() + token.expires_in * 1000,
-      email: tokenEmail(token.access_token),
+      email: teamRunTokenEmail(token.access_token),
       tokenEndpoint: discovery.token_endpoint,
       clientId: config.clientId
     })
@@ -318,7 +297,7 @@ export class TeamRunAuthService {
       accessToken: token.access_token,
       refreshToken: token.refresh_token ?? session.refreshToken,
       expiresAt: Date.now() + token.expires_in * 1000,
-      email: tokenEmail(token.access_token) ?? session.email
+      email: teamRunTokenEmail(token.access_token) ?? session.email
     }
     saveTeamRunSession(refreshed)
     return refreshed

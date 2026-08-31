@@ -88,12 +88,16 @@ export function TeamAgentLauncher(props: Props) {
   }, [workspaceOptions, workspaceValue])
 
   useEffect(() => {
-    if (selectedWorkspace?.kind === 'folder' && count !== '1') setCount('1')
+    if (selectedWorkspace?.kind === 'folder' && count !== '1') {
+      setCount('1')
+    }
   }, [count, selectedWorkspace?.kind])
 
   const launch = async () => {
     const snapshot = props.latestSnapshot
-    if (!snapshot || !selectedWorkspace) return
+    if (!snapshot || !selectedWorkspace) {
+      return
+    }
     setLaunching(true)
     try {
       const links: Promise<void>[] = []
@@ -168,7 +172,7 @@ export function TeamAgentLauncher(props: Props) {
       const started = results.filter(
         (result) => result.status === 'fulfilled' && result.value
       ).length
-      if (started > 0)
+      if (started > 0) {
         toast.success(
           translate(
             'auto.components.team.space.TeamAgentLauncher.50e9904340',
@@ -176,6 +180,7 @@ export function TeamAgentLauncher(props: Props) {
             { value0: started, value1: started === 1 ? '' : 's' }
           )
         )
+      }
       if (started < launchCount) {
         toast.error(
           translate(
@@ -348,7 +353,9 @@ async function linkAgentRun(args: {
       status: { sequence: 1, status: 'starting', heartbeatAt }
     })
     .catch((error) => {
-      if (!isTeamRunMutationQueued(error)) throw error
+      if (!isTeamRunMutationQueued(error)) {
+        throw error
+      }
     })
   await window.api.teamRun.runs
     .updateStatus({
@@ -356,6 +363,8 @@ async function linkAgentRun(args: {
       status: { sequence: 2, status: 'working', heartbeatAt }
     })
     .catch((error) => {
-      if (!isTeamRunMutationQueued(error)) throw error
+      if (!isTeamRunMutationQueued(error)) {
+        throw error
+      }
     })
 }

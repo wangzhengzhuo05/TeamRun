@@ -43,7 +43,9 @@ export function TaskConversationPanel({
   const [comment, setComment] = useState('')
   const submit = async () => {
     const body = comment.trim()
-    if (!body) return
+    if (!body) {
+      return
+    }
     await onComment(body)
     setComment('')
   }

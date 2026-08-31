@@ -43,7 +43,7 @@ describe('TeamMemberManagement', () => {
     writeText.mockResolvedValue(undefined)
     Object.defineProperty(window, 'api', {
       configurable: true,
-      value: { clipboard: { writeText }, teamRun: { organizations } } as never
+      value: { ui: { writeClipboardText: writeText }, teamRun: { organizations } } as never
     })
   })
 

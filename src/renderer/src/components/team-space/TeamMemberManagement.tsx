@@ -93,7 +93,7 @@ export function TeamMemberManagement({ organizationId, canManage, active }: Prop
   }
 
   const copyInviteCode = async () => {
-    await window.api.clipboard.writeText(latestCode)
+    await window.api.ui.writeClipboardText(latestCode)
     toast.success(
       translate('auto.components.team.space.TeamMemberManagement.codeCopied', 'Invite code copied')
     )

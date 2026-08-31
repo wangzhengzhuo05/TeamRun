@@ -59,15 +59,22 @@ async function readWorkspaceFile(
   const filePath = join(workspacePath, ...relativePath.split('/'))
   if (connectionId) {
     const provider = getSshFilesystemProvider(connectionId)
-    if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+    if (!provider) {
+      throw new Error('TeamRun SSH workspace is not connected.')
+    }
     const stats = await provider.lstat?.(filePath)
-    if (!stats) throw new Error('The SSH host cannot safely inspect untracked files.')
+    if (!stats) {
+      throw new Error('The SSH host cannot safely inspect untracked files.')
+    }
     if (stats.type === 'symlink') {
       return { content: '', isBinary: true, mode: '120000' }
     }
-    if (stats.type !== 'file') throw new Error(`Unsupported untracked path: ${relativePath}`)
-    if (stats.size > TEAMRUN_DIFF_MAX_BYTES)
+    if (stats.type !== 'file') {
+      throw new Error(`Unsupported untracked path: ${relativePath}`)
+    }
+    if (stats.size > TEAMRUN_DIFF_MAX_BYTES) {
       throw new Error(`${relativePath} exceeds the 5 MiB limit.`)
+    }
     const result = await provider.readFile(filePath)
     return { content: result.content, isBinary: result.isBinary, mode: '100644' }
   }
@@ -75,9 +82,12 @@ async function readWorkspaceFile(
   if (stats.isSymbolicLink()) {
     return { content: await readlink(filePath), isBinary: false, mode: '120000' }
   }
-  if (!stats.isFile()) throw new Error(`Unsupported untracked path: ${relativePath}`)
-  if (stats.size > TEAMRUN_DIFF_MAX_BYTES)
+  if (!stats.isFile()) {
+    throw new Error(`Unsupported untracked path: ${relativePath}`)
+  }
+  if (stats.size > TEAMRUN_DIFF_MAX_BYTES) {
     throw new Error(`${relativePath} exceeds the 5 MiB limit.`)
+  }
   const content = await readFile(filePath)
   return {
     content: content.toString('utf8'),
@@ -90,8 +100,12 @@ function renderUntrackedPatch(path: string, file: WorkspaceFile): string {
   const left = quoteDiffPath(`a/${path}`)
   const right = quoteDiffPath(`b/${path}`)
   const header = `diff --git ${left} ${right}\nnew file mode ${file.mode}\n`
-  if (file.isBinary) return `${header}Binary files /dev/null and ${right} differ\n`
-  if (!file.content) return header
+  if (file.isBinary) {
+    return `${header}Binary files /dev/null and ${right} differ\n`
+  }
+  if (!file.content) {
+    return header
+  }
   const endsWithNewline = file.content.endsWith('\n')
   const lines = file.content.replace(/\n$/, '').split('\n')
   const body = lines.map((line) => `+${line}`).join('\n')
@@ -105,7 +119,9 @@ function quoteDiffPath(path: string): string {
 }
 
 function appendPatch(current: string, next: string): string {
-  if (!current) return next
+  if (!current) {
+    return next
+  }
   return `${current}${current.endsWith('\n') ? '' : '\n'}${next}`
 }
 

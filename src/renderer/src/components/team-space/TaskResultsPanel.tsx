@@ -55,7 +55,7 @@ export function TaskResultsPanel({ publications }: Props) {
   return (
     <div className="scrollbar-sleek min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-3xl space-y-4">
-        {[...publications].reverse().map((publication) => (
+        {publications.toReversed().map((publication) => (
           <article key={publication.id} className="rounded-lg border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">

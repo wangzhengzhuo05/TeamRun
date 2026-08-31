@@ -2,12 +2,17 @@ import { z } from 'zod'
 import { entityIdSchema, markdownSchema, timestampSchema } from './scalars.js'
 
 function isGitRemoteUrl(value: string): boolean {
-  if (/^[^\s@]+@[^\s:]+:[^\s]+$/.test(value)) return true
+  if (/^[^\s@]+@[^\s:]+:[^\s]+$/.test(value)) {
+    return true
+  }
   try {
     const url = new URL(value)
-    if (!['https:', 'http:', 'ssh:', 'git:'].includes(url.protocol)) return false
-    if (url.password || (url.username && (url.protocol === 'https:' || url.protocol === 'http:')))
+    if (!['https:', 'http:', 'ssh:', 'git:'].includes(url.protocol)) {
       return false
+    }
+    if (url.password || (url.username && (url.protocol === 'https:' || url.protocol === 'http:'))) {
+      return false
+    }
     return Boolean(url.hostname && url.pathname && url.pathname !== '/')
   } catch {
     return false

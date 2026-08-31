@@ -46,6 +46,7 @@ const RUN_LABEL: Record<AgentRun['status'], () => string> = {
 }
 
 export function TeamAgentRunPanel(props: Props) {
+  const { canDevelop, onRefresh, runs } = props
   const agentStatusEpoch = useAppStore((state) => state.agentStatusEpoch)
   const [workspaceIds, setWorkspaceIds] = useState<Record<string, string>>({})
   const syncingRuns = useRef(new Set<string>())
@@ -53,12 +54,14 @@ export function TeamAgentRunPanel(props: Props) {
   useEffect(() => {
     let active = true
     void Promise.all(
-      props.runs.map(async (run) => {
+      runs.map(async (run) => {
         const workspace = await window.api.teamRun.runs.resolveWorkspace(run.clientRunId)
         return [run.clientRunId, workspace?.workspaceId ?? null] as const
       })
     ).then((pairs) => {
-      if (!active) return
+      if (!active) {
+        return
+      }
       setWorkspaceIds(
         Object.fromEntries(pairs.filter((pair): pair is [string, string] => pair[1] !== null))
       )
@@ -66,32 +69,42 @@ export function TeamAgentRunPanel(props: Props) {
     return () => {
       active = false
     }
-  }, [props.runs])
+  }, [runs])
 
   useEffect(() => {
-    if (!props.canDevelop) {
+    if (!canDevelop) {
       return
     }
     void agentStatusEpoch
     const entries = Object.values(useAppStore.getState().agentStatusByPaneKey)
     const updates: Promise<unknown>[] = []
-    for (const run of props.runs) {
+    for (const run of runs) {
       if (
         run.status === 'queued' ||
         run.status === 'completed' ||
         run.status === 'failed' ||
         run.status === 'canceled'
-      )
+      ) {
         continue
+      }
       const workspaceId = workspaceIds[run.clientRunId]
-      if (!workspaceId || syncingRuns.current.has(run.id)) continue
+      if (!workspaceId || syncingRuns.current.has(run.id)) {
+        continue
+      }
       const latest = entries
         .filter((entry) => entry.worktreeId === workspaceId)
         .sort((left, right) => right.updatedAt - left.updatedAt)[0]
-      if (!latest) continue
-      const status = teamRunStatusFromAgent(latest)
-      if (!status || status === run.status || (run.status === 'review' && status === 'needs_input'))
+      if (!latest) {
         continue
+      }
+      const status = teamRunStatusFromAgent(latest)
+      if (
+        !status ||
+        status === run.status ||
+        (run.status === 'review' && status === 'needs_input')
+      ) {
+        continue
+      }
       syncingRuns.current.add(run.id)
       updates.push(
         window.api.teamRun.runs
@@ -108,9 +121,9 @@ export function TeamAgentRunPanel(props: Props) {
       )
     }
     if (updates.length > 0) {
-      void Promise.allSettled(updates).then(() => props.onRefresh().catch(() => undefined))
+      void Promise.allSettled(updates).then(() => onRefresh().catch(() => undefined))
     }
-  }, [agentStatusEpoch, props.canDevelop, props.onRefresh, props.runs, workspaceIds])
+  }, [agentStatusEpoch, canDevelop, onRefresh, runs, workspaceIds])
   const openWorkspace = async (run: AgentRun) => {
     const workspace = await window.api.teamRun.runs.resolveWorkspace(run.clientRunId)
     if (!workspace || !activateAndRevealWorktree(workspace.workspaceId)) {

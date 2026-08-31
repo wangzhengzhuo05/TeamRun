@@ -6,10 +6,18 @@ import { translate } from '@/i18n/i18n'
 import { teamTaskStatusLabel } from './team-task-status-label'
 
 function StatusIcon({ status }: { status: TaskStatus }) {
-  if (status === 'done') return <CheckCircle2 className="size-3.5" />
-  if (status === 'in_review') return <Eye className="size-3.5" />
-  if (status === 'in_progress') return <CircleDot className="size-3.5" />
-  if (status === 'canceled') return <XCircle className="size-3.5" />
+  if (status === 'done') {
+    return <CheckCircle2 className="size-3.5" />
+  }
+  if (status === 'in_review') {
+    return <Eye className="size-3.5" />
+  }
+  if (status === 'in_progress') {
+    return <CircleDot className="size-3.5" />
+  }
+  if (status === 'canceled') {
+    return <XCircle className="size-3.5" />
+  }
   return <Circle className="size-3.5" />
 }
 

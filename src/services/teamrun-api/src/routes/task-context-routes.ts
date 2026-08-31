@@ -107,7 +107,9 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
           .select()
           .from(projects)
           .where(eq(projects.id, lockedTask.projectId))
-        if (!project) throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+        if (!project) {
+          throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+        }
         const comments = body.includeComments
           ? await transaction
               .select()

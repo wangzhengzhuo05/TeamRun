@@ -13,11 +13,14 @@ const collaboration = vi.hoisted(() => ({
 
 const claudeAgent: TeamAgent = {
   id: 'agent-claude',
+  organizationId: 'organization-1',
   projectId: 'project-1',
   name: 'Claude',
   agentKind: 'claude',
   launchCommand: null,
   instructionsMarkdown: '',
+  version: 1,
+  createdByUserId: 'user-1',
   createdAt: '2026-08-31T00:00:00.000Z',
   updatedAt: '2026-08-31T00:00:00.000Z'
 }

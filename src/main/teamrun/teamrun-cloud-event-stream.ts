@@ -1,7 +1,7 @@
 import { teamEventSchema } from '../../packages/teamrun-contracts/src/index'
 import type { TeamEvent } from '../../shared/teamrun-api'
 import type { TeamRunSyncStatus } from '../../shared/teamrun-cloud'
-import { TeamRunApiClient } from './teamrun-api-client'
+import type { TeamRunApiClient } from './teamrun-api-client'
 
 export type TeamRunCloudEventFrame =
   | { type: 'status'; status: TeamRunSyncStatus }
@@ -38,7 +38,9 @@ export async function streamTeamRunCloudEvents(
       cursor = await connectTeamRunCloudEvents(client, organizationId, cursor, signal, emit)
       retryMs = 1000
     } catch (error) {
-      if (signal.aborted) return
+      if (signal.aborted) {
+        return
+      }
       const message = error instanceof Error ? error.message : 'Event stream failed'
       emit({
         type: 'status',
@@ -60,7 +62,9 @@ async function connectTeamRunCloudEvents(
 ): Promise<number> {
   await client.flushPending()
   const apiUrl = client.auth.apiUrl
-  if (!apiUrl) throw new Error('teamrun_api_unconfigured')
+  if (!apiUrl) {
+    throw new Error('teamrun_api_unconfigured')
+  }
   const url = new URL('/v1/events', apiUrl)
   url.searchParams.set('organizationId', organizationId)
   url.searchParams.set('cursor', String(initialCursor))
@@ -109,7 +113,9 @@ async function consumeEventBody(
           if (parsed.success) {
             cursor = parsed.data.cursor
             const scope = client.auth.cacheScope()
-            if (scope) client.cache.putEventCursor(scope, organizationId, cursor)
+            if (scope) {
+              client.cache.putEventCursor(scope, organizationId, cursor)
+            }
             emit({ type: 'event', event: parsed.data })
           }
         } catch {

@@ -4,8 +4,11 @@ import { brandTeamRunCliText } from './teamrun-cli-brand'
 const originalCommand = process.env.TEAMRUN_CLI_COMMAND
 
 afterEach(() => {
-  if (originalCommand === undefined) delete process.env.TEAMRUN_CLI_COMMAND
-  else process.env.TEAMRUN_CLI_COMMAND = originalCommand
+  if (originalCommand === undefined) {
+    delete process.env.TEAMRUN_CLI_COMMAND
+  } else {
+    process.env.TEAMRUN_CLI_COMMAND = originalCommand
+  }
 })
 
 describe('TeamRun CLI branding', () => {

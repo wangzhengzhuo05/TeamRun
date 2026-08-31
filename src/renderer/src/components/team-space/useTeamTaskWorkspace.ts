@@ -54,7 +54,9 @@ export function useTeamTaskWorkspace(
   const [loading, setLoading] = useState(false)
 
   const refreshRuns = useCallback(async () => {
-    if (!taskId) return
+    if (!taskId) {
+      return
+    }
     const [next, nextPublications] = await Promise.all([
       window.api.teamRun.runs.list(taskId),
       window.api.teamRun.publications.list(taskId)
@@ -67,9 +69,10 @@ export function useTeamTaskWorkspace(
       )
     )
     setVerifications(Object.fromEntries(pairs))
-  }, [eventRevision, taskId])
+  }, [taskId])
 
   useEffect(() => {
+    void eventRevision
     setTask(null)
     setMembers([])
     setComments([])
@@ -77,7 +80,9 @@ export function useTeamTaskWorkspace(
     setRuns([])
     setPublications([])
     setVerifications({})
-    if (!taskId) return
+    if (!taskId) {
+      return
+    }
     let active = true
     setLoading(true)
     void Promise.all([
@@ -97,7 +102,9 @@ export function useTeamTaskWorkspace(
           ),
           window.api.teamRun.organizations.listMembers(nextTask.organizationId)
         ])
-        if (!active) return
+        if (!active) {
+          return
+        }
         setTask(nextTask)
         setMembers(nextMembers)
         setComments(nextComments)
@@ -111,11 +118,13 @@ export function useTeamTaskWorkspace(
     return () => {
       active = false
     }
-  }, [taskId])
+  }, [eventRevision, taskId])
 
   const updateStatus = useCallback(
     async (status: TaskStatus) => {
-      if (!task) return
+      if (!task) {
+        return
+      }
       try {
         const next = await window.api.teamRun.tasks.update({
           taskId: task.id,
@@ -138,7 +147,9 @@ export function useTeamTaskWorkspace(
 
   const updateOwner = useCallback(
     async (ownerUserId: string) => {
-      if (!task || ownerUserId === task.ownerUserId) return
+      if (!task || ownerUserId === task.ownerUserId) {
+        return
+      }
       try {
         const next = await window.api.teamRun.tasks.update({
           taskId: task.id,
@@ -161,7 +172,9 @@ export function useTeamTaskWorkspace(
 
   const addComment = useCallback(
     async (bodyMarkdown: string) => {
-      if (!task) return
+      if (!task) {
+        return
+      }
       try {
         const created = await window.api.teamRun.tasks.createComment({
           taskId: task.id,
@@ -182,7 +195,9 @@ export function useTeamTaskWorkspace(
   )
 
   const createSnapshot = useCallback(async () => {
-    if (!task) return null
+    if (!task) {
+      return null
+    }
     try {
       const created = await window.api.teamRun.tasks.createSnapshot({
         taskId: task.id,

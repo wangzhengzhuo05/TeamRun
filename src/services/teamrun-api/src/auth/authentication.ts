@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { users } from '../database/schema.js'
 import { ApiProblem } from '../http/api-problem.js'

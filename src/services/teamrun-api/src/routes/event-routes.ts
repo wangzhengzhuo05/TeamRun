@@ -82,11 +82,15 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
             writeSseEvent(reply.raw, event)
             cursor = event.cursor
           }
-          if (events.length === 200) pending = true
+          if (events.length === 200) {
+            pending = true
+          }
         }
       } finally {
         polling = false
-        if (pending && !reply.raw.destroyed) void drain()
+        if (pending && !reply.raw.destroyed) {
+          void drain()
+        }
       }
     }
     const unsubscribe = app.teamRunEventNotifier.subscribe(query.organizationId, () => {

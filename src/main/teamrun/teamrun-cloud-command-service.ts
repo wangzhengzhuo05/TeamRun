@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import {
-  createAgentRunRequestSchema,
   createContextSnapshotRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
@@ -12,7 +11,6 @@ import {
   updateProjectRequestSchema,
   updateTaskRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
-import type { AgentRun } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
 import type { Store } from '../persistence'
 import { TeamRunApiClient } from './teamrun-api-client'
@@ -21,6 +19,7 @@ import { TeamRunVerificationService } from './teamrun-verification-service'
 import { TeamRunWorkspaceReviewService } from './teamrun-workspace-review-service'
 import { TeamAgentChatService } from './team-agent-chat-service'
 import { invokeTeamRunCollaborationOperation } from './teamrun-collaboration-command'
+import { createLinkedTeamRun } from './teamrun-linked-run-command'
 
 const idSchema = z.uuid()
 const textIdSchema = z.string().min(1).max(160)
@@ -230,7 +229,7 @@ export class TeamRunCloudCommandService {
         })
       }
       case 'runs.createLinked':
-        return this.#createLinkedRun(args)
+        return createLinkedTeamRun(this.client, args)
       case 'runs.resolveWorkspace':
         return this.client.getWorkspaceLink(textIdSchema.parse(args))
       case 'runs.reviewWorkspace':
@@ -294,30 +293,5 @@ export class TeamRunCloudCommandService {
             .parse(args)
         )
     }
-  }
-
-  async #createLinkedRun(args: unknown): Promise<AgentRun> {
-    const parsed = z
-      .object({
-        taskId: idSchema,
-        run: createAgentRunRequestSchema,
-        workspaceId: z.string().min(1).max(4096),
-        workspacePath: z.string().min(1).max(32_768)
-      })
-      .parse(args)
-    const run = await this.client.request<AgentRun>(`/v1/tasks/${parsed.taskId}/agent-runs`, {
-      method: 'POST',
-      body: parsed.run,
-      queueIfOffline: false
-    })
-    this.client.putWorkspaceLink({
-      clientRunId: parsed.run.clientRunId,
-      agentRunId: run.id,
-      workspaceId: parsed.workspaceId,
-      workspacePath: parsed.workspacePath,
-      taskId: parsed.taskId,
-      baseRevision: parsed.run.baseRevision
-    })
-    return run
   }
 }

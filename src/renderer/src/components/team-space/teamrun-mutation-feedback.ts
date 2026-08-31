@@ -5,9 +5,13 @@ import { teamRunErrorMessage } from './teamrun-error-message'
 const QUEUED_MESSAGES = ['Saved offline.', 'Saved for later.']
 
 export function isTeamRunMutationQueued(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false
+  if (!error || typeof error !== 'object') {
+    return false
+  }
   const candidate = error as { code?: unknown; message?: unknown }
-  if (candidate.code === 'teamrun_mutation_queued') return true
+  if (candidate.code === 'teamrun_mutation_queued') {
+    return true
+  }
   const message = candidate.message
   return typeof message === 'string' && QUEUED_MESSAGES.some((prefix) => message.includes(prefix))
 }

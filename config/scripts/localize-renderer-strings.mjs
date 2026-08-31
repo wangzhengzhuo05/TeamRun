@@ -226,7 +226,9 @@ async function collectCandidateFiles(root) {
 }
 
 function resolveRequestedFiles(root, requestedFiles) {
-  if (requestedFiles.length === 0) return null
+  if (requestedFiles.length === 0) {
+    return null
+  }
   const rendererRoot = path.resolve(root, 'src', 'renderer', 'src')
   return requestedFiles.map((requestedFile) => {
     const filePath = path.resolve(root, requestedFile)

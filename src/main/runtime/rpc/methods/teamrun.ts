@@ -24,7 +24,9 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
       cursor: z.number().int().nonnegative().optional()
     }),
     handler: async (params, { runtime, signal }, emit) => {
-      if (!signal) throw new Error('streaming_transport_required')
+      if (!signal) {
+        throw new Error('streaming_transport_required')
+      }
       await runtime.streamTeamRunCloudEvents(params.organizationId, params.cursor, signal, emit)
     }
   }),

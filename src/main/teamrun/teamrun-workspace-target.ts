@@ -41,7 +41,9 @@ export function resolveTeamRunWorkspaceTarget(
     throw new Error('TeamRun workspace is no longer registered on this device.')
   }
   const repo = store.getRepo(parsed.repoId)
-  if (!repo) throw new Error('TeamRun repository is no longer available.')
+  if (!repo) {
+    throw new Error('TeamRun repository is no longer available.')
+  }
   return {
     workspaceId: workspace.workspaceId,
     path: parsed.worktreePath,

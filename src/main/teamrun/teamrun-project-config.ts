@@ -13,7 +13,9 @@ async function readRemoteConfig(
   parse: (content: string) => OrcaHooks | null
 ): Promise<OrcaHooks | null> {
   const provider = getSshFilesystemProvider(connectionId)
-  if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+  if (!provider) {
+    throw new Error('TeamRun SSH workspace is not connected.')
+  }
   try {
     const result = await provider.readFile(joinWorktreeRelativePath(workspacePath, fileName))
     return result.isBinary ? null : parse(result.content)
@@ -26,7 +28,9 @@ export async function loadTeamRunWorkspaceConfig(
   workspacePath: string,
   connectionId: string | null
 ): Promise<OrcaHooks | null> {
-  if (!connectionId) return loadHooks(workspacePath)
+  if (!connectionId) {
+    return loadHooks(workspacePath)
+  }
   const [teamRun, orca] = await Promise.all([
     readRemoteConfig(workspacePath, connectionId, 'teamrun.yaml', parseTeamRunYaml),
     readRemoteConfig(workspacePath, connectionId, 'orca.yaml', parseOrcaYaml)

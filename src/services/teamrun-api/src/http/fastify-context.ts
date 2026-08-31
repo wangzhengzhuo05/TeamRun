@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import type { TeamRunDatabase } from '../database/connection.js'
 import type { TeamRunServiceConfig } from '../service-config.js'
 import type { TeamEventNotifier } from '../events/team-event-notifier.js'
@@ -11,10 +11,12 @@ export type TeamRunUser = {
 }
 
 declare module 'fastify' {
+  // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface
   interface FastifyContextConfig {
     public?: boolean
   }
 
+  // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface
   interface FastifyInstance {
     teamRunConfig: TeamRunServiceConfig
     teamRunDatabase: TeamRunDatabase
@@ -22,6 +24,7 @@ declare module 'fastify' {
     authenticateTeamRunRequest: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
   }
 
+  // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface
   interface FastifyRequest {
     teamRunUser: TeamRunUser
   }
