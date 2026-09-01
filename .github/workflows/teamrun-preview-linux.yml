@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      publish_appimage:
+        description: Publish the Linux AppImage release after building
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -56,13 +62,24 @@ jobs:
           pnpm run verify:built-skills-cli
           pnpm run build:web-from-renderer
 
+      - name: Upload web-only preview artifact
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish_appimage
+        uses: actions/upload-artifact@v7
+        with:
+          name: teamrun-web-preview-${{ github.sha }}
+          path: out/web/
+          retention-days: 3
+          if-no-files-found: error
+
       - name: Package preview AppImage
+        if: github.event_name != 'workflow_dispatch' || inputs.publish_appimage
         run: |
           pnpm run ensure:electron-runtime
           pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage --x64 --publish never
           mv dist/teamrun-linux.AppImage "dist/$PREVIEW_APPIMAGE"
 
       - name: Create deployment manifest
+        if: github.event_name != 'workflow_dispatch' || inputs.publish_appimage
         run: |
           artifact_sha256=$(sha256sum "dist/$PREVIEW_APPIMAGE" | cut -d ' ' -f 1)
           artifact_size=$(stat -c '%s' "dist/$PREVIEW_APPIMAGE")
@@ -80,6 +97,7 @@ jobs:
           )
 
       - name: Publish mutable preview release
+        if: github.event_name != 'workflow_dispatch' || inputs.publish_appimage
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
