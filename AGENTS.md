@@ -71,3 +71,17 @@ Be mindful of the user's `gh` CLI API rate limit — batch requests where possib
 ## CI Build Workflow
 
 Use GitHub Actions for every application build, package, release, preview, and build-dependent validation. Do not run build or packaging commands locally; use focused static checks and tests that do not build instead. Treat the CI artifact and its recorded source commit as the build output of record.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the default five-role triage vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Uses a multi-context layout. See `docs/agents/domain.md`.
