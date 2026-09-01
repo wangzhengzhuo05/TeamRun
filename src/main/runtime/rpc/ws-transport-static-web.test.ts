@@ -26,6 +26,10 @@ describe('WebSocketTransport static web client', () => {
     const staticRoot = mkdtempSync(join(tmpdir(), 'ws-transport-static-'))
     mkdirSync(join(staticRoot, 'assets'))
     writeFileSync(join(staticRoot, 'web-index.html'), '<html>web</html>')
+    writeFileSync(
+      join(staticRoot, 'web-runtime-pairing-logic-prototype.html'),
+      '<html>prototype</html>'
+    )
     writeFileSync(join(staticRoot, 'assets', 'app.js'), 'console.log("web")')
     const transport = createStaticTransport(staticRoot)
 
@@ -41,6 +45,13 @@ describe('WebSocketTransport static web client', () => {
     expect(assetResponse.headers.get('cache-control')).toBe('no-cache')
     expect(assetResponse.headers.get('content-length')).toBe('18')
     await expect(assetResponse.text()).resolves.toBe('console.log("web")')
+
+    const prototypeResponse = await fetch(
+      `http://127.0.0.1:${transport.resolvedPort}/web-runtime-pairing-logic-prototype.html`
+    )
+    expect(prototypeResponse.status).toBe(200)
+    expect(prototypeResponse.headers.get('content-type')).toContain('text/html')
+    await expect(prototypeResponse.text()).resolves.toBe('<html>prototype</html>')
   })
 
   it('serves web assets when a reverse-proxy path prefix is forwarded', async () => {

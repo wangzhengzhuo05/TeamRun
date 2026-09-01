@@ -61,6 +61,7 @@ jobs:
           pnpm run build:electron-vite
           pnpm run verify:built-skills-cli
           pnpm run build:web-from-renderer
+          node --input-type=module -e "import { copyFileSync } from 'node:fs'; copyFileSync('src/renderer/src/web/web-runtime-pairing-logic-prototype.html', 'out/web/web-runtime-pairing-logic-prototype.html')"
 
       - name: Upload web-only preview artifact
         if: github.event_name == 'workflow_dispatch' && !inputs.publish_appimage
