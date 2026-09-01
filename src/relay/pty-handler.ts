@@ -48,6 +48,7 @@ import type { TuiAgent } from '../shared/tui-agent'
 import { forceKillPosixPtyProcessGroups } from '../main/pty/posix-pty-process-groups'
 import { stripInheritedBuildModeEnv } from '../main/pty/build-mode-env'
 import { stripLegacyTerminalShimEnv } from '../main/pty/legacy-terminal-shim-dir'
+import { normalizeSshWorkloadProcess } from '../main/ssh/ssh-process-survival-priority'
 import {
   PTY_STARTUP_INGRESS_VERSION,
   PtyStartupIngress,
@@ -1575,6 +1576,7 @@ export class PtyHandler {
           ...shellLaunch.env
         }
       })
+      normalizeSshWorkloadProcess(term.pid)
     } catch (error) {
       // Why: Windows loads conpty.node only on first spawn, so handle that late binding failure here.
       if (isMissingNodePtyNativeBinding(error)) {
@@ -2121,6 +2123,7 @@ export class PtyHandler {
         ...shellLaunch.env
       }
     })
+    normalizeSshWorkloadProcess(term.pid)
     this.wireAndStore({
       id: entry.id,
       incarnationId: randomUUID(),

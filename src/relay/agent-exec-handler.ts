@@ -5,6 +5,7 @@ import type { RelayDispatcher, RequestContext } from './dispatcher'
 import { applyTerminalGitCredentialPromptGuard } from '../shared/terminal-git-credential-guard'
 import { mergeGitConfigEnvProtocol } from '../shared/git-credential-prompt-env'
 import { terminateRelaySubprocessTree } from './subprocess-tree-termination'
+import { normalizeSshWorkloadProcess } from '../main/ssh/ssh-process-survival-priority'
 
 const DEFAULT_TIMEOUT_MS = 60_000
 const MAX_TIMEOUT_MS = 5 * 60 * 1000
@@ -169,6 +170,7 @@ export class AgentExecHandler {
           stdio: ['pipe', 'pipe', 'pipe'],
           windowsHide: true
         })
+        normalizeSshWorkloadProcess(child.pid)
       } catch (error) {
         resolve({
           stdout: '',

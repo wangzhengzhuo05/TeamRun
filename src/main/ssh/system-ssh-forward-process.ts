@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { connect, createServer } from 'node:net'
 import { buildSshArgs, findSystemSsh, type SystemSshBuildArgsOptions } from './ssh-system-fallback'
 import type { SshTarget } from '../../shared/ssh-types'
+import { prioritizeSshSurvivalProcess } from './ssh-process-survival-priority'
 
 export const SYSTEM_SSH_FORWARD_STARTUP_GRACE_MS = 750
 export const SYSTEM_SSH_FORWARD_LISTENER_PROBE_INTERVAL_MS = 50
@@ -50,10 +51,12 @@ export function spawnSystemSshPortForward(
 
   // Why: port-forward ssh processes are not wired to TeamRun credential prompts;
   // system SSH forwards must authenticate via OpenSSH config, agent, or control socket.
-  return spawn(sshPath, args, {
+  const child = spawn(sshPath, args, {
     stdio: ['ignore', 'ignore', 'pipe'],
     windowsHide: true
   })
+  prioritizeSshSurvivalProcess(child.pid)
+  return child
 }
 
 export function startSystemSshPortForwardProcess(

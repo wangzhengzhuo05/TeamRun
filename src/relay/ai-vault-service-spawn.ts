@@ -2,6 +2,7 @@ import { fork, type ChildProcess } from 'node:child_process'
 import { join } from 'node:path'
 import { buildRelayAiVaultServiceEnv } from '../main/ai-vault/session-scanner-service-env'
 import { lowerAiVaultServicePriority } from '../main/ai-vault/session-scanner-service-priority'
+import { normalizeSshWorkloadProcess } from '../main/ssh/ssh-process-survival-priority'
 
 export function relayAiVaultServiceEntryPath(baseDir = __dirname): string {
   return join(baseDir, 'relay-ai-vault-service.js')
@@ -14,6 +15,7 @@ export function spawnRelayAiVaultService(): ChildProcess {
     env: buildRelayAiVaultServiceEnv(),
     ...(process.platform === 'win32' ? { windowsHide: true } : {})
   })
+  normalizeSshWorkloadProcess(child.pid)
   lowerAiVaultServicePriority(child.pid)
   child.unref()
   return child

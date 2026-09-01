@@ -5,6 +5,7 @@ import type { SshTarget } from '../../shared/ssh-types'
 import { wrapRemoteCommandForPosixShell, type SshExecOptions } from './ssh-connection-utils'
 import { buildSshArgs, type SystemSshBuildArgsOptions } from './system-ssh-args'
 import { findSystemSsh } from './system-ssh-binary'
+import { prioritizeSshSurvivalProcess } from './ssh-process-survival-priority'
 
 export type SystemSshProcess = {
   stdin: NodeJS.WritableStream
@@ -45,6 +46,7 @@ export function spawnSystemSsh(
     stdio: ['pipe', 'pipe', 'pipe'],
     windowsHide: true
   })
+  prioritizeSshSurvivalProcess(proc.pid)
 
   return wrapChildProcess(proc)
 }
@@ -67,6 +69,7 @@ export function spawnSystemSshCommand(
     stdio: ['pipe', 'pipe', 'pipe'],
     windowsHide: true
   })
+  prioritizeSshSurvivalProcess(proc.pid)
   return wrapCommandProcess(proc)
 }
 

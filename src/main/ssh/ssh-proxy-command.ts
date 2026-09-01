@@ -5,6 +5,7 @@ import type { SshTarget } from '../../shared/ssh-types'
 import type { SshResolvedConfig } from './ssh-config-parser'
 import { shellEscape } from './ssh-connection-utils'
 import { isOpenSshConfigBackedTarget } from './system-ssh-args'
+import { prioritizeSshSurvivalProcess } from './ssh-process-survival-priority'
 
 // Why: ProxyJump and jumpHost are syntactic sugar for ProxyCommand.
 // OpenSSH internally converts `ProxyJump bastion` to
@@ -117,6 +118,7 @@ export function spawnProxyCommand(
             windowsVerbatimArguments: shell.windowsVerbatimArguments
           })
         })()
+  prioritizeSshSurvivalProcess(proc.pid)
 
   // Why: a single PassThrough for both directions creates a feedback loop.
   // Reads come from the proxy's stdout; writes go to its stdin.
