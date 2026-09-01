@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { TeamRunVerificationCommand } from '../../shared/orca-yaml-hook-types'
 import type { Store } from '../persistence'
 import { runAutomationPrecheck } from '../automations/precheck-runner'
-import { TeamRunApiClient } from './teamrun-api-client'
+import type { TeamRunApiClient } from './teamrun-api-client'
 import { loadTeamRunWorkspaceConfig } from './teamrun-project-config'
 import type { VerificationResult } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunRuntimeVerificationResult } from '../../shared/teamrun-runtime'
@@ -43,8 +43,9 @@ export class TeamRunVerificationService {
     commandId: string
   }): Promise<VerificationResult> {
     const resolved = await this.#resolve(args.clientRunId)
-    if (resolved.agentRunId !== args.runId)
+    if (resolved.agentRunId !== args.runId) {
       throw new Error('TeamRun agent run does not match workspace.')
+    }
     const result = resolved.runtimeEnvironmentId
       ? await callTeamRunRuntime<TeamRunRuntimeVerificationResult>({
           userDataPath: this.userDataPath,
@@ -93,13 +94,17 @@ export class TeamRunVerificationService {
 
   #command(commands: TeamRunVerificationCommand[], commandId: string): TeamRunVerificationCommand {
     const command = commands.find((candidate) => candidate.id === commandId)
-    if (!command) throw new Error('Verification command is not declared in teamrun.yaml.')
+    if (!command) {
+      throw new Error('Verification command is not declared in teamrun.yaml.')
+    }
     return command
   }
 
   async #resolve(clientRunId: string) {
     const workspace = this.client.getWorkspaceLink(clientRunId)
-    if (!workspace) throw new Error('TeamRun workspace link is not available on this device.')
+    if (!workspace) {
+      throw new Error('TeamRun workspace link is not available on this device.')
+    }
     const target = resolveTeamRunWorkspaceTarget(this.store, workspace)
     const config = target.runtimeEnvironmentId
       ? null

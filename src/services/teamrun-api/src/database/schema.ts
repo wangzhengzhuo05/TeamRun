@@ -15,8 +15,36 @@ import {
   uniqueIndex,
   uuid
 } from 'drizzle-orm/pg-core'
+import { organizations, projects, repositories, timestamps, users } from './workspace-schema.js'
 
-export const organizationRoleEnum = pgEnum('organization_role', ['owner', 'admin', 'member'])
+export {
+  organizationInvitations,
+  organizationMembers,
+  organizationRoleEnum,
+  organizations,
+  invitationStatusEnum,
+  teamInviteCodes,
+  projects,
+  repositories,
+  users
+} from './workspace-schema.js'
+export {
+  channelMessages,
+  channels,
+  modelConnections,
+  teamAgentReplyInvocations,
+  teamAgents,
+  teamServerBindings
+} from './collaboration-schema.js'
+export {
+  teamFileAvailabilityEnum,
+  teamFileKindEnum,
+  teamFileProposalStatusEnum,
+  teamFileProposals,
+  teamFiles,
+  teamFileVersions
+} from './team-file-schema.js'
+
 export const taskStatusEnum = pgEnum('task_status', [
   'todo',
   'in_progress',
@@ -34,166 +62,15 @@ export const agentRunStatusEnum = pgEnum('agent_run_status', [
   'failed',
   'canceled'
 ])
+export const agentRunExecutionTargetEnum = pgEnum('agent_run_execution_target', [
+  'personal',
+  'team_server'
+])
 export const publicationStateEnum = pgEnum('publication_state', [
   'preparing',
   'finalized',
   'expired'
 ])
-export const invitationStatusEnum = pgEnum('invitation_status', ['pending', 'accepted', 'revoked'])
-
-const timestamps = {
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
-}
-
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  oidcSubject: text('oidc_subject').notNull().unique(),
-  email: text('email').notNull(),
-  displayName: text('display_name').notNull(),
-  ...timestamps
-})
-
-export const organizations = pgTable('organizations', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-  ...timestamps
-})
-
-export const organizationMembers = pgTable(
-  'organization_members',
-  {
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    role: organizationRoleEnum('role').notNull(),
-    joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull()
-  },
-  (table) => [primaryKey({ columns: [table.organizationId, table.userId] })]
-)
-
-export const organizationInvitations = pgTable(
-  'organization_invitations',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    email: text('email').notNull(),
-    role: organizationRoleEnum('role').notNull(),
-    status: invitationStatusEnum('status').notNull().default('pending'),
-    invitedByUserId: uuid('invited_by_user_id')
-      .notNull()
-      .references(() => users.id),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
-  },
-  (table) => [
-    uniqueIndex('organization_invitations_pending_email')
-      .on(table.organizationId, table.email)
-      .where(sql`${table.status} = 'pending'`)
-  ]
-)
-
-export const projects = pgTable(
-  'projects',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    key: text('key').notNull(),
-    name: text('name').notNull(),
-    contextMarkdown: text('context_markdown').notNull().default(''),
-    contextVersion: integer('context_version').notNull().default(0),
-    nextTaskNumber: integer('next_task_number').notNull().default(1),
-    ...timestamps
-  },
-  (table) => [uniqueIndex('projects_organization_key').on(table.organizationId, table.key)]
-)
-
-export const repositories = pgTable(
-  'repositories',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    projectId: uuid('project_id')
-      .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
-    provider: text('provider').notNull(),
-    remoteUrl: text('remote_url').notNull(),
-    displayName: text('display_name').notNull(),
-    defaultBranch: text('default_branch').notNull(),
-    ...timestamps
-  },
-  (table) => [uniqueIndex('repositories_project_remote').on(table.projectId, table.remoteUrl)]
-)
-
-export const channels = pgTable(
-  'channels',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    projectId: uuid('project_id')
-      .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
-    description: text('description').notNull().default(''),
-    createdByUserId: uuid('created_by_user_id')
-      .notNull()
-      .references(() => users.id),
-    ...timestamps
-  },
-  (table) => [uniqueIndex('channels_project_name').on(table.projectId, table.name)]
-)
-
-export const channelMessages = pgTable(
-  'channel_messages',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    channelId: uuid('channel_id')
-      .notNull()
-      .references(() => channels.id, { onDelete: 'cascade' }),
-    authorUserId: uuid('author_user_id')
-      .notNull()
-      .references(() => users.id),
-    bodyMarkdown: text('body_markdown').notNull(),
-    ...timestamps
-  },
-  (table) => [index('channel_messages_channel_created').on(table.channelId, table.createdAt)]
-)
-
-export const teamAgents = pgTable(
-  'team_agents',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-    projectId: uuid('project_id')
-      .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
-    agentKind: text('agent_kind').notNull(),
-    launchCommand: text('launch_command'),
-    instructionsMarkdown: text('instructions_markdown').notNull().default(''),
-    version: integer('version').notNull().default(1),
-    createdByUserId: uuid('created_by_user_id')
-      .notNull()
-      .references(() => users.id),
-    ...timestamps
-  },
-  (table) => [uniqueIndex('team_agents_project_name').on(table.projectId, table.name)]
-)
-
 export const tasks = pgTable(
   'tasks',
   {
@@ -254,6 +131,12 @@ export const contextSnapshots = pgTable(
     taskVersion: integer('task_version').notNull(),
     projectContextVersion: integer('project_context_version').notNull(),
     commentWatermark: timestamp('comment_watermark', { withTimezone: true }),
+    teamFileVersionIds: jsonb('team_file_version_ids').$type<string[]>().notNull().default([]),
+    agentSelectedFileVersionIds: jsonb('agent_selected_file_version_ids')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    autoEnrichmentRequested: boolean('auto_enrichment_requested').notNull().default(false),
     renderedMarkdown: text('rendered_markdown').notNull(),
     hash: text('hash').notNull(),
     createdByUserId: uuid('created_by_user_id')
@@ -282,6 +165,7 @@ export const agentRuns = pgTable(
       .references(() => users.id),
     agentKind: text('agent_kind').notNull(),
     teamAgentSnapshot: jsonb('team_agent_snapshot').$type<TeamAgentSnapshot>(),
+    executionTarget: agentRunExecutionTargetEnum('execution_target').notNull().default('personal'),
     status: agentRunStatusEnum('status').notNull().default('queued'),
     stale: boolean('stale').notNull().default(false),
     baseRevision: jsonb('base_revision').$type<WorkspaceRevision>().notNull(),

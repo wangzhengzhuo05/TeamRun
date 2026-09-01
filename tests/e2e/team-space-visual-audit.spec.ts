@@ -47,6 +47,7 @@ async function installTeamRunMocks(electronApp: ElectronApplication): Promise<vo
         'teamrun:authStatus',
         {
           state: 'signed-in',
+          userId: ids.user,
           email: 'developer@teamrun.local',
           apiUrl: 'https://teamrun.local',
           devAuth: true,
@@ -132,16 +133,18 @@ async function installTeamRunMocks(electronApp: ElectronApplication): Promise<vo
         ]
       ],
       [
-        'teamrun:organizations:listInvitations',
+        'teamrun:organizations:listInviteCodes',
         [
           {
             id: `${ids.user.slice(0, -1)}b`,
             organizationId: ids.org,
-            email: 'pending.member.with.long.address@teamrun.local',
-            role: 'member',
-            status: 'pending',
-            invitedByUserId: ids.user,
+            codeHint: '8A3F',
+            status: 'active',
+            createdByUserId: ids.user,
+            redeemedByUserId: null,
             expiresAt: '2026-09-02T08:00:00.000Z',
+            redeemedAt: null,
+            revokedAt: null,
             createdAt: timestamp
           }
         ]
@@ -412,20 +415,17 @@ test('audits primary app and Team Space layouts', async ({ electronApp, orcaPage
     await screenshot(orcaPage, testInfo, `team-space-${tab.toLowerCase().replaceAll(' ', '-')}`)
   }
 
-  await teamSpaceDock.getByRole('button', { name: 'Agents', exact: true }).click()
-  await expect(orcaPage.getByRole('dialog')).toBeVisible()
-  await screenshot(orcaPage, testInfo, 'team-space-dialog-agents')
-  await orcaPage.keyboard.press('Escape')
-
-  await teamSpaceDock.getByRole('button', { name: 'Members', exact: true }).click()
+  await teamSpaceDock.getByRole('button', { name: 'Team management', exact: true }).click()
   await expect(orcaPage.getByRole('dialog')).toBeVisible()
   await screenshot(orcaPage, testInfo, 'team-space-dialog-members')
+  await orcaPage.getByRole('tab', { name: 'Team Agents' }).click()
+  await screenshot(orcaPage, testInfo, 'team-space-dialog-agents')
   await orcaPage.keyboard.press('Escape')
 
   const moreButton = teamSpaceDock.getByRole('button', { name: 'More', exact: true })
   await moreButton.click()
   await screenshot(orcaPage, testInfo, 'team-space-more')
-  for (const trigger of ['New organization', 'New project', 'Add repository']) {
+  for (const trigger of ['Join Team', 'New organization', 'New project', 'Add repository']) {
     const triggerButton = orcaPage.getByRole('button', { name: trigger, exact: true })
     if (!(await triggerButton.isVisible())) {
       await moreButton.click()

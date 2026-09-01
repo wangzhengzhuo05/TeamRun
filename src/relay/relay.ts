@@ -82,6 +82,7 @@ import { registerRelayPluginHostCallHandlers } from './plugin-host-call-handler'
 import { DispatcherClientWriter } from './dispatcher-client-writer'
 import { SshPtyConsumerSessionAdapter } from './ssh-pty-consumer-session-adapter'
 import { RelayPtySourcePublication } from './relay-pty-source-publication'
+import { prioritizeSshSurvivalProcess } from '../main/ssh/ssh-process-survival-priority'
 
 const DEFAULT_GRACE_MS = DEFAULT_SSH_RELAY_GRACE_PERIOD_SECONDS * 1000
 const SOCK_NAME = 'relay.sock'
@@ -542,6 +543,7 @@ async function main(): Promise<void> {
   const endpointCredential = readEndpointCredential(credentialFile)
 
   if (connectMode) {
+    prioritizeSshSurvivalProcess(process.pid)
     runConnectMode(sockPath, endpointCredential)
     return
   }
@@ -554,6 +556,7 @@ async function main(): Promise<void> {
     )
     return
   }
+  prioritizeSshSurvivalProcess(process.pid)
 
   // Why: only the long-lived detached daemon accumulates relay.log; route it through a size-capped rotator so it can't grow forever.
   if (detached && logFile) {

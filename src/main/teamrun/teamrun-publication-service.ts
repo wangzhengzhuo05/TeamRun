@@ -9,7 +9,7 @@ import type {
 import type { Store } from '../persistence'
 import { gitExecFileAsync } from '../git/runner'
 import { getSshGitProvider } from '../providers/ssh-git-dispatch'
-import { TeamRunApiClient } from './teamrun-api-client'
+import type { TeamRunApiClient } from './teamrun-api-client'
 import type { TeamRunRuntimePublicationResult } from '../../shared/teamrun-runtime'
 import { callTeamRunRuntime } from './teamrun-runtime-client'
 import { resolveTeamRunWorkspaceTarget } from './teamrun-workspace-target'
@@ -34,8 +34,9 @@ function artifact(
   content: string
 ): ArtifactContent {
   const byteSize = Buffer.byteLength(content)
-  if (byteSize > MAX_ARTIFACT_BYTES)
+  if (byteSize > MAX_ARTIFACT_BYTES) {
     throw new Error(`${fileName} exceeds the 5 MiB publication limit.`)
+  }
   return {
     clientArtifactId: randomUUID(),
     kind,
@@ -59,7 +60,9 @@ export class TeamRunPublicationService {
     const git = async (args: string[]) => {
       if (context.connectionId) {
         const provider = getSshGitProvider(context.connectionId)
-        if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+        if (!provider) {
+          throw new Error('TeamRun SSH workspace is not connected.')
+        }
         return provider.exec(args, context.path, { timeoutMs: 60_000 })
       }
       return gitExecFileAsync(args, {
@@ -108,7 +111,9 @@ export class TeamRunPublicationService {
             `## ${check.commandLabel}\n\n\`${check.command}\`\n\nExit: ${check.exitCode}\n\n\`\`\`text\n${check.output}\n\`\`\``
         )
         .join('\n\n')
-      if (output) artifacts.push(artifact('verification_output', 'verification-results.md', output))
+      if (output) {
+        artifacts.push(artifact('verification_output', 'verification-results.md', output))
+      }
     }
 
     const request: PreparePublicationRequest = {
@@ -128,14 +133,18 @@ export class TeamRunPublicationService {
         const selected = artifacts.find(
           (candidate) => candidate.clientArtifactId === upload.clientArtifactId
         )
-        if (!selected) throw new Error('Prepared publication contains an unknown artifact.')
+        if (!selected) {
+          throw new Error('Prepared publication contains an unknown artifact.')
+        }
         const response = await fetch(upload.uploadUrl, {
           method: 'PUT',
           headers: upload.requiredHeaders,
           body: selected.content,
           signal: AbortSignal.timeout(60_000)
         })
-        if (!response.ok) throw new Error(`Artifact upload failed (${response.status}).`)
+        if (!response.ok) {
+          throw new Error(`Artifact upload failed (${response.status}).`)
+        }
       })
     )
     return this.client.request(`/v1/publications/${prepared.publicationId}/finalize`, {

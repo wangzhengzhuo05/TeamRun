@@ -11881,8 +11881,8 @@
       "commands": [
         "pnpm exec vitest run --config config/vitest.config.ts src/main/startup/ensure-virtual-display.test.ts config/scripts/headless-serve-shutdown-workflow.test.mjs --reporter=dot",
         "shellcheck config/docker/headless-serve-shutdown/run-signal-case.sh",
-        "node config/scripts/run-headless-serve-shutdown-docker.mjs --appimage dist/orca-linux.AppImage",
-        "node config/scripts/run-headless-serve-shutdown-docker.mjs --appimage dist/orca-linux.AppImage --platform linux/amd64"
+        "node config/scripts/run-headless-serve-shutdown-docker.mjs --appimage dist/teamrun-linux.AppImage",
+        "node config/scripts/run-headless-serve-shutdown-docker.mjs --appimage dist/teamrun-linux.AppImage --platform linux/amd64"
       ],
       "testFiles": [
         "src/main/startup/ensure-virtual-display.test.ts",

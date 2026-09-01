@@ -45,6 +45,7 @@ services:
         mc mb --ignore-existing teamrun/teamrun-publications
 
   api:
+    image: teamrun-api:preview
     build:
       context: ../..
       dockerfile: config/teamrun/api.Dockerfile
@@ -63,6 +64,7 @@ services:
       TEAMRUN_SHARED_KEY: ${TEAMRUN_SHARED_KEY}
       TEAMRUN_SHARED_KEY_EMAIL: ${TEAMRUN_SHARED_KEY_EMAIL:-team@teamrun.local}
       TEAMRUN_SHARED_KEY_DISPLAY_NAME: ${TEAMRUN_SHARED_KEY_DISPLAY_NAME:-TeamRun Team}
+      TEAMRUN_RUNTIME_ENCRYPTION_KEY: ${TEAMRUN_RUNTIME_ENCRYPTION_KEY}
       TEAMRUN_DEV_AUTH: '0'
       TEAMRUN_CORS_ORIGINS: https://${TEAMRUN_DOMAIN},https://preview.runteam.site
       TEAMRUN_S3_ENDPOINT: http://minio:9000

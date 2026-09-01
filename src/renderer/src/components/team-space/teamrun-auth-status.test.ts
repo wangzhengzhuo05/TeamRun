@@ -16,14 +16,28 @@ describe('normalizeTeamRunAuthStatus', () => {
         apiUrl: 'https://teamrun.example.com',
         devAuth: false,
         sharedKeyAuth: true,
-        email: null
+        email: null,
+        userId: 'user-1'
       })
     ).toEqual({
       state: 'signed-in',
       apiUrl: 'https://teamrun.example.com',
       devAuth: false,
       sharedKeyAuth: true,
-      email: null
+      email: null,
+      userId: 'user-1'
     })
+  })
+
+  it('keeps old server responses compatible without guessing an identity', () => {
+    expect(
+      normalizeTeamRunAuthStatus({
+        state: 'signed-in',
+        apiUrl: 'https://teamrun.example.com',
+        devAuth: false,
+        sharedKeyAuth: true,
+        email: 'member@example.com'
+      })
+    ).toMatchObject({ state: 'signed-in', userId: null })
   })
 })

@@ -577,6 +577,16 @@ const api = {
         ipcRenderer.invoke('teamrun:organizations:listMembers', organizationId),
       addMember: (args) => ipcRenderer.invoke('teamrun:organizations:addMember', args),
       removeMember: (args) => ipcRenderer.invoke('teamrun:organizations:removeMember', args),
+      updateMemberRole: (args) =>
+        ipcRenderer.invoke('teamrun:organizations:updateMemberRole', args),
+      listInviteCodes: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:listInviteCodes', organizationId),
+      createInviteCode: (organizationId) =>
+        ipcRenderer.invoke('teamrun:organizations:createInviteCode', organizationId),
+      revokeInviteCode: (args) =>
+        ipcRenderer.invoke('teamrun:organizations:revokeInviteCode', args),
+      redeemInviteCode: (code) =>
+        ipcRenderer.invoke('teamrun:organizations:redeemInviteCode', code),
       listInvitations: (organizationId) =>
         ipcRenderer.invoke('teamrun:organizations:listInvitations', organizationId),
       invite: (args) => ipcRenderer.invoke('teamrun:organizations:invite', args),
@@ -595,7 +605,26 @@ const api = {
       listMessages: (channelId) => ipcRenderer.invoke('teamrun:channels:listMessages', channelId),
       createMessage: (args) => ipcRenderer.invoke('teamrun:channels:createMessage', args),
       listTeamAgents: (projectId) => ipcRenderer.invoke('teamrun:teamAgents:list', projectId),
-      createTeamAgent: (args) => ipcRenderer.invoke('teamrun:teamAgents:create', args)
+      createTeamAgent: (args) => ipcRenderer.invoke('teamrun:teamAgents:create', args),
+      getTeamServer: (projectId) => ipcRenderer.invoke('teamrun:teamServer:get', projectId),
+      enrollTeamServer: (args) => ipcRenderer.invoke('teamrun:teamServer:enroll', args),
+      listModelConnections: (projectId) =>
+        ipcRenderer.invoke('teamrun:modelConnections:list', projectId),
+      createModelConnection: (args) => ipcRenderer.invoke('teamrun:modelConnections:create', args),
+      reply: (args) => ipcRenderer.invoke('teamrun:teamAgents:reply', args)
+    },
+    files: {
+      list: (projectId) => ipcRenderer.invoke('teamrun:files:list', projectId),
+      create: (args) => ipcRenderer.invoke('teamrun:files:create', args),
+      listVersions: (teamFileId) => ipcRenderer.invoke('teamrun:files:listVersions', teamFileId),
+      readVersion: (versionId) => ipcRenderer.invoke('teamrun:files:readVersion', versionId),
+      createVersion: (args) => ipcRenderer.invoke('teamrun:files:createVersion', args),
+      listProposals: (teamFileId) => ipcRenderer.invoke('teamrun:files:listProposals', teamFileId),
+      requestProposal: (args) => ipcRenderer.invoke('teamrun:files:requestProposal', args),
+      applyProposal: (proposalId) => ipcRenderer.invoke('teamrun:files:applyProposal', proposalId),
+      clearQuarantine: (versionId) =>
+        ipcRenderer.invoke('teamrun:files:clearQuarantine', versionId),
+      delete: (teamFileId) => ipcRenderer.invoke('teamrun:files:delete', teamFileId)
     },
     tasks: {
       list: (projectId) => ipcRenderer.invoke('teamrun:tasks:list', projectId),
@@ -611,6 +640,8 @@ const api = {
       list: (taskId) => ipcRenderer.invoke('teamrun:runs:list', taskId),
       create: (args) => ipcRenderer.invoke('teamrun:runs:create', args),
       createLinked: (args) => ipcRenderer.invoke('teamrun:runs:createLinked', args),
+      startTeamServer: (args) => ipcRenderer.invoke('teamrun:runs:startTeamServer', args),
+      getTeamServerState: (runId) => ipcRenderer.invoke('teamrun:runs:getTeamServerState', runId),
       resolveWorkspace: (clientRunId) =>
         ipcRenderer.invoke('teamrun:runs:resolveWorkspace', clientRunId),
       reviewWorkspace: (args) => ipcRenderer.invoke('teamrun:runs:reviewWorkspace', args),

@@ -33,7 +33,9 @@ export type RuntimeTeamRunCommandHost = {
 async function readConfigFile(target: RuntimeFileTarget, fileName: string): Promise<string | null> {
   if (target.connectionId) {
     const provider = getSshFilesystemProvider(target.connectionId)
-    if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+    if (!provider) {
+      throw new Error('TeamRun SSH workspace is not connected.')
+    }
     try {
       const result = await provider.readFile(
         joinWorktreeRelativePath(target.worktree.path, fileName)
@@ -46,7 +48,9 @@ async function readConfigFile(target: RuntimeFileTarget, fileName: string): Prom
   try {
     return await readFile(join(target.worktree.path, fileName), 'utf8')
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null
+    }
     throw error
   }
 }
@@ -74,7 +78,9 @@ export class RuntimeTeamRunCommands {
   ): Promise<TeamRunRuntimeVerificationResult> {
     const target = await this.host.resolveRuntimeFileTarget(worktree)
     const command = (await loadCommands(target)).find((candidate) => candidate.id === commandId)
-    if (!command) throw new Error('Verification command is not declared in teamrun.yaml.')
+    if (!command) {
+      throw new Error('Verification command is not declared in teamrun.yaml.')
+    }
     const result = await runAutomationPrecheck({
       precheck: { command: command.command, timeoutSeconds: 15 * 60 },
       target: target.connectionId
@@ -101,7 +107,9 @@ export class RuntimeTeamRunCommands {
     const git = async (args: string[]) => {
       if (target.connectionId) {
         const provider = getSshGitProvider(target.connectionId)
-        if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+        if (!provider) {
+          throw new Error('TeamRun SSH workspace is not connected.')
+        }
         return provider.exec(args, target.worktree.path, { timeoutMs: 60_000 })
       }
       return gitExecFileAsync(args, {

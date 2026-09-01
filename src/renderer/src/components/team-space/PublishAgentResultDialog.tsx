@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = {
   run: AgentRun
@@ -53,12 +54,13 @@ export function PublishAgentResultDialog({ run, verifications, onPublished }: Pr
       setOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : translate(
-              'auto.components.team.space.PublishAgentResultDialog.b8e3cca263',
-              'Publication failed'
-            )
+        teamRunErrorMessage(
+          error,
+          translate(
+            'auto.components.team.space.PublishAgentResultDialog.b8e3cca263',
+            'Publication failed'
+          )
+        )
       )
     } finally {
       setPublishing(false)

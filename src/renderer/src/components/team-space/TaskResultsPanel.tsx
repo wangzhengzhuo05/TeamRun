@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import CommentMarkdown from '@/components/sidebar/CommentMarkdown'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = { publications: ResultPublication[] }
 
@@ -26,12 +27,13 @@ export function TaskResultsPanel({ publications }: Props) {
       .then((entries) => active && setArtifacts(Object.fromEntries(entries)))
       .catch((error) =>
         toast.error(
-          error instanceof Error
-            ? error.message
-            : translate(
-                'auto.components.team.space.TaskResultsPanel.loadFailed',
-                'Unable to load published artifacts'
-              )
+          teamRunErrorMessage(
+            error,
+            translate(
+              'auto.components.team.space.TaskResultsPanel.loadFailed',
+              'Unable to load published artifacts'
+            )
+          )
         )
       )
     return () => {
@@ -53,7 +55,7 @@ export function TaskResultsPanel({ publications }: Props) {
   return (
     <div className="scrollbar-sleek min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-3xl space-y-4">
-        {[...publications].reverse().map((publication) => (
+        {publications.toReversed().map((publication) => (
           <article key={publication.id} className="rounded-lg border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">

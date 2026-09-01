@@ -32,6 +32,6 @@ describe('TeamRun mutation feedback', () => {
     expect(toast.info).toHaveBeenCalledWith('Saved locally and queued for sync.')
 
     expect(reportTeamRunMutation(new Error('Conflict'), 'failed')).toBe(false)
-    expect(toast.error).toHaveBeenCalledWith('Conflict')
+    expect(toast.error).toHaveBeenCalledWith('failed')
   })
 })

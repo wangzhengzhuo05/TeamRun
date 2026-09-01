@@ -1,27 +1,25 @@
 import { z } from 'zod'
 import {
   createAgentRunRequestSchema,
-  createChannelMessageRequestSchema,
-  createChannelRequestSchema,
-  createContextSnapshotRequestSchema,
   createProjectRequestSchema,
   createRepositoryRequestSchema,
-  createTaskCommentRequestSchema,
-  createTaskRequestSchema,
-  createTeamAgentRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
+  startTeamServerDevelopmentRunRequestSchema,
   updateAgentRunStatusRequestSchema,
-  updateProjectRequestSchema,
-  updateTaskRequestSchema
+  updateProjectRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
-import type { AgentRun } from '../../packages/teamrun-contracts/src/index'
 import type { TeamRunCloudOperation } from '../../shared/teamrun-cloud-operations'
 import type { Store } from '../persistence'
 import { TeamRunApiClient } from './teamrun-api-client'
 import { TeamRunPublicationService } from './teamrun-publication-service'
 import { TeamRunVerificationService } from './teamrun-verification-service'
 import { TeamRunWorkspaceReviewService } from './teamrun-workspace-review-service'
+import { TeamAgentChatService } from './team-agent-chat-service'
+import { invokeTeamRunCollaborationOperation } from './teamrun-collaboration-command'
+import { createLinkedTeamRun } from './teamrun-linked-run-command'
+import { invokeTeamRunFileOperation } from './teamrun-file-command'
+import { invokeTeamRunTaskOperation } from './teamrun-task-command'
 
 const idSchema = z.uuid()
 const textIdSchema = z.string().min(1).max(160)
@@ -38,12 +36,14 @@ export class TeamRunCloudCommandService {
   readonly #verification: TeamRunVerificationService
   readonly #publication: TeamRunPublicationService
   readonly #workspaceReview: TeamRunWorkspaceReviewService
+  readonly #agentChat: TeamAgentChatService
 
   constructor(store: Store, userDataPath: string, client = new TeamRunApiClient()) {
     this.client = client
     this.#verification = new TeamRunVerificationService(store, client, userDataPath)
     this.#publication = new TeamRunPublicationService(store, client, userDataPath)
     this.#workspaceReview = new TeamRunWorkspaceReviewService(store, client, userDataPath)
+    this.#agentChat = new TeamAgentChatService(client)
   }
 
   async invoke(operation: TeamRunCloudOperation, args?: unknown): Promise<unknown> {
@@ -88,6 +88,38 @@ export class TeamRunCloudCommandService {
           { method: 'DELETE' }
         )
       }
+      case 'organizations.updateMemberRole': {
+        const parsed = z
+          .object({
+            organizationId: idSchema,
+            userId: idSchema,
+            role: z.enum(['admin', 'member'])
+          })
+          .parse(args)
+        return this.client.request(
+          `/v1/organizations/${parsed.organizationId}/members/${parsed.userId}`,
+          { method: 'PATCH', body: { role: parsed.role } }
+        )
+      }
+      case 'organizations.listInviteCodes':
+        return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invite-codes`)
+      case 'organizations.createInviteCode':
+        return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invite-codes`, {
+          method: 'POST',
+          body: {}
+        })
+      case 'organizations.revokeInviteCode': {
+        const parsed = z.object({ organizationId: idSchema, inviteCodeId: idSchema }).parse(args)
+        return this.client.request(
+          `/v1/organizations/${parsed.organizationId}/invite-codes/${parsed.inviteCodeId}`,
+          { method: 'DELETE' }
+        )
+      }
+      case 'organizations.redeemInviteCode':
+        return this.client.request('/v1/team-invite-codes/redeem', {
+          method: 'POST',
+          body: { code: z.string().min(1).max(128).parse(args) }
+        })
       case 'organizations.listInvitations':
         return this.client.request(`/v1/organizations/${idSchema.parse(args)}/invitations`)
       case 'organizations.invite': {
@@ -138,78 +170,39 @@ export class TeamRunCloudCommandService {
         })
       }
       case 'collaboration.listChannels':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/channels`)
-      case 'collaboration.createChannel': {
-        const parsed = z
-          .object({ projectId: idSchema, channel: createChannelRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/channels`, {
-          method: 'POST',
-          body: parsed.channel
-        })
-      }
+      case 'collaboration.createChannel':
       case 'collaboration.listMessages':
-        return this.client.request(`/v1/channels/${idSchema.parse(args)}/messages`)
-      case 'collaboration.createMessage': {
-        const parsed = z
-          .object({ channelId: idSchema, message: createChannelMessageRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/channels/${parsed.channelId}/messages`, {
-          method: 'POST',
-          body: parsed.message
-        })
-      }
+      case 'collaboration.createMessage':
       case 'collaboration.listTeamAgents':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/team-agents`)
-      case 'collaboration.createTeamAgent': {
-        const parsed = z
-          .object({ projectId: idSchema, teamAgent: createTeamAgentRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/team-agents`, {
-          method: 'POST',
-          body: parsed.teamAgent
-        })
-      }
+      case 'collaboration.createTeamAgent':
+      case 'collaboration.getTeamServer':
+      case 'collaboration.enrollTeamServer':
+      case 'collaboration.listModelConnections':
+      case 'collaboration.createModelConnection':
+      case 'collaboration.credentialStatus':
+      case 'collaboration.saveCredential':
+      case 'collaboration.reply':
+        return invokeTeamRunCollaborationOperation(this.client, this.#agentChat, operation, args)
+      case 'files.list':
+      case 'files.create':
+      case 'files.listVersions':
+      case 'files.readVersion':
+      case 'files.createVersion':
+      case 'files.listProposals':
+      case 'files.requestProposal':
+      case 'files.applyProposal':
+      case 'files.clearQuarantine':
+      case 'files.delete':
+        return invokeTeamRunFileOperation(this.client, operation, args)
       case 'tasks.list':
-        return this.client.request(`/v1/projects/${idSchema.parse(args)}/tasks`)
       case 'tasks.get':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}`)
-      case 'tasks.create': {
-        const parsed = z.object({ projectId: idSchema, task: createTaskRequestSchema }).parse(args)
-        return this.client.request(`/v1/projects/${parsed.projectId}/tasks`, {
-          method: 'POST',
-          body: parsed.task
-        })
-      }
-      case 'tasks.update': {
-        const parsed = z.object({ taskId: idSchema, changes: updateTaskRequestSchema }).parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}`, {
-          method: 'PATCH',
-          body: parsed.changes
-        })
-      }
+      case 'tasks.create':
+      case 'tasks.update':
       case 'tasks.listComments':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}/comments`)
-      case 'tasks.createComment': {
-        const parsed = z
-          .object({ taskId: idSchema, comment: createTaskCommentRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}/comments`, {
-          method: 'POST',
-          body: parsed.comment
-        })
-      }
+      case 'tasks.createComment':
       case 'tasks.listSnapshots':
-        return this.client.request(`/v1/tasks/${idSchema.parse(args)}/context-snapshots`)
-      case 'tasks.createSnapshot': {
-        const parsed = z
-          .object({ taskId: idSchema, snapshot: createContextSnapshotRequestSchema })
-          .parse(args)
-        return this.client.request(`/v1/tasks/${parsed.taskId}/context-snapshots`, {
-          method: 'POST',
-          body: parsed.snapshot
-        })
-      }
+      case 'tasks.createSnapshot':
+        return invokeTeamRunTaskOperation(this.client, operation, args)
       case 'runs.list':
         return this.client.request(`/v1/tasks/${idSchema.parse(args)}/agent-runs`)
       case 'runs.create': {
@@ -220,7 +213,22 @@ export class TeamRunCloudCommandService {
         })
       }
       case 'runs.createLinked':
-        return this.#createLinkedRun(args)
+        return createLinkedTeamRun(this.client, args)
+      case 'runs.startTeamServer': {
+        const parsed = z
+          .object({ taskId: idSchema, run: startTeamServerDevelopmentRunRequestSchema })
+          .parse(args)
+        return this.client.request(`/v1/tasks/${parsed.taskId}/team-server-runs`, {
+          method: 'POST',
+          body: parsed.run,
+          queueIfOffline: false,
+          timeoutMs: 150_000
+        })
+      }
+      case 'runs.getTeamServerState':
+        return this.client.request(`/v1/agent-runs/${idSchema.parse(args)}/team-server-state`, {
+          cache: false
+        })
       case 'runs.resolveWorkspace':
         return this.client.getWorkspaceLink(textIdSchema.parse(args))
       case 'runs.reviewWorkspace':
@@ -284,30 +292,5 @@ export class TeamRunCloudCommandService {
             .parse(args)
         )
     }
-  }
-
-  async #createLinkedRun(args: unknown): Promise<AgentRun> {
-    const parsed = z
-      .object({
-        taskId: idSchema,
-        run: createAgentRunRequestSchema,
-        workspaceId: z.string().min(1).max(4096),
-        workspacePath: z.string().min(1).max(32_768)
-      })
-      .parse(args)
-    const run = await this.client.request<AgentRun>(`/v1/tasks/${parsed.taskId}/agent-runs`, {
-      method: 'POST',
-      body: parsed.run,
-      queueIfOffline: false
-    })
-    this.client.putWorkspaceLink({
-      clientRunId: parsed.run.clientRunId,
-      agentRunId: run.id,
-      workspaceId: parsed.workspaceId,
-      workspacePath: parsed.workspacePath,
-      taskId: parsed.taskId,
-      baseRevision: parsed.run.baseRevision
-    })
-    return run
   }
 }

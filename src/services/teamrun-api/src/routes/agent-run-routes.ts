@@ -8,13 +8,7 @@ import {
   updateAgentRunStatusRequestSchema
 } from '@teamrun/contracts'
 import { requireOrganizationRole } from '../auth/organization-access.js'
-import {
-  agentRuns,
-  contextSnapshots,
-  tasks,
-  teamAgents,
-  verificationResults
-} from '../database/schema.js'
+import { agentRuns, contextSnapshots, tasks, verificationResults } from '../database/schema.js'
 import { appendTeamEvent } from '../events/team-event-writer.js'
 import { ApiProblem } from '../http/api-problem.js'
 import { requireIdempotencyKey, runIdempotentMutation } from '../http/idempotent-mutation.js'
@@ -70,7 +64,19 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     if (!task) {
       throw new ApiProblem(404, 'task_not_found', 'Task was not found')
     }
-    await requireOrganizationRole(app.teamRunDatabase, task.organizationId, request.teamRunUser.id)
+    await requireOrganizationRole(
+      app.teamRunDatabase,
+      task.organizationId,
+      request.teamRunUser.id,
+      ['owner', 'admin']
+    )
+    if (body.teamAgentId) {
+      throw new ApiProblem(
+        409,
+        'team_agent_team_server_run_required',
+        'Team Agents cannot run in a Personal Workspace'
+      )
+    }
     const [snapshot] = await app.teamRunDatabase
       .select()
       .from(contextSnapshots)
@@ -80,33 +86,6 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     if (!snapshot) {
       throw new ApiProblem(400, 'snapshot_task_mismatch', 'Context snapshot is not for this task')
     }
-    const [teamAgent] = body.teamAgentId
-      ? await app.teamRunDatabase
-          .select()
-          .from(teamAgents)
-          .where(and(eq(teamAgents.id, body.teamAgentId), eq(teamAgents.projectId, task.projectId)))
-          .limit(1)
-      : []
-    if (body.teamAgentId && !teamAgent) {
-      throw new ApiProblem(400, 'team_agent_project_mismatch', 'Team Agent is not in this project')
-    }
-    if (teamAgent && teamAgent.agentKind !== body.agentKind) {
-      throw new ApiProblem(
-        400,
-        'team_agent_kind_mismatch',
-        'Team Agent kind does not match the run'
-      )
-    }
-    const teamAgentSnapshot = teamAgent
-      ? {
-          id: teamAgent.id,
-          name: teamAgent.name,
-          agentKind: teamAgent.agentKind,
-          launchCommand: teamAgent.launchCommand,
-          instructionsMarkdown: teamAgent.instructionsMarkdown,
-          version: teamAgent.version
-        }
-      : null
     const key = requireIdempotencyKey(request.headers['idempotency-key'] as string | undefined)
     const result = await runIdempotentMutation(app.teamRunDatabase, {
       userId: request.teamRunUser.id,
@@ -122,7 +101,7 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
             contextSnapshotId: body.contextSnapshotId,
             ownerUserId: request.teamRunUser.id,
             agentKind: body.agentKind,
-            teamAgentSnapshot,
+            teamAgentSnapshot: null,
             baseRevision: body.baseRevision,
             clientRunId: body.clientRunId,
             stale: snapshot.taskVersion !== task.version
@@ -148,6 +127,17 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     const { runId } = request.params as { runId: string }
     const body = updateAgentRunStatusRequestSchema.parse(request.body)
     const run = await requireRun(app, runId, request.teamRunUser.id)
+    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id, [
+      'owner',
+      'admin'
+    ])
+    if (run.executionTarget === 'team_server') {
+      throw new ApiProblem(
+        409,
+        'team_server_run_status_managed',
+        'Team Server run status is managed by its execution host'
+      )
+    }
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(403, 'run_status_forbidden', 'Only the run owner can report status')
     }
@@ -222,6 +212,17 @@ export async function registerAgentRunRoutes(app: FastifyInstance): Promise<void
     const { runId } = request.params as { runId: string }
     const body = createVerificationResultRequestSchema.parse(request.body)
     const run = await requireRun(app, runId, request.teamRunUser.id)
+    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id, [
+      'owner',
+      'admin'
+    ])
+    if (run.executionTarget === 'team_server') {
+      throw new ApiProblem(
+        409,
+        'team_server_run_verification_managed',
+        'Team Server runs cannot accept Personal Workspace verification reports'
+      )
+    }
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(
         403,

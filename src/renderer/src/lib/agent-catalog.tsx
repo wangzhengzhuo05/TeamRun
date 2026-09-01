@@ -46,7 +46,7 @@ function getCatalogPlatform(): NodeJS.Platform {
 export const getAgentCatalog = createLocalizedCatalog((): AgentCatalogEntry[] => [
   {
     id: 'claude',
-    label: translate('auto.lib.agent.catalog.0708ed89f1', 'Claude'),
+    label: translate('auto.lib.agent.catalog.0708ed89f1', 'Claude Code'),
     cmd: 'claude',
     homepageUrl: 'https://docs.anthropic.com/claude/docs/claude-code'
   },

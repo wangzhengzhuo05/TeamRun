@@ -22,6 +22,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = { runs: AgentRun[] }
 type ReviewState = { run: AgentRun; review: TeamRunWorkspaceReview }
@@ -128,12 +129,13 @@ export function CompareAgentRunsDialog({ runs }: Props) {
       setReviews([next[0] ?? null, next[1] ?? null])
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : translate(
-              'auto.components.team.space.CompareAgentRunsDialog.dda2dc9fdd',
-              'Unable to read the selected result.'
-            )
+        teamRunErrorMessage(
+          error,
+          translate(
+            'auto.components.team.space.CompareAgentRunsDialog.dda2dc9fdd',
+            'Unable to read the selected result.'
+          )
+        )
       )
     } finally {
       setLoading(false)

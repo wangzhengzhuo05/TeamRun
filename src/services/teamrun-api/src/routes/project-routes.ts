@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import {
   createProjectRequestSchema,
@@ -138,6 +138,23 @@ export async function registerProjectRoutes(app: FastifyInstance): Promise<void>
       key,
       requestBody: body,
       execute: async (transaction) => {
+        await transaction
+          .select({ id: projects.id })
+          .from(projects)
+          .where(eq(projects.id, projectId))
+          .for('update')
+        const [existing] = await transaction
+          .select({ id: repositories.id })
+          .from(repositories)
+          .where(eq(repositories.projectId, projectId))
+          .limit(1)
+        if (existing) {
+          throw new ApiProblem(
+            409,
+            'team_project_repository_limit',
+            'The initial Team Project release supports one repository'
+          )
+        }
         const [repository] = await transaction
           .insert(repositories)
           .values({ projectId, ...body })

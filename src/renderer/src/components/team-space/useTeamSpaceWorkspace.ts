@@ -8,6 +8,7 @@ import type {
 } from '../../../../shared/teamrun-cloud'
 import { translate } from '@/i18n/i18n'
 import { normalizeTeamRunAuthStatus } from './teamrun-auth-status'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type TeamSpaceWorkspace = {
   auth: TeamRunAuthStatus | null
@@ -28,6 +29,7 @@ type TeamSpaceWorkspace = {
   selectProject: (id: string) => void
   selectTask: (id: string | null) => void
   createOrganization: (slug: string, name: string) => Promise<void>
+  joinTeam: (code: string) => Promise<void>
   createProject: (key: string, name: string, contextMarkdown: string) => Promise<void>
   createRepository: (input: {
     provider: 'github' | 'gitlab' | 'other'
@@ -43,12 +45,13 @@ type TeamSpaceWorkspace = {
 
 function reportError(error: unknown): void {
   toast.error(
-    error instanceof Error
-      ? error.message
-      : translate(
-          'auto.components.team.space.useTeamSpaceWorkspace.e3e738a0bb',
-          'TeamRun request failed'
-        )
+    teamRunErrorMessage(
+      error,
+      translate(
+        'auto.components.team.space.useTeamSpaceWorkspace.e3e738a0bb',
+        'TeamRun request failed'
+      )
+    )
   )
 }
 
@@ -86,10 +89,14 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     void window.api.teamRun.auth
       .status()
       .then(async (value) => {
-        if (!active) return
+        if (!active) {
+          return
+        }
         const status = normalizeTeamRunAuthStatus(value)
         setAuth(status)
-        if (status.state === 'signed-in') await loadOrganizations()
+        if (status.state === 'signed-in') {
+          await loadOrganizations()
+        }
       })
       .catch(reportError)
       .finally(() => active && setLoading(false))
@@ -111,7 +118,9 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     void window.api.teamRun.projects
       .list(organizationId)
       .then((next) => {
-        if (!active) return
+        if (!active) {
+          return
+        }
         setProjects(next)
         setProjectId(next[0]?.id ?? null)
       })
@@ -122,14 +131,18 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
   }, [auth?.state, organizationId])
 
   const refreshTasks = useCallback(async () => {
-    if (!projectId) return
+    if (!projectId) {
+      return
+    }
     const next = await window.api.teamRun.tasks.list(projectId)
     setTasks(next)
     setTaskId((current) => (current && next.some((task) => task.id === current) ? current : null))
   }, [projectId])
 
   const refreshProjects = useCallback(async () => {
-    if (!organizationId) return
+    if (!organizationId) {
+      return
+    }
     const next = await window.api.teamRun.projects.list(organizationId)
     setProjects(next)
     setProjectId((current) =>
@@ -138,12 +151,19 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
   }, [organizationId])
 
   useEffect(() => {
-    if (!organizationId || auth?.state !== 'signed-in') return
+    if (!organizationId || auth?.state !== 'signed-in') {
+      return
+    }
     const removeEventListener = window.api.teamRun.events.onEvent((event) => {
-      if (event.organizationId !== organizationId) return
+      if (event.organizationId !== organizationId) {
+        return
+      }
       setEventRevision((current) => current + 1)
-      if (event.type.startsWith('project.')) void refreshProjects().catch(reportError)
-      else void refreshTasks().catch(reportError)
+      if (event.type.startsWith('project.')) {
+        void refreshProjects().catch(reportError)
+      } else {
+        void refreshTasks().catch(reportError)
+      }
     })
     void window.api.teamRun.events.start({ organizationId }).catch(reportError)
     return () => {
@@ -156,14 +176,18 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     setTaskId(null)
     setTasks([])
     setRepositories([])
-    if (!projectId) return
+    if (!projectId) {
+      return
+    }
     let active = true
     void Promise.all([
       window.api.teamRun.tasks.list(projectId),
       window.api.teamRun.projects.listRepositories(projectId)
     ])
       .then(([nextTasks, nextRepositories]) => {
-        if (!active) return
+        if (!active) {
+          return
+        }
         setTasks(nextTasks)
         setRepositories(nextRepositories)
       })
@@ -179,7 +203,9 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
         setLoading(true)
         const status = normalizeTeamRunAuthStatus(await window.api.teamRun.auth.signIn(args))
         setAuth(status)
-        if (status.state === 'signed-in') await loadOrganizations()
+        if (status.state === 'signed-in') {
+          await loadOrganizations()
+        }
       } catch (error) {
         reportError(error)
       } finally {
@@ -206,9 +232,20 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     setOrganizationId(created.id)
   }, [])
 
+  const joinTeam = useCallback(async (code: string) => {
+    const joined = await window.api.teamRun.organizations.redeemInviteCode(code)
+    setOrganizations((current) => [
+      ...current.filter((organization) => organization.id !== joined.id),
+      joined
+    ])
+    setOrganizationId(joined.id)
+  }, [])
+
   const createProject = useCallback(
     async (key: string, name: string, contextMarkdown: string) => {
-      if (!organizationId) return
+      if (!organizationId) {
+        return
+      }
       const created = await window.api.teamRun.projects.create({
         organizationId,
         project: { key, name, contextMarkdown }
@@ -221,7 +258,9 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
 
   const createRepository = useCallback(
     async (input: Parameters<TeamSpaceWorkspace['createRepository']>[0]) => {
-      if (!projectId) return
+      if (!projectId) {
+        return
+      }
       const created = await window.api.teamRun.projects.createRepository({
         projectId,
         repository: input
@@ -233,7 +272,9 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
 
   const createTask = useCallback(
     async (input: Parameters<TeamSpaceWorkspace['createTask']>[0]) => {
-      if (!projectId) return
+      if (!projectId) {
+        return
+      }
       const created = await window.api.teamRun.tasks.create({ projectId, task: input })
       setTasks((current) => [created, ...current])
       setTaskId(created.id)
@@ -260,6 +301,7 @@ export function useTeamSpaceWorkspace(): TeamSpaceWorkspace {
     selectProject: setProjectId,
     selectTask: setTaskId,
     createOrganization,
+    joinTeam,
     createProject,
     createRepository,
     createTask,

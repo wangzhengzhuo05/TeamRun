@@ -34,12 +34,19 @@ const DETAIL_TABS = [
 
 type Props = {
   taskId: string | null
+  canDevelop: boolean
   onTaskChanged: () => Promise<void>
   eventRevision: number
   onBack: () => void
 }
 
-export function TeamTaskDetail({ taskId, onTaskChanged, eventRevision, onBack }: Props) {
+export function TeamTaskDetail({
+  taskId,
+  canDevelop,
+  onTaskChanged,
+  eventRevision,
+  onBack
+}: Props) {
   const workspace = useTeamTaskWorkspace(taskId, onTaskChanged, eventRevision)
 
   if (!taskId) {
@@ -99,13 +106,19 @@ export function TeamTaskDetail({ taskId, onTaskChanged, eventRevision, onBack }:
           task={workspace.task}
           members={workspace.members}
           comments={workspace.comments}
+          canManageTask={canDevelop}
           onStatusChange={workspace.updateStatus}
           onOwnerChange={workspace.updateOwner}
           onComment={workspace.addComment}
         />
       </TabsContent>
       <TabsContent value="context" className="flex min-h-0">
-        <TaskContextPanel snapshots={workspace.snapshots} onCreate={workspace.createSnapshot} />
+        <TaskContextPanel
+          snapshots={workspace.snapshots}
+          teamFiles={workspace.teamFiles}
+          canCreate={canDevelop}
+          onCreate={workspace.createSnapshot}
+        />
       </TabsContent>
       <TabsContent value="runs" className="flex min-h-0">
         <TeamAgentRunPanel
@@ -116,6 +129,7 @@ export function TeamTaskDetail({ taskId, onTaskChanged, eventRevision, onBack }:
           runs={workspace.runs}
           publications={workspace.publications}
           verifications={workspace.verifications}
+          canDevelop={canDevelop}
           onRefresh={workspace.refreshRuns}
           onTaskChanged={onTaskChanged}
         />

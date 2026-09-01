@@ -54,7 +54,10 @@ export async function registerPublicationRoutes(app: FastifyInstance): Promise<v
     if (!run) {
       throw new ApiProblem(404, 'agent_run_not_found', 'Agent run was not found')
     }
-    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id)
+    await requireOrganizationRole(app.teamRunDatabase, run.organizationId, request.teamRunUser.id, [
+      'owner',
+      'admin'
+    ])
     if (run.ownerUserId !== request.teamRunUser.id) {
       throw new ApiProblem(403, 'publication_forbidden', 'Only the run owner can publish it')
     }
@@ -137,7 +140,8 @@ export async function registerPublicationRoutes(app: FastifyInstance): Promise<v
     await requireOrganizationRole(
       app.teamRunDatabase,
       publication.organizationId,
-      request.teamRunUser.id
+      request.teamRunUser.id,
+      ['owner', 'admin']
     )
     if (publication.publishedByUserId !== request.teamRunUser.id) {
       throw new ApiProblem(403, 'publication_forbidden', 'Only the publisher can finalize it')

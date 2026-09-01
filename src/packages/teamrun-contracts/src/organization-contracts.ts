@@ -2,12 +2,17 @@ import { z } from 'zod'
 import { entityIdSchema, markdownSchema, timestampSchema } from './scalars.js'
 
 function isGitRemoteUrl(value: string): boolean {
-  if (/^[^\s@]+@[^\s:]+:[^\s]+$/.test(value)) return true
+  if (/^[^\s@]+@[^\s:]+:[^\s]+$/.test(value)) {
+    return true
+  }
   try {
     const url = new URL(value)
-    if (!['https:', 'http:', 'ssh:', 'git:'].includes(url.protocol)) return false
-    if (url.password || (url.username && (url.protocol === 'https:' || url.protocol === 'http:')))
+    if (!['https:', 'http:', 'ssh:', 'git:'].includes(url.protocol)) {
       return false
+    }
+    if (url.password || (url.username && (url.protocol === 'https:' || url.protocol === 'http:'))) {
+      return false
+    }
     return Boolean(url.hostname && url.pathname && url.pathname !== '/')
   } catch {
     return false
@@ -40,6 +45,23 @@ export const organizationInvitationSchema = z.object({
   invitedByUserId: entityIdSchema,
   expiresAt: timestampSchema,
   createdAt: timestampSchema
+})
+
+export const teamInviteCodeSchema = z.object({
+  id: entityIdSchema,
+  organizationId: entityIdSchema,
+  codeHint: z.string().length(4),
+  status: z.enum(['active', 'redeemed', 'revoked', 'expired']),
+  createdByUserId: entityIdSchema,
+  redeemedByUserId: entityIdSchema.nullable(),
+  expiresAt: timestampSchema,
+  redeemedAt: timestampSchema.nullable(),
+  revokedAt: timestampSchema.nullable(),
+  createdAt: timestampSchema
+})
+
+export const createdTeamInviteCodeSchema = teamInviteCodeSchema.extend({
+  code: z.string().min(1)
 })
 
 export const organizationSchema = z.object({
@@ -91,6 +113,8 @@ export const createRepositoryRequestSchema = repositorySchema.pick({
 export type Organization = z.infer<typeof organizationSchema>
 export type OrganizationMember = z.infer<typeof organizationMemberSchema>
 export type OrganizationInvitation = z.infer<typeof organizationInvitationSchema>
+export type TeamInviteCode = z.infer<typeof teamInviteCodeSchema>
+export type CreatedTeamInviteCode = z.infer<typeof createdTeamInviteCodeSchema>
 export type OrganizationRole = z.infer<typeof organizationRoleSchema>
 export type Project = z.infer<typeof projectSchema>
 export type Repository = z.infer<typeof repositorySchema>

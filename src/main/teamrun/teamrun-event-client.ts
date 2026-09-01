@@ -1,6 +1,6 @@
 import type { WebContents } from 'electron'
 import { teamEventSchema } from '../../packages/teamrun-contracts/src/index'
-import { TeamRunApiClient } from './teamrun-api-client'
+import type { TeamRunApiClient } from './teamrun-api-client'
 
 function abortableDelay(milliseconds: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
@@ -35,7 +35,9 @@ export class TeamRunEventClient {
       cursor
     })
     void this.#consume(sender, organizationId, cursor, controller.signal).finally(() => {
-      if (this.#subscriptions.get(sender.id) === controller) this.#subscriptions.delete(sender.id)
+      if (this.#subscriptions.get(sender.id) === controller) {
+        this.#subscriptions.delete(sender.id)
+      }
     })
   }
 
@@ -57,7 +59,9 @@ export class TeamRunEventClient {
         cursor = await this.#connect(sender, organizationId, cursor, signal)
         retryMs = 1000
       } catch (error) {
-        if (signal.aborted) return
+        if (signal.aborted) {
+          return
+        }
         const message = error instanceof Error ? error.message : 'Event stream failed'
         sender.send('teamrun:sync:status', {
           ...this.client.syncStatus(),
@@ -80,7 +84,9 @@ export class TeamRunEventClient {
   ): Promise<number> {
     await this.client.flushPending()
     const apiUrl = this.client.auth.apiUrl
-    if (!apiUrl) throw new Error('teamrun_api_unconfigured')
+    if (!apiUrl) {
+      throw new Error('teamrun_api_unconfigured')
+    }
     const url = new URL('/v1/events', apiUrl)
     url.searchParams.set('organizationId', organizationId)
     url.searchParams.set('cursor', String(initialCursor))
@@ -92,8 +98,9 @@ export class TeamRunEventClient {
       },
       signal
     })
-    if (!response.ok || !response.body)
+    if (!response.ok || !response.body) {
       throw new Error(`TeamRun event stream failed (${response.status})`)
+    }
     sender.send('teamrun:sync:status', {
       ...this.client.syncStatus(),
       connection: 'online',
@@ -119,8 +126,12 @@ export class TeamRunEventClient {
             if (parsed.success) {
               cursor = parsed.data.cursor
               const scope = this.client.auth.cacheScope()
-              if (scope) this.client.cache.putEventCursor(scope, organizationId, cursor)
-              if (!sender.isDestroyed()) sender.send('teamrun:event', parsed.data)
+              if (scope) {
+                this.client.cache.putEventCursor(scope, organizationId, cursor)
+              }
+              if (!sender.isDestroyed()) {
+                sender.send('teamrun:event', parsed.data)
+              }
             }
           } catch {
             // Ignore malformed frames and resume from the last durable cursor.

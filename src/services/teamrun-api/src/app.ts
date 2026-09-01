@@ -12,10 +12,15 @@ import { registerAgentRunRoutes } from './routes/agent-run-routes.js'
 import { registerCollaborationRoutes } from './routes/collaboration-routes.js'
 import { registerEventRoutes } from './routes/event-routes.js'
 import { registerOrganizationRoutes } from './routes/organization-routes.js'
+import { registerModelConnectionRoutes } from './routes/model-connection-routes.js'
 import { registerProjectRoutes } from './routes/project-routes.js'
 import { registerPublicationRoutes } from './routes/publication-routes.js'
 import { registerTaskRoutes } from './routes/task-routes.js'
+import { registerTeamAgentReplyRoute } from './routes/team-agent-reply-route.js'
 import { registerTaskContextRoutes } from './routes/task-context-routes.js'
+import { registerTeamFileRoutes } from './routes/team-file-routes.js'
+import { registerTeamServerRoutes } from './routes/team-server-routes.js'
+import { registerTeamServerDevelopmentRunRoutes } from './routes/team-server-development-run-routes.js'
 import type { TeamRunServiceConfig } from './service-config.js'
 import { TEAM_EVENT_CHANNEL, TeamEventNotifier } from './events/team-event-notifier.js'
 
@@ -90,13 +95,23 @@ export async function createTeamRunApp(config: TeamRunServiceConfig): Promise<Fa
     devAuth: config.TEAMRUN_DEV_AUTH === '1',
     sharedKeyAuth: Boolean(config.TEAMRUN_SHARED_KEY)
   }))
+  app.get('/v1/auth/me', async (request) => ({
+    userId: request.teamRunUser.id,
+    email: request.teamRunUser.email,
+    displayName: request.teamRunUser.displayName
+  }))
 
   await registerOrganizationRoutes(app)
   await registerProjectRoutes(app)
+  await registerTeamServerRoutes(app)
+  await registerModelConnectionRoutes(app)
   await registerCollaborationRoutes(app)
+  await registerTeamAgentReplyRoute(app)
   await registerTaskRoutes(app)
   await registerTaskContextRoutes(app)
+  await registerTeamFileRoutes(app)
   await registerAgentRunRoutes(app)
+  registerTeamServerDevelopmentRunRoutes(app)
   await registerPublicationRoutes(app)
   await registerEventRoutes(app)
   return app

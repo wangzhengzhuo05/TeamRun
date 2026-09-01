@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import type { VerificationResult } from '../../shared/teamrun-api'
 import type { TeamRunApiError } from '../../shared/teamrun-cloud'
 import { TeamRunAuthService } from './teamrun-auth-service'
 import { TeamRunLocalCache } from './teamrun-local-cache'
@@ -42,6 +43,7 @@ export class TeamRunApiClient {
       idempotencyKey?: string
       queueIfOffline?: boolean
       cache?: boolean
+      timeoutMs?: number
     } = {}
   ): Promise<T> {
     const apiUrl = this.auth.apiUrl
@@ -77,7 +79,7 @@ export class TeamRunApiClient {
           ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {})
         },
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
-        signal: AbortSignal.timeout(30_000)
+        signal: AbortSignal.timeout(options.timeoutMs ?? 30_000)
       })
     } catch (error) {
       this.#connection = 'offline'
@@ -86,7 +88,9 @@ export class TeamRunApiClient {
         method === 'GET' && scope && options.cache !== false
           ? this.cache.getResponse(scope, path)
           : null
-      if (cached !== null) return cached as T
+      if (cached !== null) {
+        return cached as T
+      }
       this.#deferMutation({
         scope,
         method,
@@ -122,7 +126,9 @@ export class TeamRunApiClient {
 
   putWorkspaceLink(record: Parameters<TeamRunLocalCache['putWorkspace']>[1]): void {
     const scope = this.auth.cacheScope()
-    if (!scope) throw new Error('teamrun_authentication_required')
+    if (!scope) {
+      throw new Error('teamrun_authentication_required')
+    }
     this.cache.putWorkspace(scope, record)
   }
 
@@ -131,9 +137,11 @@ export class TeamRunApiClient {
     return scope ? this.cache.getWorkspace(scope, clientRunId) : null
   }
 
-  putVerification(result: import('../../shared/teamrun-api').VerificationResult): void {
+  putVerification(result: VerificationResult): void {
     const scope = this.auth.cacheScope()
-    if (!scope) throw new Error('teamrun_authentication_required')
+    if (!scope) {
+      throw new Error('teamrun_authentication_required')
+    }
     this.cache.putVerification(scope, result)
   }
 
@@ -152,10 +160,14 @@ export class TeamRunApiClient {
   }
 
   async flushPending(): Promise<void> {
-    if (this.#flushPromise) return this.#flushPromise
+    if (this.#flushPromise) {
+      return this.#flushPromise
+    }
     const scope = this.auth.cacheScope()
     const apiUrl = this.auth.apiUrl
-    if (!scope || !apiUrl || this.cache.listPendingMutations(scope).length === 0) return
+    if (!scope || !apiUrl || this.cache.listPendingMutations(scope).length === 0) {
+      return
+    }
     this.#flushPromise = (async () => {
       try {
         const authorization = await this.auth.authorizationHeader()

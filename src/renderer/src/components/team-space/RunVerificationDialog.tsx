@@ -21,6 +21,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { translate } from '@/i18n/i18n'
+import { teamRunErrorMessage } from './teamrun-error-message'
 
 type Props = {
   run: AgentRun
@@ -34,7 +35,9 @@ export function RunVerificationDialog({ run, onCompleted }: Props) {
   const [running, setRunning] = useState(false)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
     void window.api.teamRun.runs
       .listVerificationCommands(run.clientRunId)
       .then((next) => {
@@ -43,19 +46,22 @@ export function RunVerificationDialog({ run, onCompleted }: Props) {
       })
       .catch((error) =>
         toast.error(
-          error instanceof Error
-            ? error.message
-            : translate(
-                'auto.components.team.space.RunVerificationDialog.2233ed5f42',
-                'Unable to load checks'
-              )
+          teamRunErrorMessage(
+            error,
+            translate(
+              'auto.components.team.space.RunVerificationDialog.2233ed5f42',
+              'Unable to load checks'
+            )
+          )
         )
       )
   }, [open, run.clientRunId])
 
   const selected = commands.find((command) => command.id === commandId) ?? null
   const execute = async () => {
-    if (!selected) return
+    if (!selected) {
+      return
+    }
     setRunning(true)
     try {
       const result = await window.api.teamRun.runs.runVerification({
@@ -74,12 +80,13 @@ export function RunVerificationDialog({ run, onCompleted }: Props) {
       setOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : translate(
-              'auto.components.team.space.RunVerificationDialog.11e06d9d92',
-              'Verification failed'
-            )
+        teamRunErrorMessage(
+          error,
+          translate(
+            'auto.components.team.space.RunVerificationDialog.11e06d9d92',
+            'Verification failed'
+          )
+        )
       )
     } finally {
       setRunning(false)

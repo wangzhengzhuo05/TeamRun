@@ -1,0 +1,12 @@
+[Unit]
+Description=Check for TeamRun API preview updates
+
+[Timer]
+OnBootSec=6min
+OnUnitActiveSec=10min
+RandomizedDelaySec=1min
+Persistent=true
+Unit=teamrun-api-preview-update.service
+
+[Install]
+WantedBy=timers.target

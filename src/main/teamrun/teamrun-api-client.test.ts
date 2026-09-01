@@ -82,7 +82,9 @@ describe('TeamRun API cache policy', () => {
     } as unknown as TeamRunAuthService
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => Promise.reject(new Error('offline')))
+      vi.fn(async () => {
+        throw new Error('offline')
+      })
     )
 
     const client = new TeamRunApiClient(auth, cache)

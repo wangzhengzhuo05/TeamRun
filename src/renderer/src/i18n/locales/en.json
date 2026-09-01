@@ -432,7 +432,7 @@
           "760bc6883d": "Codex",
           "a5fc0cb622": "OpenClaude",
           "bf53f09bf8": "Claude Agent Teams",
-          "0708ed89f1": "Claude",
+          "0708ed89f1": "Claude Code",
           "fc80296033": "Devin",
           "da41abbdd4": "Ante",
           "060d152fb5": "Trae",
@@ -15258,7 +15258,74 @@
             "d2f82c4681": "SHA-256",
             "c46a2234e3": "Freeze context before launching agents. Runs always reference an immutable snapshot.",
             "9b187a9ca8": "Task v",
-            "0476dbda6b": "Freeze context"
+            "0476dbda6b": "Freeze context",
+            "teamFiles": "Team Files",
+            "noTeamFiles": "No text Team Files are available.",
+            "autoEnrich": "Ask Agent to add context",
+            "files": "Files"
+          },
+          "CreateTeamDocumentDialog": {
+            "newDocument": "New document",
+            "title": "Create Team Document",
+            "description": "Markdown documents are shared with every Team member and keep immutable versions.",
+            "path": "Document path",
+            "pathPlaceholder": "docs/meeting-notes.md",
+            "content": "Markdown content",
+            "create": "Create document"
+          },
+          "TeamFileEditor": {
+            "version": "Version",
+            "quarantined": "File version quarantined",
+            "reviewRequired": "Owner review is required before preview or Agent context use.",
+            "executableContent": "Executable content requires Owner review.",
+            "possibleSecret": "A possible secret requires Owner review.",
+            "clearQuarantine": "Clear quarantine",
+            "historical": "Historical version",
+            "saving": "Saving…",
+            "saveVersion": "Save new version",
+            "noPreview": "Preview is unavailable for this file type.",
+            "deleteLabel": "Delete Team File",
+            "deleteTitle": "Delete Team File?",
+            "deleteDescription": "The file leaves the Team library. Existing frozen contexts keep their version references.",
+            "delete": "Delete"
+          },
+          "TeamDocumentAgentDialog": {
+            "trigger": "Ask Team Agent",
+            "title": "Propose a document edit",
+            "description": "The Team Agent cannot overwrite the document. Review and confirm its complete replacement first.",
+            "noAgents": "Create a Team Server Agent before requesting document edits.",
+            "agent": "Team Agent",
+            "instructions": "Requested change",
+            "generate": "Generate proposal",
+            "preview": "Proposed complete document",
+            "history": "Team proposals",
+            "statusRunning": "Running",
+            "statusReady": "Ready",
+            "statusApplied": "Applied",
+            "statusFailed": "Failed",
+            "unknownAgent": "Unknown Agent",
+            "unknownMember": "Unknown member",
+            "requesterOnly": "Only the member who requested this proposal can confirm it.",
+            "apply": "Confirm and create version",
+            "loadError": "Unable to load document proposals",
+            "requestError": "Unable to create document proposal",
+            "applyError": "Unable to apply document proposal"
+          },
+          "TeamFilesPanel": {
+            "title": "Team Files",
+            "description": "Versioned documents, code, and reference files",
+            "upload": "Upload",
+            "quarantined": "Quarantined",
+            "empty": "Upload a file or create a Markdown document for the Team.",
+            "noSelection": "Select a Team File to preview its versions."
+          },
+          "useTeamFiles": {
+            "loadError": "Unable to load Team Files",
+            "uploadError": "Unable to upload file",
+            "createError": "Unable to create document",
+            "saveError": "Unable to save version",
+            "clearError": "Unable to clear quarantine",
+            "deleteError": "Unable to delete file"
           },
           "TaskConversationPanel": {
             "c011c9a39a": "Comment",
@@ -15279,12 +15346,38 @@
             "883c087e34": "Repository workspace",
             "3658f275a3": "Launch",
             "49f1951c0b": "Launching…",
-            "03975ebdf8": "Git agents use independent worktrees. A folder workspace launches one Agent tab without copying or changing the source folder.",
+            "03975ebdf8": "Personal Git work uses an independent worktree. A folder workspace opens one Agent tab without copying or changing the source folder.",
             "f51c9bb62e": "Launch independent agents",
             "50e9904340": "Started {{value0}} TeamRun agent workspace{{value1}}.",
             "partialFailure": "{{value0}} agent workspace{{value1}} could not be started.",
-            "openTaskTitle": "Open task in TeamRun",
-            "openInTeamRun": "Open in TeamRun"
+            "openTaskTitle": "Open task in a Personal Workspace",
+            "openInTeamRun": "Open in TeamRun",
+            "setupPolicyRequired": "Choose a setup policy for this repository before launching TeamRun agents."
+          },
+          "TeamServerAgentLauncher": {
+            "loadError": "Unable to load Team Agents",
+            "launchError": "Unable to start Team Server development run",
+            "started": "Team Server development run started.",
+            "title": "Run a Team Agent on the Team Server",
+            "experimental": "Experimental",
+            "description": "The shared Agent works from frozen context in an isolated server worktree. Activity and changes are Team-visible; this phase does not push or open a review request.",
+            "starting": "Starting…",
+            "start": "Start run",
+            "agentPlaceholder": "YOLO-enabled Team Agent",
+            "snapshotRequired": "Freeze a context snapshot first.",
+            "agentRequired": "Create a Team Agent with YOLO mode enabled before starting development work."
+          },
+          "TeamServerRunActivity": {
+            "loadError": "Unable to load Team Server activity",
+            "loading": "Loading Team Server activity…",
+            "teamServer": "Team Server",
+            "activity": "Shared activity log",
+            "changes": "Workspace changes",
+            "noActivity": "No activity reported yet.",
+            "truncated": "The displayed output is truncated."
+          },
+          "TeamAgentRunCard": {
+            "teamServer": "Team Server"
           },
           "TeamAgentRunPanel": {
             "72ba875f87": "No agent runs for this task.",
@@ -15295,7 +15388,8 @@
             "cecf8c7075": "Ready for review",
             "3412fc359a": "Stale context",
             "872ca19575": "This agent workspace is not available on this device.",
-            "markReadyError": "Unable to mark the run ready for review"
+            "markReadyError": "Unable to mark the run ready for review",
+            "ownerAdminOnly": "Only the Team Owner or an Admin can start work for this Team Task."
           },
           "TeamCollaborationDialog": {
             "9bca007245": "TeamRun collaboration request failed",
@@ -15339,6 +15433,49 @@
             "removeError": "Unable to remove member",
             "revokeError": "Unable to revoke invitation"
           },
+          "TeamMemberManagement": {
+            "loadError": "Unable to load Team members",
+            "loadCodesError": "Invite codes require an updated Team Server",
+            "createCodeError": "Unable to create invite code",
+            "codeCopied": "Invite code copied",
+            "revokeCodeError": "Unable to revoke invite code",
+            "updateRoleError": "Unable to update member role",
+            "removeError": "Unable to remove member",
+            "inviteTitle": "One-time invite code",
+            "inviteDescription": "The code expires in 7 days and adds one person as a Member.",
+            "creatingCode": "Creating…",
+            "createCode": "Create code",
+            "copy": "Copy",
+            "codeEnding": "Code ending in {{value0}} · expires {{value1}}",
+            "revokeCode": "Revoke code ending in {{value0}}",
+            "members": "Members",
+            "removeMember": "Remove {{value0}}",
+            "roleOwner": "Owner",
+            "roleAdmin": "Admin",
+            "roleMember": "Member",
+            "statusActive": "Active",
+            "statusRedeemed": "Redeemed",
+            "statusRevoked": "Revoked",
+            "statusExpired": "Expired",
+            "inviteCode": "Invite code",
+            "role": "Role"
+          },
+          "TeamManagementDialog": {
+            "management": "Team management",
+            "ownerDescription": "Manage Team access, roles, and reusable Team Agents.",
+            "memberDescription": "View Team members and reusable Team Agents.",
+            "members": "Members",
+            "agents": "Team Agents"
+          },
+          "JoinTeamDialog": {
+            "joinError": "Unable to join Team",
+            "joinTeam": "Join Team",
+            "title": "Join a Team",
+            "description": "Enter a one-time invite code from the Team Owner. You will join as a Member.",
+            "code": "Invite code",
+            "joining": "Joining…",
+            "join": "Join"
+          },
           "TeamSpacePage": {
             "3598cbd1e2": "total",
             "6b793be66b": "Tasks",
@@ -15352,6 +15489,7 @@
             "023381a7e7": "Organization",
             "4b5d94ac3e": "Signed in",
             "60190506d5": "Team Space",
+            "files": "Team Files",
             "groupConversation": "Team conversation",
             "taskCount": "{{value0}} total"
           },
@@ -15392,7 +15530,8 @@
             "teamKey": "Team key",
             "keyHint": "Use the HTTPS address and team key shared by your TeamRun administrator.",
             "connectKey": "Connect with team key",
-            "serviceUrlPlaceholder": "https://teamrun.example.com"
+            "serviceUrlPlaceholder": "https://teamrun.example.com",
+            "connectionError": "Unable to connect to Team Space. Check the service address and credentials."
           },
           "TeamTaskDetail": {
             "b4dbc18417": "Agent runs",
@@ -15413,7 +15552,8 @@
             "updateStatus": "Unable to update task status",
             "addComment": "Unable to add comment",
             "createSnapshot": "Unable to freeze context",
-            "updateOwner": "Unable to change task owner"
+            "updateOwner": "Unable to change task owner",
+            "loadTeamFiles": "Team Files require an updated Team Server"
           },
           "TaskResultsPanel": {
             "loadFailed": "Unable to load published artifacts",
@@ -15447,12 +15587,15 @@
             "chooseChannel": "Choose a channel",
             "mentionAgent": "Mention Agent",
             "send": "Send message",
-            "sendHint": "Send · Enter"
+            "sendHint": "Send · Enter",
+            "unknownAgent": "Team Agent",
+            "agentReplying": "{{value0}} is replying…"
           },
           "TeamSpaceDock": {
             "features": "Team Space features",
             "chat": "Chat",
-            "tasks": "Tasks"
+            "tasks": "Tasks",
+            "files": "Files"
           },
           "TeamSpaceMorePopover": {
             "more": "More",
@@ -15466,7 +15609,87 @@
             "loadError": "Unable to load chat",
             "sendError": "Unable to send message",
             "generalDescription": "Team conversation",
-            "createChannelError": "Unable to start chat"
+            "createChannelError": "Unable to start chat",
+            "agentReplyError": "Agent could not reply. Check the Team Server and Model Connection."
+          },
+          "TeamAgentManagement": {
+            "createAgentError": "Unable to create Team Agent",
+            "name": "Team Agent name",
+            "instructions": "Reusable instructions",
+            "create": "Create Team Agent",
+            "noInstructions": "No additional instructions",
+            "loadError": "Unable to load Team Agent settings",
+            "ownerOnly": "Only the Team Owner can create or configure Team Agents.",
+            "teamServer": "Team Server",
+            "teamServerDescription": "One Linux runtime executes the same Team Agents for every member.",
+            "replaceServer": "Replace server",
+            "serverOwnerRequired": "The Team Owner must bind a Team Server before Team Agents can run.",
+            "serverName": "Server name",
+            "pairingCode": "One-time pairing code",
+            "pairingHint": "Generate runtime access on the Linux Team Server. Replacing it immediately resets the active server.",
+            "verifyingServer": "Verifying Team Server…",
+            "bindServer": "Bind Team Server",
+            "enrollServerError": "Unable to bind Team Server",
+            "modelConnections": "Model Connections",
+            "modelConnectionDescription": "Base URL and model are shared metadata. The API key stays encrypted on the Team Server.",
+            "serverKeyConfigured": "API key configured on Team Server",
+            "serverKeyMissing": "API key is not configured",
+            "bindServerFirst": "Bind a Team Server before adding a Model Connection.",
+            "connectionName": "Connection name",
+            "model": "Model",
+            "baseUrl": "Base URL",
+            "apiKey": "API key",
+            "configuringConnection": "Configuring Team Server…",
+            "createConnection": "Create Model Connection",
+            "createConnectionError": "Unable to create Model Connection",
+            "teamAgents": "Team Agents",
+            "teamAgentDescription": "Reusable identities run with one frozen Team context on the bound Team Server.",
+            "migrationRequired": "Migration required",
+            "yoloEnabled": "YOLO mode enabled for development runs",
+            "modelConnection": "Model Connection",
+            "yoloMode": "YOLO mode",
+            "yoloDescription": "Future development runs may add files without asking. All Team activity remains visible.",
+            "creatingAgent": "Creating Team Agent…",
+            "connectionFirst": "Create a Model Connection before creating a Team Agent."
+          },
+          "TeamAgentManagementDialog": {
+            "agents": "Agents",
+            "title": "Agent management"
+          },
+          "teamrunErrorMessage": {
+            "httpsRequired": "Use HTTPS for remote TeamRun services.",
+            "teamKeyRequired": "Enter a valid team key.",
+            "developmentEmailRequired": "Enter a valid development email.",
+            "authenticationFailed": "TeamRun could not verify these credentials.",
+            "sessionExpired": "Your TeamRun session expired. Sign in again.",
+            "singleSignOnUnavailable": "Single sign-on is not configured correctly.",
+            "serviceUnconfigured": "Set the TeamRun service address before continuing.",
+            "accessDenied": "You do not have permission to perform this action.",
+            "versionConflict": "This item changed on the server. Refresh and try again.",
+            "memberNotSignedIn": "This member must sign in to TeamRun before being added.",
+            "inviteCodeInvalid": "This invite code is invalid.",
+            "inviteCodeUsed": "This invite code has already been used.",
+            "inviteCodeUnavailable": "This invite code has expired or was revoked.",
+            "alreadyTeamMember": "You are already a member of this Team.",
+            "ownerChangeForbidden": "The Team Owner role cannot be changed or removed.",
+            "teamFileTooLarge": "Each Team File version is limited to 512 KiB.",
+            "teamFilePathConflict": "A Team File already uses this path.",
+            "teamFileContentInvalid": "The Team File content could not be read.",
+            "teamFileQuarantined": "An Owner must clear this Team File version before it can be used.",
+            "teamFileContextUnsupported": "Only text Team Files can be added to task context.",
+            "teamDocumentAgentInputTooLarge": "This document is too large for a Team Agent edit.",
+            "teamFileProposalStale": "The document changed after this proposal. Generate a new proposal.",
+            "teamFileProposalNotReady": "This document proposal is not ready to apply.",
+            "teamServerUnavailable": "Team Server is unavailable. Check its connection and try again.",
+            "teamServerRequired": "Bind a Team Server before continuing.",
+            "teamServerOpenCodeMissing": "Install OpenCode on the Team Server before binding it.",
+            "teamServerEncryptionUnavailable": "Configure encrypted model credential storage on the Team Server.",
+            "teamServerDocumentEditUpdateRequired": "Update the Team Server before requesting document edits.",
+            "teamServerDevelopmentUpdateRequired": "Update the Team Server before starting development runs.",
+            "teamServerDevelopmentRequiresYolo": "Enable YOLO mode for this Team Agent before starting development work.",
+            "teamProjectRepositoryRequired": "Bind a repository to this Team Project before starting development work.",
+            "teamProjectRepositoryLimit": "This release supports one repository per Team Project.",
+            "teamAgentMigrationRequired": "Recreate this Team Agent with a Team Server Model Connection."
           }
         }
       }

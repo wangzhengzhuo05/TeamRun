@@ -4,7 +4,9 @@ const INVALID_AUTH_STATUS_MESSAGE =
   'Team Space received an invalid response. Update the TeamRun server and try again.'
 
 export function normalizeTeamRunAuthStatus(value: unknown): TeamRunAuthStatus {
-  if (!value || typeof value !== 'object') return invalidAuthStatus()
+  if (!value || typeof value !== 'object') {
+    return invalidAuthStatus()
+  }
   const status = value as Record<string, unknown>
   if (
     typeof status.apiUrl !== 'string' ||
@@ -14,13 +16,23 @@ export function normalizeTeamRunAuthStatus(value: unknown): TeamRunAuthStatus {
     return invalidAuthStatus()
   }
   if (status.state === 'signed-in') {
-    if (typeof status.email !== 'string' && status.email !== null) return invalidAuthStatus()
+    if (typeof status.email !== 'string' && status.email !== null) {
+      return invalidAuthStatus()
+    }
+    if (
+      status.userId !== undefined &&
+      typeof status.userId !== 'string' &&
+      status.userId !== null
+    ) {
+      return invalidAuthStatus()
+    }
     return {
       state: 'signed-in',
       apiUrl: status.apiUrl,
       devAuth: status.devAuth,
       sharedKeyAuth: status.sharedKeyAuth,
-      email: status.email
+      email: status.email,
+      userId: typeof status.userId === 'string' ? status.userId : null
     }
   }
   if (status.state === 'signed-out' || status.state === 'unconfigured') {

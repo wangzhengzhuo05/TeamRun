@@ -55,6 +55,16 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
       }
       polling = true
       try {
+        try {
+          await requireOrganizationRole(
+            app.teamRunDatabase,
+            query.organizationId,
+            request.teamRunUser.id
+          )
+        } catch {
+          reply.raw.end()
+          return
+        }
         while (pending && !reply.raw.destroyed) {
           pending = false
           const events = await app.teamRunDatabase
@@ -72,11 +82,15 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
             writeSseEvent(reply.raw, event)
             cursor = event.cursor
           }
-          if (events.length === 200) pending = true
+          if (events.length === 200) {
+            pending = true
+          }
         }
       } finally {
         polling = false
-        if (pending && !reply.raw.destroyed) void drain()
+        if (pending && !reply.raw.destroyed) {
+          void drain()
+        }
       }
     }
     const unsubscribe = app.teamRunEventNotifier.subscribe(query.organizationId, () => {

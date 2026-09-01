@@ -1,9 +1,11 @@
-import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http'
 import { extname, isAbsolute, posix, relative, resolve } from 'node:path'
 
-const STATIC_WEB_ALLOWED_PATHS = new Set(['/web-index.html'])
+const STATIC_WEB_ALLOWED_PATHS = new Set([
+  '/web-index.html',
+  '/web-runtime-pairing-logic-prototype.html'
+])
 const STATIC_WEB_ALLOWED_PREFIXES = ['/assets/']
 const STATIC_WEB_CONTENT_TYPES = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -69,25 +71,27 @@ async function handleStaticRequest(
     'Content-Type',
     STATIC_WEB_CONTENT_TYPES.get(extname(absolutePath)) ?? 'application/octet-stream'
   )
-  response.setHeader('Content-Length', fileStat.size)
-  response.setHeader(
-    'Cache-Control',
-    pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache'
-  )
+  response.setHeader('Cache-Control', 'no-cache')
+  if (pathname === '/web-index.html' && request.method === 'GET') {
+    const content = await readFile(absolutePath, 'utf8')
+    const version = Math.trunc(fileStat.mtimeMs).toString(36)
+    const versioned = content.replace(/((?:src|href)="\.\/assets\/[^"?]+)(")/g, `$1?v=${version}$2`)
+    response.setHeader('Content-Length', Buffer.byteLength(versioned))
+    response.end(versioned)
+    return
+  }
   if (request.method === 'HEAD') {
     response.end()
     return
   }
 
-  const stream = createReadStream(absolutePath)
-  stream.on('error', () => {
-    if (!response.headersSent) {
-      writeHttpStatus(response, 500)
-      return
-    }
-    response.destroy()
-  })
-  stream.pipe(response)
+  try {
+    const content = await readFile(absolutePath)
+    response.setHeader('Content-Length', content.byteLength)
+    response.end(content)
+  } catch {
+    writeHttpStatus(response, 500)
+  }
 }
 
 function parseStaticPathname(rawUrl: string | undefined): string | null {

@@ -22,9 +22,12 @@
     "fastify": "5.12.1",
     "jose": "6.2.9",
     "postgres": "3.4.9",
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.21.0",
     "zod": "~4.4.3"
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "drizzle-kit": "0.31.10",
     "tsx": "4.23.12",
     "typescript": "^7.0.2",

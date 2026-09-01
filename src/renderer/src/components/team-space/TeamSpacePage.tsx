@@ -7,6 +7,7 @@ import { CreateTeamTaskDialog } from './CreateTeamTaskDialog'
 import { TeamSpaceChatPanel } from './TeamSpaceChatPanel'
 import { TeamSpaceDock, type TeamSpaceView } from './TeamSpaceDock'
 import { TeamSpaceSignIn } from './TeamSpaceSignIn'
+import { TeamFilesPanel } from './TeamFilesPanel'
 import { TeamTaskDetail } from './TeamTaskDetail'
 import { TeamTaskList } from './TeamTaskList'
 import { useTeamSpaceChat } from './useTeamSpaceChat'
@@ -36,7 +37,8 @@ export default function TeamSpacePage() {
   )
   const selectedProject = workspace.projects.find((project) => project.id === workspace.projectId)
   const selectedChannel = chat.channels.find((channel) => channel.id === chat.channelId)
-  const canManageMembers =
+  const canManageTeam = selectedOrganization?.role === 'owner'
+  const canDevelopTeam =
     selectedOrganization?.role === 'owner' || selectedOrganization?.role === 'admin'
   const syncLabel =
     workspace.syncStatus?.connection === 'online'
@@ -46,6 +48,18 @@ export default function TeamSpacePage() {
         : workspace.syncStatus?.connection === 'blocked'
           ? translate('auto.components.team.space.TeamSpacePage.0e6814c307', 'Sync blocked')
           : translate('auto.components.team.space.TeamSpacePage.01b927d2d1', 'Offline cache')
+  const locationLabel =
+    view === 'chat'
+      ? selectedChannel
+        ? `# ${selectedChannel.name}`
+        : (selectedOrganization?.name ??
+          translate(
+            'auto.components.team.space.TeamSpacePage.groupConversation',
+            'Team conversation'
+          ))
+      : view === 'files'
+        ? translate('auto.components.team.space.TeamSpacePage.files', 'Team Files')
+        : translate('auto.components.team.space.TeamSpacePage.6b793be66b', 'Tasks')
 
   return (
     <div className="team-space-shell flex h-full min-h-0 flex-col bg-background text-foreground">
@@ -60,15 +74,7 @@ export default function TeamSpacePage() {
                 selectedOrganization?.name ??
                 translate('auto.components.team.space.TeamSpacePage.60190506d5', 'Team Space')}
             </h1>
-            <p className="truncate text-xs text-muted-foreground">
-              {selectedChannel
-                ? `# ${selectedChannel.name}`
-                : (selectedOrganization?.name ??
-                  translate(
-                    'auto.components.team.space.TeamSpacePage.groupConversation',
-                    'Team conversation'
-                  ))}
-            </p>
+            <p className="truncate text-xs text-muted-foreground">{locationLabel}</p>
           </div>
         </div>
         {workspace.syncStatus ? (
@@ -107,7 +113,7 @@ export default function TeamSpacePage() {
       {view === 'chat' ? (
         <TeamSpaceChatPanel
           projectId={workspace.projectId}
-          authEmail={workspace.auth.email}
+          authUserId={workspace.auth.userId ?? null}
           channels={chat.channels}
           channelId={chat.channelId}
           messages={chat.messages}
@@ -115,9 +121,18 @@ export default function TeamSpacePage() {
           teamAgents={chat.teamAgents}
           loading={chat.loading}
           sending={chat.sending}
+          replyingAgentIds={chat.replyingAgentIds}
           onSelectChannel={chat.selectChannel}
           onCreateGeneralChannel={chat.createGeneralChannel}
           onSendMessage={chat.sendMessage}
+        />
+      ) : view === 'files' ? (
+        <TeamFilesPanel
+          projectId={workspace.projectId}
+          authUserId={workspace.auth.userId ?? null}
+          eventRevision={workspace.eventRevision}
+          canManageTeam={canManageTeam}
+          canDevelopTeam={canDevelopTeam}
         />
       ) : (
         <div
@@ -140,7 +155,7 @@ export default function TeamSpacePage() {
               </div>
               <CreateTeamTaskDialog
                 repositories={workspace.repositories}
-                disabled={!workspace.projectId}
+                disabled={!workspace.projectId || !canDevelopTeam}
                 onCreate={workspace.createTask}
               />
             </div>
@@ -153,6 +168,7 @@ export default function TeamSpacePage() {
           <main className="team-space-task-detail min-h-0 overflow-hidden">
             <TeamTaskDetail
               taskId={workspace.taskId}
+              canDevelop={canDevelopTeam}
               eventRevision={workspace.eventRevision}
               onTaskChanged={workspace.refreshTasks}
               onBack={() => workspace.selectTask(null)}
@@ -166,13 +182,16 @@ export default function TeamSpacePage() {
         projects={workspace.projects}
         organizationId={workspace.organizationId}
         projectId={workspace.projectId}
-        canManageMembers={canManageMembers}
+        canManageTeam={canManageTeam}
+        canDevelopTeam={canDevelopTeam}
+        hasRepository={workspace.repositories.length > 0}
         onViewChange={setView}
         onSelectOrganization={workspace.selectOrganization}
         onSelectProject={workspace.selectProject}
         onCreateOrganization={workspace.createOrganization}
         onCreateProject={workspace.createProject}
         onCreateRepository={workspace.createRepository}
+        onJoinTeam={workspace.joinTeam}
         onSignOut={workspace.signOut}
       />
     </div>

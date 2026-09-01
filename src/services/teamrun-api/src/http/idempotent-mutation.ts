@@ -24,6 +24,34 @@ export function requireIdempotencyKey(value: string | undefined): string {
   return key
 }
 
+export async function readIdempotentMutation(
+  db: TeamRunDatabase,
+  args: { userId: string; route: string; key: string; requestBody: unknown }
+): Promise<(MutationResult & { replayed: true }) | null> {
+  const [existing] = await db
+    .select()
+    .from(idempotencyRecords)
+    .where(
+      and(
+        eq(idempotencyRecords.userId, args.userId),
+        eq(idempotencyRecords.route, args.route),
+        eq(idempotencyRecords.key, args.key)
+      )
+    )
+    .limit(1)
+  if (!existing) {
+    return null
+  }
+  if (existing.requestHash !== requestHash(args.requestBody)) {
+    throw new ApiProblem(
+      409,
+      'idempotency_conflict',
+      'Idempotency key was already used with a different request'
+    )
+  }
+  return { status: existing.responseStatus, body: existing.responseBody, replayed: true }
+}
+
 export async function runIdempotentMutation(
   db: TeamRunDatabase,
   args: {

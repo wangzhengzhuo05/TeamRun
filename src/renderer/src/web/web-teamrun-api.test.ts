@@ -77,7 +77,7 @@ describe('Web TeamRun preload API', () => {
   })
 
   it('routes TeamRun auth and organization calls through the paired runtime', async () => {
-    const calls: Array<{ method: string; params: unknown }> = []
+    const calls: { method: string; params: unknown }[] = []
     vi.doMock('./web-runtime-client', () => ({
       WebRuntimeClient: class {
         call(method: string, params?: unknown): Promise<RuntimeRpcResponse<unknown>> {

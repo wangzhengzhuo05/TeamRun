@@ -178,6 +178,34 @@ WantedBy=multi-user.target
 Replace `100.64.1.20` with the LAN, Tailscale, tunnel, or public hostname that
 clients should use.
 
+### Team Server model credentials
+
+A headless runtime enrolled as a Team Server also needs OpenCode on the service
+user's `PATH` and a stable 32-byte encryption key. TeamRun uses the key only to
+encrypt Model Connection API keys on that server; the TeamRun API never stores
+those model secrets.
+
+Create a root-owned environment file once:
+
+```bash
+sudo install -d -m 700 /etc/orca
+printf 'TEAMRUN_MODEL_CONNECTION_KEY=%s\n' "$(openssl rand -base64 32)" \
+  | sudo tee /etc/orca/team-server.env >/dev/null
+sudo chown root:root /etc/orca/team-server.env
+sudo chmod 600 /etc/orca/team-server.env
+```
+
+Then add it to the service:
+
+```ini
+[Service]
+EnvironmentFile=/etc/orca/team-server.env
+```
+
+Back up this file separately from the TeamRun data directory. Replacing the key
+makes previously configured Model Connections unreadable; configure them again
+from Team management after an intentional rotation.
+
 `KillMode=mixed` sends the graceful stop signal only to TeamRun's main process,
 then retains systemd's cgroup-wide `SIGKILL` fallback if shutdown times out.
 This lets TeamRun keep its owned Xvfb alive until Electron disconnects cleanly.
@@ -838,7 +866,7 @@ refuse to run there and print the command to run on the machine you want.
 - Clients cannot connect: make sure `--pairing-address` is an address reachable
   from the client, and make sure firewalls allow the selected `--port`.
 - Journal shows `Another TeamRun instance is already running for this userData
-  profile` and the unit exits `3`: another process already owns the profile, so
+profile` and the unit exits `3`: another process already owns the profile, so
   `RestartPreventExitStatus=3` leaves the unit `failed` on purpose. Find the
   owner with `systemctl status orca-serve` and `pgrep -af orca`. Stop it (or
   keep it and leave the unit down), then run

@@ -1,11 +1,18 @@
 import { z } from 'zod'
+import { gitRemoteUrlSchema } from '../../../../packages/teamrun-contracts/src/index'
+import {
+  TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY,
+  TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
+} from '../../../../shared/protocol-version'
 import { TEAMRUN_CLOUD_OPERATIONS } from '../../../../shared/teamrun-cloud-operations'
-import { defineMethod, defineStreamingMethod, type RpcAnyMethod } from '../core'
+import { defineMethod, defineStreamingMethod, type RpcAnyMethod, type RpcContext } from '../core'
 
 const Worktree = z.string().min(1).max(32_768)
 const FullGitObjectId = z
   .string()
   .regex(/^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$/, 'Expected a full git object id')
+const TeamServerDevelopmentRunId = z.uuid()
 
 export const TEAMRUN_METHODS: RpcAnyMethod[] = [
   defineMethod({
@@ -17,6 +24,98 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
     handler: (params, { runtime }) =>
       runtime.invokeTeamRunCloudOperation(params.operation, params.args)
   }),
+  defineMethod({
+    name: 'teamrun.teamServer.status',
+    params: null,
+    handler: (_params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.getTeamServerStatus()
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.modelConnection.configure',
+    params: z.object({
+      connectionId: z.uuid(),
+      baseUrl: z.url().max(2048),
+      apiKey: z.string().trim().min(1).max(4096),
+      model: z.string().trim().min(1).max(200)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.configureTeamServerModelConnection(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.reply',
+    params: z.object({
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000)
+      }),
+      messages: z
+        .array(
+          z.object({
+            author: z.string().trim().min(1).max(160),
+            bodyMarkdown: z.string().max(32_000)
+          })
+        )
+        .max(20)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context)
+      return context.runtime.runTeamServerAgentReply(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.proposeDocumentEdit',
+    params: z.object({
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000)
+      }),
+      path: z.string().trim().min(1).max(512),
+      instructionsMarkdown: z.string().trim().min(1).max(8_000),
+      currentContentMarkdown: z.string().max(64_000)
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DOCUMENT_EDIT_RUNTIME_CAPABILITY)
+      return context.runtime.proposeTeamServerDocumentEdit(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.startDevelopmentRun',
+    params: z.object({
+      runId: TeamServerDevelopmentRunId,
+      connectionId: z.uuid(),
+      agent: z.object({
+        name: z.string().trim().min(1).max(160),
+        instructionsMarkdown: z.string().max(256_000),
+        yoloMode: z.literal(true)
+      }),
+      repository: z.object({
+        remoteUrl: gitRemoteUrlSchema,
+        defaultBranch: z.string().trim().min(1).max(240)
+      }),
+      task: z.object({
+        title: z.string().trim().min(1).max(500),
+        frozenContextMarkdown: z.string().max(128_000)
+      })
+    }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+      return context.runtime.startTeamServerDevelopmentRun(params)
+    }
+  }),
+  defineMethod({
+    name: 'teamrun.teamAgent.getDevelopmentRun',
+    params: z.object({ runId: TeamServerDevelopmentRunId }),
+    handler: (params, context) => {
+      requirePairedRuntime(context, TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+      return context.runtime.getTeamServerDevelopmentRun(params.runId)
+    }
+  }),
   defineStreamingMethod({
     name: 'teamrun.events.subscribe',
     params: z.object({
@@ -24,7 +123,9 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
       cursor: z.number().int().nonnegative().optional()
     }),
     handler: async (params, { runtime, signal }, emit) => {
-      if (!signal) throw new Error('streaming_transport_required')
+      if (!signal) {
+        throw new Error('streaming_transport_required')
+      }
       await runtime.streamTeamRunCloudEvents(params.organizationId, params.cursor, signal, emit)
     }
   }),
@@ -50,3 +151,16 @@ export const TEAMRUN_METHODS: RpcAnyMethod[] = [
       runtime.prepareTeamRunPublication(params.worktree, params.baseObjectId, params.includeDiff)
   })
 ]
+
+function requirePairedRuntime(
+  context: RpcContext,
+  capability: string = TEAMRUN_TEAM_SERVER_RUNTIME_CAPABILITY
+): void {
+  if (
+    context.clientKind !== 'runtime' ||
+    !context.pairedDeviceId ||
+    !context.clientCapabilities?.includes(capability)
+  ) {
+    throw new Error('team_server_paired_runtime_required')
+  }
+}

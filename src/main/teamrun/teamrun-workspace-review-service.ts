@@ -3,7 +3,7 @@ import { gitExecFileAsync } from '../git/runner'
 import { getSshGitProvider } from '../providers/ssh-git-dispatch'
 import type { TeamRunRuntimePublicationResult } from '../../shared/teamrun-runtime'
 import type { TeamRunWorkspaceReview } from '../../shared/teamrun-cloud'
-import { TeamRunApiClient } from './teamrun-api-client'
+import type { TeamRunApiClient } from './teamrun-api-client'
 import { callTeamRunRuntime } from './teamrun-runtime-client'
 import { resolveTeamRunWorkspaceTarget } from './teamrun-workspace-target'
 import { collectTeamRunGitResult, TEAMRUN_DIFF_MAX_BYTES } from './teamrun-git-result'
@@ -60,7 +60,9 @@ export class TeamRunWorkspaceReviewService {
     const git = async (argv: string[]) => {
       if (connectionId) {
         const provider = getSshGitProvider(connectionId)
-        if (!provider) throw new Error('TeamRun SSH workspace is not connected.')
+        if (!provider) {
+          throw new Error('TeamRun SSH workspace is not connected.')
+        }
         return provider.exec(argv, workspacePath, { timeoutMs: 60_000 })
       }
       return gitExecFileAsync(argv, {

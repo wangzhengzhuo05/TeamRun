@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@renderer': resolve('src/renderer/src'),
+      '@teamrun/contracts': resolve('src/packages/teamrun-contracts/src/index.ts'),
       '@': resolve('src/renderer/src')
     }
   },

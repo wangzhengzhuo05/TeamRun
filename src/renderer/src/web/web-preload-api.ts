@@ -11,6 +11,7 @@ import type { TeamEvent } from '../../../shared/teamrun-api'
 import type { TeamRunSyncStatus } from '../../../shared/teamrun-cloud'
 import type { TeamRunCloudOperation } from '../../../shared/teamrun-cloud-operations'
 import type { RuntimeRpcResponse } from '../../../shared/runtime-rpc-envelope'
+import { TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY } from '../../../shared/protocol-version'
 import { parseHostAccessLink } from '../../../shared/remote-pairing-address'
 import { verifyRemotePairingRuntimeStatus } from '../../../shared/remote-pairing-verification'
 import type { AiVaultDeleteSessionArgs } from '../../../shared/ai-vault-session-deletion'
@@ -1409,13 +1410,23 @@ function createTeamRunApi(): TeamRunApi {
   let eventSubscription: { unsubscribe: () => void } | null = null
   let eventGeneration = 0
 
-  const invoke = <T>(operation: TeamRunCloudOperation, args?: unknown): Promise<T> =>
-    callRuntimeResult<T>('teamrun.cloudInvoke', {
-      operation,
-      ...(args === undefined ? {} : { args })
-    })
+  const invoke = <T>(
+    operation: TeamRunCloudOperation,
+    args?: unknown,
+    timeoutMs?: number
+  ): Promise<T> =>
+    callRuntimeResult<T>(
+      'teamrun.cloudInvoke',
+      {
+        operation,
+        ...(args === undefined ? {} : { args })
+      },
+      timeoutMs
+    )
   const notifySync = (status: TeamRunSyncStatus): TeamRunSyncStatus => {
-    for (const listener of syncListeners) listener(status)
+    for (const listener of syncListeners) {
+      listener(status)
+    }
     return status
   }
 
@@ -1447,6 +1458,12 @@ function createTeamRunApi(): TeamRunApi {
       listMembers: (organizationId) => invoke('organizations.listMembers', organizationId),
       addMember: (args) => invoke('organizations.addMember', args),
       removeMember: (args) => invoke('organizations.removeMember', args),
+      updateMemberRole: (args) => invoke('organizations.updateMemberRole', args),
+      listInviteCodes: (organizationId) => invoke('organizations.listInviteCodes', organizationId),
+      createInviteCode: (organizationId) =>
+        invoke('organizations.createInviteCode', organizationId),
+      revokeInviteCode: (args) => invoke('organizations.revokeInviteCode', args),
+      redeemInviteCode: (code) => invoke('organizations.redeemInviteCode', code),
       listInvitations: (organizationId) => invoke('organizations.listInvitations', organizationId),
       invite: (args) => invoke('organizations.invite', args),
       revokeInvitation: (args) => invoke('organizations.revokeInvitation', args)
@@ -1464,7 +1481,24 @@ function createTeamRunApi(): TeamRunApi {
       listMessages: (channelId) => invoke('collaboration.listMessages', channelId),
       createMessage: (args) => invoke('collaboration.createMessage', args),
       listTeamAgents: (projectId) => invoke('collaboration.listTeamAgents', projectId),
-      createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args)
+      createTeamAgent: (args) => invoke('collaboration.createTeamAgent', args),
+      getTeamServer: (projectId) => invoke('collaboration.getTeamServer', projectId),
+      enrollTeamServer: (args) => invoke('collaboration.enrollTeamServer', args),
+      listModelConnections: (projectId) => invoke('collaboration.listModelConnections', projectId),
+      createModelConnection: (args) => invoke('collaboration.createModelConnection', args),
+      reply: (args) => invoke('collaboration.reply', args, 140_000)
+    },
+    files: {
+      list: (projectId) => invoke('files.list', projectId),
+      create: (args) => invoke('files.create', args),
+      listVersions: (teamFileId) => invoke('files.listVersions', teamFileId),
+      readVersion: (versionId) => invoke('files.readVersion', versionId),
+      createVersion: (args) => invoke('files.createVersion', args),
+      listProposals: (teamFileId) => invoke('files.listProposals', teamFileId),
+      requestProposal: (args) => invoke('files.requestProposal', args, 140_000),
+      applyProposal: (proposalId) => invoke('files.applyProposal', proposalId),
+      clearQuarantine: (versionId) => invoke('files.clearQuarantine', versionId),
+      delete: (teamFileId) => invoke('files.delete', teamFileId)
     },
     tasks: {
       list: (projectId) => invoke('tasks.list', projectId),
@@ -1480,6 +1514,16 @@ function createTeamRunApi(): TeamRunApi {
       list: (taskId) => invoke('runs.list', taskId),
       create: (args) => invoke('runs.create', args),
       createLinked: (args) => invoke('runs.createLinked', args),
+      startTeamServer: async (args) => {
+        const status = await getRemoteRuntimeStatus()
+        if (
+          !status.capabilities?.includes(TEAMRUN_TEAM_SERVER_DEVELOPMENT_RUN_RUNTIME_CAPABILITY)
+        ) {
+          throw new Error('team_server_development_run_update_required')
+        }
+        return invoke('runs.startTeamServer', args, 160_000)
+      },
+      getTeamServerState: (runId) => invoke('runs.getTeamServerState', runId),
       resolveWorkspace: (clientRunId) => invoke('runs.resolveWorkspace', clientRunId),
       reviewWorkspace: (args) => invoke('runs.reviewWorkspace', args),
       updateStatus: (args) => invoke('runs.updateStatus', args),
@@ -1507,28 +1551,40 @@ function createTeamRunApi(): TeamRunApi {
           {
             onResponse: (response) => {
               if (!response.ok) {
-                for (const listener of errorListeners) listener(response.error.message)
+                for (const listener of errorListeners) {
+                  listener(response.error.message)
+                }
                 return
               }
               const frame = response.result as
                 | { type: 'status'; status: TeamRunSyncStatus }
                 | { type: 'event'; event: TeamEvent }
                 | { type: 'error'; message: string }
-              if (frame.type === 'status') notifySync(frame.status)
-              else if (frame.type === 'event') {
-                for (const listener of eventListeners) listener(frame.event)
+              if (frame.type === 'status') {
+                notifySync(frame.status)
+              } else if (frame.type === 'event') {
+                for (const listener of eventListeners) {
+                  listener(frame.event)
+                }
               } else if (frame.type === 'error') {
-                for (const listener of errorListeners) listener(frame.message)
+                for (const listener of errorListeners) {
+                  listener(frame.message)
+                }
               }
             },
             onError: (error) => {
               const message = error instanceof Error ? error.message : String(error)
-              for (const listener of errorListeners) listener(message)
+              for (const listener of errorListeners) {
+                listener(message)
+              }
             }
           }
         )
-        if (generation !== eventGeneration) subscription.unsubscribe()
-        else eventSubscription = subscription
+        if (generation !== eventGeneration) {
+          subscription.unsubscribe()
+        } else {
+          eventSubscription = subscription
+        }
       },
       stop: async () => {
         eventGeneration++

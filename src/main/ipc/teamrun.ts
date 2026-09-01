@@ -2,18 +2,13 @@ import { app, ipcMain } from 'electron'
 import { z } from 'zod'
 import {
   createAgentRunRequestSchema,
-  createChannelMessageRequestSchema,
-  createChannelRequestSchema,
   createContextSnapshotRequestSchema,
-  createProjectRequestSchema,
-  createRepositoryRequestSchema,
   createTaskCommentRequestSchema,
   createTaskRequestSchema,
-  createTeamAgentRequestSchema,
   finalizePublicationRequestSchema,
   preparePublicationRequestSchema,
+  startTeamServerDevelopmentRunRequestSchema,
   updateAgentRunStatusRequestSchema,
-  updateProjectRequestSchema,
   updateTaskRequestSchema
 } from '../../packages/teamrun-contracts/src/index'
 import type { AgentRun } from '../../packages/teamrun-contracts/src/index'
@@ -22,6 +17,9 @@ import { TeamRunVerificationService } from '../teamrun/teamrun-verification-serv
 import { TeamRunPublicationService } from '../teamrun/teamrun-publication-service'
 import { TeamRunWorkspaceReviewService } from '../teamrun/teamrun-workspace-review-service'
 import { TeamRunEventClient } from '../teamrun/teamrun-event-client'
+import { TeamAgentChatService } from '../teamrun/team-agent-chat-service'
+import { registerTeamRunWorkspaceHandlers } from './teamrun-workspace-ipc'
+import { registerTeamRunFileHandlers } from './teamrun-file-ipc'
 import type { Store } from '../persistence'
 
 const idSchema = z.uuid()
@@ -44,6 +42,7 @@ export function registerTeamRunHandlers(store: Store): void {
   const publication = new TeamRunPublicationService(store, teamRunClient, userDataPath)
   const workspaceReview = new TeamRunWorkspaceReviewService(store, teamRunClient, userDataPath)
   const events = new TeamRunEventClient(teamRunClient)
+  const agentChat = new TeamAgentChatService(teamRunClient)
   ipcMain.handle('teamrun:authStatus', () => teamRunClient.auth.status())
   ipcMain.handle('teamrun:signIn', (_event, args) =>
     teamRunClient.auth.signIn(signInSchema.parse(args))
@@ -55,129 +54,8 @@ export function registerTeamRunHandlers(store: Store): void {
     return teamRunClient.syncStatus()
   })
 
-  ipcMain.handle('teamrun:organizations:list', () => teamRunClient.request('/v1/organizations'))
-  ipcMain.handle('teamrun:organizations:create', (_event, args) => {
-    const body = z
-      .object({
-        slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,62}$/),
-        name: z.string().min(1).max(160)
-      })
-      .parse(args)
-    return teamRunClient.request('/v1/organizations', { method: 'POST', body })
-  })
-  ipcMain.handle('teamrun:organizations:listMembers', (_event, organizationId) =>
-    teamRunClient.request(`/v1/organizations/${pathId(organizationId)}/members`)
-  )
-  ipcMain.handle('teamrun:organizations:addMember', (_event, args) => {
-    const parsed = z
-      .object({
-        organizationId: idSchema,
-        email: z.email(),
-        role: z.enum(['admin', 'member'])
-      })
-      .parse(args)
-    return teamRunClient.request(`/v1/organizations/${parsed.organizationId}/members`, {
-      method: 'POST',
-      body: { email: parsed.email, role: parsed.role }
-    })
-  })
-  ipcMain.handle('teamrun:organizations:removeMember', (_event, args) => {
-    const parsed = z.object({ organizationId: idSchema, userId: idSchema }).parse(args)
-    return teamRunClient.request(
-      `/v1/organizations/${parsed.organizationId}/members/${parsed.userId}`,
-      { method: 'DELETE' }
-    )
-  })
-  ipcMain.handle('teamrun:organizations:listInvitations', (_event, organizationId) =>
-    teamRunClient.request(`/v1/organizations/${pathId(organizationId)}/invitations`)
-  )
-  ipcMain.handle('teamrun:organizations:invite', (_event, args) => {
-    const parsed = z
-      .object({ organizationId: idSchema, email: z.email(), role: z.enum(['admin', 'member']) })
-      .parse(args)
-    return teamRunClient.request(`/v1/organizations/${parsed.organizationId}/invitations`, {
-      method: 'POST',
-      body: { email: parsed.email, role: parsed.role }
-    })
-  })
-  ipcMain.handle('teamrun:organizations:revokeInvitation', (_event, args) => {
-    const parsed = z.object({ organizationId: idSchema, invitationId: idSchema }).parse(args)
-    return teamRunClient.request(
-      `/v1/organizations/${parsed.organizationId}/invitations/${parsed.invitationId}`,
-      { method: 'DELETE' }
-    )
-  })
-
-  ipcMain.handle('teamrun:projects:list', (_event, organizationId) =>
-    teamRunClient.request(`/v1/organizations/${pathId(organizationId)}/projects`)
-  )
-  ipcMain.handle('teamrun:projects:create', (_event, args) => {
-    const parsed = z
-      .object({ organizationId: idSchema, project: createProjectRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/organizations/${parsed.organizationId}/projects`, {
-      method: 'POST',
-      body: parsed.project
-    })
-  })
-  ipcMain.handle('teamrun:projects:update', (_event, args) => {
-    const parsed = z
-      .object({ projectId: idSchema, changes: updateProjectRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/projects/${parsed.projectId}`, {
-      method: 'PATCH',
-      body: parsed.changes
-    })
-  })
-  ipcMain.handle('teamrun:repositories:list', (_event, projectId) =>
-    teamRunClient.request(`/v1/projects/${pathId(projectId)}/repositories`)
-  )
-  ipcMain.handle('teamrun:repositories:create', (_event, args) => {
-    const parsed = z
-      .object({ projectId: idSchema, repository: createRepositoryRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/projects/${parsed.projectId}/repositories`, {
-      method: 'POST',
-      body: parsed.repository
-    })
-  })
-
-  ipcMain.handle('teamrun:channels:list', (_event, projectId) =>
-    teamRunClient.request(`/v1/projects/${pathId(projectId)}/channels`)
-  )
-  ipcMain.handle('teamrun:channels:create', (_event, args) => {
-    const parsed = z
-      .object({ projectId: idSchema, channel: createChannelRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/projects/${parsed.projectId}/channels`, {
-      method: 'POST',
-      body: parsed.channel
-    })
-  })
-  ipcMain.handle('teamrun:channels:listMessages', (_event, channelId) =>
-    teamRunClient.request(`/v1/channels/${pathId(channelId)}/messages`)
-  )
-  ipcMain.handle('teamrun:channels:createMessage', (_event, args) => {
-    const parsed = z
-      .object({ channelId: idSchema, message: createChannelMessageRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/channels/${parsed.channelId}/messages`, {
-      method: 'POST',
-      body: parsed.message
-    })
-  })
-  ipcMain.handle('teamrun:teamAgents:list', (_event, projectId) =>
-    teamRunClient.request(`/v1/projects/${pathId(projectId)}/team-agents`)
-  )
-  ipcMain.handle('teamrun:teamAgents:create', (_event, args) => {
-    const parsed = z
-      .object({ projectId: idSchema, teamAgent: createTeamAgentRequestSchema })
-      .parse(args)
-    return teamRunClient.request(`/v1/projects/${parsed.projectId}/team-agents`, {
-      method: 'POST',
-      body: parsed.teamAgent
-    })
-  })
+  registerTeamRunWorkspaceHandlers(teamRunClient, agentChat)
+  registerTeamRunFileHandlers(teamRunClient)
 
   ipcMain.handle('teamrun:tasks:list', (_event, projectId) =>
     teamRunClient.request(`/v1/projects/${pathId(projectId)}/tasks`)
@@ -246,7 +124,8 @@ export function registerTeamRunHandlers(store: Store): void {
     const run = await teamRunClient.request<AgentRun>(`/v1/tasks/${parsed.taskId}/agent-runs`, {
       method: 'POST',
       body: parsed.run,
-      queueIfOffline: false
+      queueIfOffline: false,
+      timeoutMs: 150_000
     })
     teamRunClient.putWorkspaceLink({
       clientRunId: parsed.run.clientRunId,
@@ -258,6 +137,19 @@ export function registerTeamRunHandlers(store: Store): void {
     })
     return run
   })
+  ipcMain.handle('teamrun:runs:startTeamServer', (_event, args) => {
+    const parsed = z
+      .object({ taskId: idSchema, run: startTeamServerDevelopmentRunRequestSchema })
+      .parse(args)
+    return teamRunClient.request(`/v1/tasks/${parsed.taskId}/team-server-runs`, {
+      method: 'POST',
+      body: parsed.run,
+      queueIfOffline: false
+    })
+  })
+  ipcMain.handle('teamrun:runs:getTeamServerState', (_event, runId) =>
+    teamRunClient.request(`/v1/agent-runs/${pathId(runId)}/team-server-state`, { cache: false })
+  )
   ipcMain.handle('teamrun:runs:resolveWorkspace', (_event, clientRunId) =>
     teamRunClient.getWorkspaceLink(z.string().min(1).max(160).parse(clientRunId))
   )

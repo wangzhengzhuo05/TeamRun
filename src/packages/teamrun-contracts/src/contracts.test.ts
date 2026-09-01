@@ -3,10 +3,14 @@ import { describe, expect, it } from 'vitest'
 import {
   agentRunStatusSchema,
   createTeamAgentRequestSchema,
+  createTeamFileProposalRequestSchema,
   createTaskRequestSchema,
   gitRemoteUrlSchema,
   publicationArtifactSchema,
   preparePublicationRequestSchema,
+  requestTeamAgentReplySchema,
+  startTeamServerDevelopmentRunRequestSchema,
+  teamServerDevelopmentRunStateSchema,
   teamRunWorkspaceLinkSchema
 } from './index.js'
 
@@ -26,22 +30,73 @@ describe('TeamRun contracts', () => {
     }
   })
 
-  it('requires a launch command for Generic CLI Team Agents', () => {
+  it('requires OpenCode and a Model Connection for new Team Agents', () => {
+    const modelConnectionId = crypto.randomUUID()
     expect(
       createTeamAgentRequestSchema.safeParse({
         name: 'Internal reviewer',
         agentKind: 'generic-cli',
+        launchCommand: 'company-agent --interactive',
+        modelConnectionId,
         instructionsMarkdown: ''
       }).success
     ).toBe(false)
     expect(
       createTeamAgentRequestSchema.parse({
         name: 'Internal reviewer',
-        agentKind: 'generic-cli',
-        launchCommand: 'company-agent --interactive',
+        agentKind: 'opencode',
+        modelConnectionId,
         instructionsMarkdown: ''
-      }).launchCommand
-    ).toBe('company-agent --interactive')
+      }).modelConnectionId
+    ).toBe(modelConnectionId)
+  })
+
+  it('accepts only an Agent identity when requesting a server-authored reply', () => {
+    const body = { teamAgentId: crypto.randomUUID() }
+    expect(requestTeamAgentReplySchema.parse(body)).toEqual(body)
+    expect(
+      requestTeamAgentReplySchema.safeParse({ ...body, bodyMarkdown: 'forged response' }).success
+    ).toBe(false)
+  })
+
+  it('bounds Team Agent document proposal requests', () => {
+    const teamAgentId = crypto.randomUUID()
+    expect(
+      createTeamFileProposalRequestSchema.parse({
+        teamAgentId,
+        instructionsMarkdown: 'Add the agreed decision.'
+      })
+    ).toEqual({ teamAgentId, instructionsMarkdown: 'Add the agreed decision.' })
+    expect(
+      createTeamFileProposalRequestSchema.safeParse({
+        teamAgentId,
+        instructionsMarkdown: 'x'.repeat(8_001)
+      }).success
+    ).toBe(false)
+  })
+
+  it('validates Team Server development run requests and shared state', () => {
+    const request = {
+      contextSnapshotId: crypto.randomUUID(),
+      teamAgentId: crypto.randomUUID()
+    }
+    expect(startTeamServerDevelopmentRunRequestSchema.parse(request)).toEqual(request)
+    expect(
+      teamServerDevelopmentRunStateSchema.parse({
+        runId: crypto.randomUUID(),
+        status: 'working',
+        sequence: 2,
+        branchName: 'teamrun/run-id',
+        baseObjectId: 'a'.repeat(40),
+        headObjectId: null,
+        activityLog: '',
+        logTruncated: false,
+        diffPatch: '',
+        diffTruncated: false,
+        failureCode: null,
+        updatedAt: new Date().toISOString()
+      }).status
+    ).toBe('working')
   })
 
   it('keeps imported tasks canonical after the initial snapshot', () => {

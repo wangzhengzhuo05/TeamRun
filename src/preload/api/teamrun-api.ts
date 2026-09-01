@@ -7,12 +7,19 @@ import type {
   CreateChannelMessageRequest,
   CreateChannelRequest,
   CreateContextSnapshotRequest,
+  CreateModelConnectionRequest,
   CreateProjectRequest,
   CreateRepositoryRequest,
   CreateTaskCommentRequest,
   CreateTaskRequest,
   CreateTeamAgentRequest,
+  CreateTeamFileRequest,
+  CreateTeamFileProposalRequest,
+  CreateTeamFileVersionRequest,
+  CreatedTeamInviteCode,
   FinalizePublicationRequest,
+  EnrollTeamServerRequest,
+  ModelConnection,
   Organization,
   OrganizationInvitation,
   OrganizationMember,
@@ -26,7 +33,15 @@ import type {
   TaskComment,
   TeamAgent,
   TeamEvent,
+  TeamFile,
+  TeamFileProposal,
+  TeamFileVersion,
+  TeamFileVersionContent,
+  TeamInviteCode,
+  TeamServerBinding,
+  TeamServerDevelopmentRunState,
   UpdateAgentRunStatusRequest,
+  StartTeamServerDevelopmentRunRequest,
   UpdateProjectRequest,
   UpdateTaskRequest,
   VerificationResult
@@ -61,6 +76,15 @@ export type TeamRunApi = {
       role: 'admin' | 'member'
     }) => Promise<OrganizationMember>
     removeMember: (args: { organizationId: string; userId: string }) => Promise<void>
+    updateMemberRole: (args: {
+      organizationId: string
+      userId: string
+      role: 'admin' | 'member'
+    }) => Promise<void>
+    listInviteCodes: (organizationId: string) => Promise<TeamInviteCode[]>
+    createInviteCode: (organizationId: string) => Promise<CreatedTeamInviteCode>
+    revokeInviteCode: (args: { organizationId: string; inviteCodeId: string }) => Promise<void>
+    redeemInviteCode: (code: string) => Promise<Organization>
     listInvitations: (organizationId: string) => Promise<OrganizationInvitation[]>
     invite: (args: {
       organizationId: string
@@ -92,6 +116,40 @@ export type TeamRunApi = {
       projectId: string
       teamAgent: CreateTeamAgentRequest
     }) => Promise<TeamAgent>
+    getTeamServer: (projectId: string) => Promise<TeamServerBinding | null>
+    enrollTeamServer: (args: {
+      projectId: string
+      teamServer: EnrollTeamServerRequest
+    }) => Promise<TeamServerBinding>
+    listModelConnections: (projectId: string) => Promise<ModelConnection[]>
+    createModelConnection: (args: {
+      projectId: string
+      connection: CreateModelConnectionRequest
+    }) => Promise<ModelConnection>
+    reply: (args: {
+      projectId: string
+      channelId: string
+      teamAgentId: string
+      bodyMarkdown: string
+    }) => Promise<ChannelMessage>
+  }
+  files: {
+    list: (projectId: string) => Promise<TeamFile[]>
+    create: (args: { projectId: string; file: CreateTeamFileRequest }) => Promise<TeamFile>
+    listVersions: (teamFileId: string) => Promise<TeamFileVersion[]>
+    readVersion: (versionId: string) => Promise<TeamFileVersionContent>
+    createVersion: (args: {
+      teamFileId: string
+      version: CreateTeamFileVersionRequest
+    }) => Promise<TeamFileVersion>
+    listProposals: (teamFileId: string) => Promise<TeamFileProposal[]>
+    requestProposal: (args: {
+      teamFileId: string
+      proposal: CreateTeamFileProposalRequest
+    }) => Promise<TeamFileProposal>
+    applyProposal: (proposalId: string) => Promise<TeamFileVersion>
+    clearQuarantine: (versionId: string) => Promise<TeamFileVersion>
+    delete: (teamFileId: string) => Promise<void>
   }
   tasks: {
     list: (projectId: string) => Promise<Task[]>
@@ -118,6 +176,11 @@ export type TeamRunApi = {
       workspaceId: string
       workspacePath: string
     }) => Promise<AgentRun>
+    startTeamServer: (args: {
+      taskId: string
+      run: StartTeamServerDevelopmentRunRequest
+    }) => Promise<AgentRun>
+    getTeamServerState: (runId: string) => Promise<TeamServerDevelopmentRunState>
     resolveWorkspace: (clientRunId: string) => Promise<TeamRunWorkspaceRecord | null>
     reviewWorkspace: (args: {
       runId: string

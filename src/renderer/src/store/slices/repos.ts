@@ -3168,7 +3168,9 @@ export const createRepoSlice: StateCreator<AppState, [], [], RepoSlice> = (set, 
             ? s.repos.map((entry) => (getRepoHostIdentity(entry) === repoIdentity ? repo : entry))
             : [...s.repos, repo]
         )
-        if (nextRepos === s.repos) return s
+        if (nextRepos === s.repos) {
+          return s
+        }
         const hostId = getRepoExecutionHostId(repo)
         return {
           repos: nextRepos,

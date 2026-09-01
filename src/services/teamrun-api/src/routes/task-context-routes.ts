@@ -5,7 +5,9 @@ import {
   createTaskCommentRequestSchema,
   externalTaskSourceSchema
 } from '@teamrun/contracts'
+import { requireOrganizationRole } from '../auth/organization-access.js'
 import { renderTaskContext } from '../context/task-context-renderer.js'
+import { loadTeamFileContext } from '../context/team-file-context.js'
 import { agentRuns, contextSnapshots, projects, taskComments, tasks } from '../database/schema.js'
 import { appendTeamEvent } from '../events/team-event-writer.js'
 import { ApiProblem } from '../http/api-problem.js'
@@ -74,6 +76,12 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
     const { taskId } = request.params as { taskId: string }
     const body = createContextSnapshotRequestSchema.parse(request.body)
     const { task } = await requireTask(app, taskId, request.teamRunUser.id)
+    await requireOrganizationRole(
+      app.teamRunDatabase,
+      task.organizationId,
+      request.teamRunUser.id,
+      ['owner', 'admin']
+    )
     if (task.version !== body.taskVersion) {
       throw new ApiProblem(409, 'task_version_conflict', 'Task changed before snapshot creation')
     }
@@ -100,7 +108,9 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
           .select()
           .from(projects)
           .where(eq(projects.id, lockedTask.projectId))
-        if (!project) throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+        if (!project) {
+          throw new ApiProblem(404, 'project_not_found', 'Project was not found')
+        }
         const comments = body.includeComments
           ? await transaction
               .select()
@@ -111,6 +121,12 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
         const externalSource = lockedTask.externalSource
           ? externalTaskSourceSchema.parse(lockedTask.externalSource)
           : null
+        const files = await loadTeamFileContext(
+          transaction,
+          lockedTask.projectId,
+          body.selectedTeamFileVersionIds,
+          []
+        )
         const rendered = renderTaskContext({
           projectKey: project.key,
           projectName: project.name,
@@ -121,6 +137,7 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
             createdAt: comment.createdAt.toISOString(),
             updatedAt: comment.updatedAt.toISOString()
           })),
+          files,
           includeExternalSource: body.includeExternalSource
         })
         const [snapshot] = await transaction
@@ -131,6 +148,11 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
             taskVersion: lockedTask.version,
             projectContextVersion: body.includeProjectContext ? project.contextVersion : 0,
             commentWatermark: comments.at(-1)?.createdAt ?? null,
+            teamFileVersionIds: files.map((file) => file.versionId),
+            agentSelectedFileVersionIds: files
+              .filter((file) => file.selectedBy === 'agent')
+              .map((file) => file.versionId),
+            autoEnrichmentRequested: body.autoEnrich,
             renderedMarkdown: rendered.markdown,
             hash: rendered.hash,
             createdByUserId: request.teamRunUser.id
@@ -144,7 +166,12 @@ export async function registerTaskContextRoutes(app: FastifyInstance): Promise<v
           type: 'context_snapshot.created',
           entityId: snapshot.id,
           actorUserId: request.teamRunUser.id,
-          data: { taskId, hash: rendered.hash }
+          data: {
+            taskId,
+            hash: rendered.hash,
+            teamFileVersionIds: files.map((file) => file.versionId),
+            autoEnrichmentRequested: body.autoEnrich
+          }
         })
         return { status: 201, body: snapshot }
       }
